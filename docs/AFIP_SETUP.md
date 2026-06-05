@@ -15,7 +15,7 @@ Si aún no tienes certificados de producción, puedes usar el entorno de pruebas
 3.  Sube el `pedido.csr` a la web de AFIP (WSASS - Gestión de certificados) para obtener tu `.crt`.
 
 ## 3. Configuración en la App
-Edita el archivo `.env` en la raíz (o las variables de entorno de tu servidor) con los siguientes campos:
+Edita el archivo `.env` del backend (o las variables de entorno de tu servidor) con los siguientes campos:
 
 ```env
 # Datos de la Empresa
@@ -24,13 +24,39 @@ COMPANY_CUIT="30123456789" # Solo números
 COMPANY_ADDRESS="Calle Falsa 123, CABA"
 COMPANY_EMAIL="facturacion@minegocio.com"
 
-# Configuración AFIP
-AFIP_CERT_PATH="C:/certificados/factura_afip.crt" # Ruta absoluta
-AFIP_KEY_PATH="C:/certificados/privada.key"     # Ruta absoluta
-NODE_ENV="development" # Usa "production" para el entorno real
+# Configuración AFIP (local)
+AFIP_CERT_PATH="../secure/afip/tu-certificado.crt"
+AFIP_KEY_PATH="../secure/afip/private.key"
+AFIP_PTO_VTA="1"
+
+# Cola AFIP
+ENABLE_AFIP_QUEUE="true"
+REDIS_URL="redis://localhost:6379"
+
+NODE_ENV="development" # Usa "production" para entorno real
 ```
 
-## 4. Notas Técnicas
+## 4. Deploy en Render (recomendado)
+
+En Render no conviene depender de rutas de archivos locales. Lo recomendado es cargar certificado y clave como variables de entorno en formato PEM.
+
+Variables mínimas en Render (Backend):
+
+- `NODE_ENV=production`
+- `MONGO_URI=<mongodb-uri-produccion>`
+- `JWT_ACCESS_TOKEN_SECRET=<secreto-largo>`
+- `JWT_REFRESH_TOKEN_SECRET=<secreto-largo>`
+- `CORS_ALLOWED_ORIGINS=https://tu-frontend.vercel.app,https://*.vercel.app`
+- `COMPANY_CUIT=<cuit-sin-guiones>`
+- `AFIP_PTO_VTA=1`
+- `ENABLE_AFIP_QUEUE=true`
+- `REDIS_URL=<redis-de-render-o-upstash>`
+- `AFIP_CERT_PEM="-----BEGIN CERTIFICATE-----...-----END CERTIFICATE-----"`
+- `AFIP_KEY_PEM="-----BEGIN PRIVATE KEY-----...-----END PRIVATE KEY-----"`
+
+> El backend ya prioriza `AFIP_CERT_PEM`/`AFIP_KEY_PEM` y usa `AFIP_CERT_PATH`/`AFIP_KEY_PATH` solo como fallback para local.
+
+## 5. Notas Técnicas
 *   **Punto de Venta:** Por defecto la app usa el Punto de Venta `1`. Asegúrate de tenerlo creado en AFIP como "Web Services".
-*   **Modo Simulación:** Si no configuras `AFIP_CERT_PATH` o `AFIP_KEY_PATH`, la app funcionará en **modo simulación**, generando CAEs falsos para que puedas seguir testeando la interfaz de usuario sin conexión real.
+*   **Sin certificado/clave:** si no configuras certificado y clave (`AFIP_CERT_PEM`/`AFIP_KEY_PEM` o `AFIP_CERT_PATH`/`AFIP_KEY_PATH`), AFIP queda deshabilitado y la API devolverá error de configuración al facturar.
 *   **Librería:** Utilizamos `@afipsdk/afip.js`.

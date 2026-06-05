@@ -14,11 +14,26 @@ export const Register = () => {
     e.preventDefault();
     setError('');
     try {
-      await register({ email, password, roles: ['admin'] }).unwrap();
+      const normalizedEmail = email.trim().toLowerCase();
+      const normalizedPassword = password.trim();
+
+      await register({
+        email: normalizedEmail,
+        password: normalizedPassword,
+        roles: ['admin'],
+      }).unwrap();
       setSuccess(true);
       setTimeout(() => navigate('/login'), 2000);
     } catch (err: any) {
-      setError(err.data?.message || 'Error al registrar usuario.');
+      const status = err?.status;
+      const message = err?.data?.message as string | undefined;
+
+      if (status === 401 || message === 'Missing auth') {
+        setError('Ya existe un administrador. Iniciá sesión con tu cuenta.');
+        return;
+      }
+
+      setError(message || 'Error al registrar usuario.');
     }
   };
 

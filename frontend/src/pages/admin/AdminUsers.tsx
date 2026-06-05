@@ -95,7 +95,9 @@ export const AdminUsers: React.FC = () => {
             <div>
               <label className="section-heading mb-3 block">Permisos</label>
               <div className="surface rounded-xl p-4 space-y-2">
-                {Object.entries(PERMISSION_LABELS).map(([key, label]) => (
+                {Object.entries(PERMISSION_LABELS)
+                  .filter(([key]) => key !== 'clients:view' && key !== 'clients:edit')
+                  .map(([key, label]) => (
                   <label key={key} className="flex items-center gap-3 cursor-pointer group py-1">
                     <div className="relative flex items-center justify-center w-4 h-4 flex-shrink-0">
                       <input type="checkbox" checked={!!selectedPermissions[key]}

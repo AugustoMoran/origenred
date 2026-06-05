@@ -16,7 +16,13 @@ export const Login = () => {
     e.preventDefault();
     setError('');
     try {
-      const result = await login({ email, password }).unwrap();
+      const normalizedEmail = email.trim().toLowerCase();
+      const normalizedPassword = password.trim();
+
+      const result = await login({
+        email: normalizedEmail,
+        password: normalizedPassword,
+      }).unwrap();
       dispatch(setCredentials(result));
       navigate('/');
     } catch (err: any) {

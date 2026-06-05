@@ -46,6 +46,12 @@ const isAllowedOrigin = (origin?: string) => {
     originUrl = null;
   }
 
+  if (process.env.NODE_ENV !== 'production' && originUrl) {
+    if (originUrl.hostname === 'localhost' || originUrl.hostname === '127.0.0.1') {
+      return true;
+    }
+  }
+
   return allowedOrigins.some((allowed) => {
     const normalizedAllowed = normalizeOrigin(allowed);
 
