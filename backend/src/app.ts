@@ -16,11 +16,65 @@ const app = express();
 // Socket.IO will be dynamically imported inside start() to avoid TS server errors when
 // @types/* are not yet installed in the editor environment.
 
+const parseAllowedOrigins = () => {
+  const raw = process.env.CORS_ALLOWED_ORIGINS || process.env.FRONTEND_URL || '';
+  return raw
+    .split(',')
+    .map((origin) => origin.trim())
+    .filter(Boolean);
+};
+
+const allowedOrigins = parseAllowedOrigins();
+
+const normalizeOrigin = (value: string) => {
+  try {
+    return new URL(value).origin.toLowerCase();
+  } catch {
+    return value.trim().toLowerCase().replace(/\/+$/, '');
+  }
+};
+
+const isAllowedOrigin = (origin?: string) => {
+  if (!origin) return true;
+  if (!allowedOrigins.length) return true;
+
+  const normalizedOrigin = normalizeOrigin(origin);
+  let originUrl: URL | null = null;
+  try {
+    originUrl = new URL(normalizedOrigin);
+  } catch {
+    originUrl = null;
+  }
+
+  return allowedOrigins.some((allowed) => {
+    const normalizedAllowed = normalizeOrigin(allowed);
+
+    if (normalizedAllowed.startsWith('*.') && originUrl) {
+      const domain = normalizedAllowed.slice(1); // ".vercel.app"
+      return originUrl.hostname.endsWith(domain);
+    }
+
+    const protocolWildcardMatch = normalizedAllowed.match(/^(https?):\/\/\*\.(.+)$/);
+    if (protocolWildcardMatch && originUrl) {
+      const [, protocol, domain] = protocolWildcardMatch;
+      return originUrl.protocol === `${protocol}:` && originUrl.hostname.endsWith(`.${domain}`);
+    }
+
+    return normalizedOrigin === normalizedAllowed;
+  });
+};
+
 app.use(helmet({
   crossOriginResourcePolicy: false,
 }));
 app.use(cors({
-  origin: true, // Allow all origins in dev or specify frontend URL
+  origin: (origin, callback) => {
+    if (isAllowedOrigin(origin)) {
+      callback(null, true);
+      return;
+    }
+    callback(new Error('Origin not allowed by CORS'));
+  },
   credentials: true
 }));
 app.use(morgan('dev'));
@@ -79,7 +133,18 @@ export async function start() {
 
     // Initialize Socket.IO
     const { Server } = await import('socket.io');
-    io = new Server(server, { cors: { origin: process.env.FRONTEND_URL || '*' } });
+    io = new Server(server, {
+      cors: {
+        origin: (origin, callback) => {
+          if (isAllowedOrigin(origin)) {
+            callback(null, true);
+            return;
+          }
+          callback(new Error('Socket origin not allowed by CORS'));
+        },
+        credentials: true,
+      },
+    });
 
     // Initialize AFIP Workers only when explicitly enabled
     if (process.env.ENABLE_AFIP_QUEUE === 'true') {

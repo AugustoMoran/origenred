@@ -26,7 +26,7 @@ describe('Auth Integration Tests', () => {
       .send(testUser);
     
     expect(res.status).toBe(200);
-    expect(res.body).toHaveProperty('access');
+    expect(res.body).toHaveProperty('token');
     const cookies = res.get('Set-Cookie');
     expect(cookies).toBeDefined();
     expect(cookies![0]).toMatch(/refreshToken=/);

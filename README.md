@@ -39,3 +39,31 @@ Instrucciones rápidas:
 
 Este repositorio es un scaffold inicial con arquitectura modular, seguridad y despliegue en mente.# plataforma-de-facturacion
 Sistema profesional de facturación y gestión comercial desarrollado con React, TypeScript, Express y MongoDB. Incluye control de stock por sucursal, ventas, facturación AFIP, roles y permisos dinámicos, comisiones, códigos de barras, sincronización en tiempo real, reportes, autenticación segura con JWT HttpOnly y arquitectura lista para producción.
+
+## Deploy de Producción (Render + Vercel)
+
+### Backend en Render
+- **Root Directory:** `backend`
+- **Build Command:** `npm ci && npm run build`
+- **Start Command:** `npm run start`
+
+Variables recomendadas en Render:
+- `NODE_ENV=production`
+- `PORT=4000`
+- `MONGO_URI=<mongodb-uri-produccion>`
+- `JWT_ACCESS_TOKEN_SECRET=<secreto-largo>`
+- `JWT_REFRESH_TOKEN_SECRET=<secreto-largo>`
+- `CORS_ALLOWED_ORIGINS=https://tu-frontend.vercel.app,https://*.vercel.app`
+- `FRONTEND_URL=https://tu-frontend.vercel.app`
+- `REDIS_URL=<opcional-si-activas-colas-afip>`
+- `ENABLE_AFIP_QUEUE=false` (o `true` si Redis está listo)
+
+### Frontend en Vercel
+- **Root Directory:** `frontend`
+- **Build Command:** `npm run build`
+- **Output Directory:** `dist`
+
+Variable requerida en Vercel:
+- `VITE_API_URL=https://tu-backend.onrender.com/api`
+
+El archivo `frontend/vercel.json` ya incluye rewrite SPA para que las rutas de React funcionen correctamente.

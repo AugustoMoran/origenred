@@ -3,6 +3,9 @@ import mongoose from 'mongoose';
 
 let mongoServer: any;
 
+process.env.NODE_ENV = 'test';
+process.env.ENABLE_AFIP_QUEUE = 'false';
+
 beforeAll(async () => {
   mongoServer = await MongoMemoryReplSet.create({
     replSet: { count: 1 }

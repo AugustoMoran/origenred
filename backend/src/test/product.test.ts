@@ -2,15 +2,6 @@ import mongoose from 'mongoose';
 import Product from '../modules/inventory/models/Product';
 
 describe('Product Model Test', () => {
-  beforeAll(async () => {
-    const url = process.env.MONGO_URI || 'mongodb://localhost:27017/test-db';
-    await mongoose.connect(url);
-  });
-
-  afterAll(async () => {
-    await mongoose.connection.close();
-  });
-
   it('should create and save a product successfully', async () => {
     const productData = {
       name: 'Test Product',
@@ -19,7 +10,8 @@ describe('Product Model Test', () => {
       costPrice: 50,
       iva: 21,
       margin: 100,
-      stock: 10
+      stock: 10,
+      category: 'General'
     };
     const validProduct = new Product(productData);
     const savedProduct = await validProduct.save();

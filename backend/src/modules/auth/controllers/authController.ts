@@ -3,6 +3,16 @@ import { register, validateUser, tokenService } from '../services/authService';
 import { User } from '../models/User';
 import { io } from '../../../app';
 
+const buildRefreshCookieOptions = () => {
+  const isProd = process.env.NODE_ENV === 'production';
+  return {
+    httpOnly: true,
+    sameSite: (isProd ? 'none' : 'strict') as 'none' | 'strict',
+    secure: isProd,
+    path: '/api/auth/refresh',
+  };
+};
+
 export async function registerController(req: Request, res: Response) {
   const { email, password, roles, permissions, name, branch } = req.body;
   
@@ -47,7 +57,8 @@ export async function loginController(req: Request, res: Response) {
   user.markModified('refreshTokens');
   await user.save({ validateBeforeSave: false });
 
-  res.cookie('refreshToken', refresh, { httpOnly: true, sameSite: 'strict', secure: process.env.NODE_ENV === 'production', path: '/api/auth/refresh' });
+  const refreshCookieOptions = buildRefreshCookieOptions();
+  res.cookie('refreshToken', refresh, refreshCookieOptions);
   res.json({ 
     token: access, 
     user: {
@@ -79,12 +90,12 @@ export async function refreshController(req: Request, res: Response) {
     } catch (err) {
       // reuse detected
       await tokenService.revokeRefreshToken(userId);
-      res.clearCookie('refreshToken');
+      res.clearCookie('refreshToken', buildRefreshCookieOptions());
       return res.status(401).json({ message: 'Refresh token reuse detected' });
     }
 
     const access = tokenService.signAccessToken(user as any);
-    res.cookie('refreshToken', newRefresh, { httpOnly: true, sameSite: 'strict', secure: process.env.NODE_ENV === 'production', path: '/api/auth/refresh' });
+    res.cookie('refreshToken', newRefresh, buildRefreshCookieOptions());
     res.json({ access });
   } catch (err) {
     return res.status(401).json({ message: 'Invalid refresh token' });
@@ -101,6 +112,6 @@ export async function logoutController(req: Request, res: Response) {
       // ignore
     }
   }
-  res.clearCookie('refreshToken');
+  res.clearCookie('refreshToken', buildRefreshCookieOptions());
   res.json({ ok: true });
 }
