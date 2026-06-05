@@ -1,0 +1,16 @@
+node_modules
+dist
+build
+/.env
+/.env.local
+/.env.*.local
+coverage
+*.log
+/.next
+/.vscode
+/.idea
+docker-compose.override.yml
+tmp
+
+# AFIP certificates and local env files
+/secure/afip/
