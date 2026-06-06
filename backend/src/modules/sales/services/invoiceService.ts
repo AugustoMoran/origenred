@@ -83,7 +83,11 @@ export class InvoiceService {
 
         const populatedBranch =
           sale.branch && typeof sale.branch === 'object' ? (sale.branch as any) : null;
-        const branchAddress = (populatedBranch?.address || '').trim();
+        const rawBranchAddress = populatedBranch?.address;
+        const branchAddress =
+          typeof rawBranchAddress === 'string'
+            ? rawBranchAddress.trim()
+            : '';
 
         // Empresa: mail fijo solicitado, CUIT desde env, dirección real de la sucursal de la venta
         const companyName = process.env.COMPANY_NAME || 'PLATAFORMA DE FACTURACION S.A.';

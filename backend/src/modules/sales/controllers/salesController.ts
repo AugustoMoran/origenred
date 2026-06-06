@@ -93,6 +93,11 @@ export const downloadInvoiceController = async (req: Request, res: Response) => 
     res.setHeader('Content-Disposition', `attachment; filename=Factura-${sale.invoiceNumber}.pdf`);
     res.send(pdfBuffer);
   } catch (error: any) {
+    console.error('[sales][download-invoice] error', {
+      saleId: req.params.id,
+      message: error?.message,
+      stack: error?.stack,
+    });
     res.status(500).json({ message: error.message });
   }
 };
