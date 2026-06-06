@@ -2,6 +2,14 @@ import bcrypt from 'bcrypt';
 import { User, IUser } from '../models/User';
 import * as tokenService from './tokenService';
 
+function normalizeEmail(email: string) {
+  return email.trim().toLowerCase();
+}
+
+function escapeRegex(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
 export async function register(
   email: string,
   password: string,
@@ -10,6 +18,7 @@ export async function register(
   name?: string,
   branch?: string
 ) {
+  const normalizedEmail = normalizeEmail(email);
   const hash = await bcrypt.hash(password, 10);
   
   // Check if this is the first user
@@ -17,8 +26,8 @@ export async function register(
   const finalRoles = userCount === 0 ? ['admin'] : roles;
   
   const user = await User.create({ 
-    name: name || email.split('@')[0], 
-    email, 
+    name: name || normalizedEmail.split('@')[0], 
+    email: normalizedEmail,
     password: hash, 
     roles: finalRoles,
     permissions,
@@ -28,7 +37,18 @@ export async function register(
 }
 
 export async function validateUser(email: string, password: string) {
-  const user = await User.findOne({ email });
+  const normalizedEmail = normalizeEmail(email);
+
+  // Fast path for normalized records
+  let user = await User.findOne({ email: normalizedEmail });
+
+  // Backward compatibility for legacy records stored with mixed-case emails
+  if (!user) {
+    user = await User.findOne({
+      email: { $regex: `^${escapeRegex(normalizedEmail)}$`, $options: 'i' },
+    });
+  }
+
   if (!user) return null;
   const ok = await bcrypt.compare(password, user.password);
   return ok ? user : null;

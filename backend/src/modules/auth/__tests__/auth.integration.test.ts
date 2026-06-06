@@ -42,6 +42,19 @@ describe('Auth Integration Tests', () => {
     expect(res.status).toBe(401);
   });
 
+  it('should login with mixed-case email input', async () => {
+    await request(app)
+      .post('/api/auth/register')
+      .send({ email: 'Seller.Mixed@Example.COM', password: 'Password123!' });
+
+    const res = await request(app)
+      .post('/api/auth/login')
+      .send({ email: 'seller.mixed@example.com', password: 'Password123!' });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('token');
+  });
+
   it('should rotate refresh token', async () => {
     await request(app).post('/api/auth/register').send(testUser);
     
