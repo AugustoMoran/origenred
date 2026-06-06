@@ -53,8 +53,10 @@ Variables mínimas en Render (Backend):
 - `REDIS_URL=<redis-de-render-o-upstash>`
 - `AFIP_CERT_PEM="-----BEGIN CERTIFICATE-----...-----END CERTIFICATE-----"`
 - `AFIP_KEY_PEM="-----BEGIN PRIVATE KEY-----...-----END PRIVATE KEY-----"`
+- `BRAND_LOGO_PATH=<ruta-opcional-al-logo-para-PDFs>`
 
 > El backend ya prioriza `AFIP_CERT_PEM`/`AFIP_KEY_PEM` y usa `AFIP_CERT_PATH`/`AFIP_KEY_PATH` solo como fallback para local.
+> Para facturas/remitos, el backend busca logo en `BRAND_LOGO_PATH` y, si no está, usa fallback automático (`frontend/public/brand-logo.png`).
 
 ## 5. Notas Técnicas
 *   **Punto de Venta:** Por defecto la app usa el Punto de Venta `1`. Asegúrate de tenerlo creado en AFIP como "Web Services".

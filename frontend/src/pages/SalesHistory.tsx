@@ -15,6 +15,39 @@ export const SalesHistory = () => {
   const [deleteSale, { isLoading: deletingSale }] = useDeleteSaleMutation();
   const [createCreditNote, { isLoading: creatingCreditNote }] = useCreateCreditNoteMutation();
 
+  const getCreditNoteState = (sale: any) => {
+    const invoiceType = String(sale?.invoiceType || '').toUpperCase();
+    const isFiscalType = ['A', 'B', 'C'].includes(invoiceType);
+    const isAfipAuthorized =
+      isFiscalType &&
+      String(sale?.billingStatus || '').toUpperCase() === 'COMPLETED' &&
+      Boolean(sale?.cae) &&
+      Boolean(sale?.voucherNumber);
+
+    if (['REFUNDED', 'CANCELLED'].includes(String(sale?.status || '').toUpperCase())) {
+      return { enabled: false, reason: 'La venta ya fue anulada', label: 'Anulada' };
+    }
+
+    if (!isFiscalType) {
+      return {
+        enabled: true,
+        reason: 'Anulación interna (sin AFIP)',
+        label: 'Interna',
+      };
+    }
+
+    if (!isAfipAuthorized) {
+      const current = String(sale?.billingStatus || 'PENDING').toUpperCase();
+      return {
+        enabled: true,
+        reason: `Anulación interna (venta no autorizada por AFIP: ${current})`,
+        label: 'Interna',
+      };
+    }
+
+    return { enabled: true, reason: 'Emitir Nota de Crédito AFIP', label: 'AFIP OK' };
+  };
+
   const handleDownload = async (id: string, invoiceNumber: string) => {
     try {
       const blob = await downloadInvoice(id).unwrap();
@@ -147,13 +180,12 @@ export const SalesHistory = () => {
               <th className="text-right">Total</th>
               <th className="text-center">Estado</th>
               <th className="text-center">PDF</th>
-              <th className="text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {sales.length === 0 && (
               <tr>
-                <td colSpan={10} className="text-center text-slate-600 py-12 text-sm">
+                <td colSpan={9} className="text-center text-slate-600 py-12 text-sm">
                   Sin ventas registradas
                 </td>
               </tr>
@@ -224,35 +256,43 @@ export const SalesHistory = () => {
                         </svg>
                       </button>
                     )}
+
+                    <HasPermission
+                      permission={PERMISSIONS.SALES_EDIT}
+                      fallback={<span className="text-[10px] text-slate-500">Sin permiso</span>}
+                    >
+                      {(() => {
+                        const creditNoteState = getCreditNoteState(s);
+
+                        return (
+                          <>
+                            <span className="mx-1 h-6 w-px bg-white/10" />
+                            <button
+                              onClick={() => creditNoteState.enabled && handleCreateCreditNote(s)}
+                              disabled={creatingCreditNote || !creditNoteState.enabled}
+                              className="btn-icon !text-amber-300 hover:!bg-amber-400/10 hover:!border-amber-400/20 disabled:opacity-40 disabled:cursor-not-allowed"
+                              title={creditNoteState.reason}
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 14l6-6m0 0H9m6 0v6M5 6h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
+                              </svg>
+                            </button>
+
+                            <button
+                              onClick={() => handleDeleteSale(s._id)}
+                              disabled={deletingSale}
+                              className="btn-icon !text-red-400 hover:!bg-red-400/10 hover:!border-red-400/20 disabled:opacity-50"
+                              title="Eliminar venta"
+                            >
+                              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </button>
+                          </>
+                        );
+                      })()}
+                    </HasPermission>
                   </div>
-                </td>
-                <td className="text-center">
-                  <HasPermission permission={PERMISSIONS.SALES_EDIT}>
-                    <div className="flex items-center justify-center gap-2">
-                      {['A', 'B', 'C'].includes(s.invoiceType) && s.billingStatus === 'COMPLETED' && (
-                        <button
-                          onClick={() => handleCreateCreditNote(s)}
-                          disabled={creatingCreditNote}
-                          className="btn-icon !text-amber-300 hover:!bg-amber-400/10 hover:!border-amber-400/20 disabled:opacity-50"
-                          title="Emitir Nota de Crédito"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 14l6-6m0 0H9m6 0v6M5 6h14a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V8a2 2 0 012-2z" />
-                          </svg>
-                        </button>
-                      )}
-                      <button
-                        onClick={() => handleDeleteSale(s._id)}
-                        disabled={deletingSale}
-                        className="btn-icon !text-red-400 hover:!bg-red-400/10 hover:!border-red-400/20 disabled:opacity-50"
-                        title="Eliminar venta"
-                      >
-                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </HasPermission>
                 </td>
               </tr>
             ))}

@@ -1,6 +1,7 @@
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
 import { ISale } from '../models/Sale';
+import { getBrandLogoBuffer } from './brandLogo';
 
 export class InvoiceService {
   static async generatePDF(sale: ISale): Promise<Buffer> {
@@ -39,6 +40,16 @@ export class InvoiceService {
         doc.rect(0, 0, doc.page.width, 95).fill('#111827');
         doc.restore();
 
+        const brandLogo = getBrandLogoBuffer();
+        if (brandLogo) {
+          try {
+            doc.roundedRect(470, 14, 78, 62, 8).fillAndStroke('#FFFFFF', '#E2E8F0');
+            doc.image(brandLogo, 476, 18, { fit: [66, 54], align: 'center', valign: 'center' });
+          } catch {
+            // Ignorar fallo de imagen sin romper la generación del PDF
+          }
+        }
+
         doc
           .font('Helvetica-Bold')
           .fontSize(24)
@@ -61,12 +72,12 @@ export class InvoiceService {
           .font('Helvetica-Bold')
           .fontSize(12)
           .fillColor('#E2E8F0')
-          .text(`Tipo: ${sale.invoiceType}`, 430, 36, { width: 130, align: 'right' });
+          .text(`Tipo: ${sale.invoiceType}`, 345, 36, { width: 105, align: 'right' });
         doc
           .font('Helvetica')
           .fontSize(10)
           .fillColor('#CBD5E1')
-          .text(new Date(sale.createdAt).toLocaleString('es-AR'), 430, 56, { width: 130, align: 'right' });
+          .text(new Date(sale.createdAt).toLocaleString('es-AR'), 305, 56, { width: 145, align: 'right' });
 
         let y = 120;
 

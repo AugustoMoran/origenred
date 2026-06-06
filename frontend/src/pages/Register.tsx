@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useRegisterMutation } from '../services/authApi';
 
+const brandLogo = '/brand-logo.png';
+
 export const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -47,8 +49,8 @@ export const Register = () => {
       <div className="w-full max-w-sm relative z-10 animate-slide-up">
         <div className="glass rounded-2xl p-8">
           <div className="text-center mb-8">
-            <div className="w-12 h-12 rounded-xl bg-brand-600 mx-auto mb-4 flex items-center justify-center shadow-glow-md">
-              <span className="text-white text-xl font-bold">F</span>
+            <div className="w-14 h-14 rounded-xl bg-white/90 mx-auto mb-4 flex items-center justify-center shadow-glow-md ring-1 ring-white/30 overflow-hidden">
+              <img src={brandLogo} alt="Logo" className="w-10 h-10 object-contain" />
             </div>
             <h1 className="text-xl font-bold text-white">Crear cuenta</h1>
             <p className="text-sm text-slate-500 mt-1">Configuración inicial de administrador</p>

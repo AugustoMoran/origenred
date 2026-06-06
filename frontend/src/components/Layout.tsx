@@ -4,6 +4,8 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { logout } from "../store/authSlice";
 
+const brandLogo = "/brand-logo.png";
+
 const NAV_MAIN = [
 	{
 		to: "/",
@@ -97,7 +99,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 	if (!user) return <>{children}</>;
 
 	const companyName = (import.meta as any).env?.VITE_COMPANY_NAME || "FacturaApp";
-	const companyInitial = companyName[0].toUpperCase();
 
 	return (
 		<div className="flex h-screen bg-[#030712] overflow-hidden text-slate-300">
@@ -114,8 +115,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 					</svg>
 				</button>
 				<div className="flex items-center gap-2">
-					<div className="w-7 h-7 rounded-lg bg-brand-600 flex items-center justify-center text-white font-bold text-xs">
-						{companyInitial}
+					<div className="w-8 h-8 rounded-lg bg-white/90 flex items-center justify-center ring-1 ring-white/30 overflow-hidden">
+						<img src={brandLogo} alt="Logo" className="w-6 h-6 object-contain" />
 					</div>
 					<p className="text-sm font-semibold text-white">{companyName}</p>
 				</div>
@@ -146,8 +147,8 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
 				{/* Logo */}
 				<div className="px-5 py-5 flex items-center gap-3 border-b border-white/[0.04]">
-					<div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center text-white font-bold text-sm shadow-glow-sm flex-shrink-0">
-						{companyInitial}
+					<div className="w-9 h-9 rounded-lg bg-white/90 flex items-center justify-center ring-1 ring-white/25 shadow-glow-sm overflow-hidden flex-shrink-0">
+						<img src={brandLogo} alt="Logo" className="w-7 h-7 object-contain" />
 					</div>
 					<div className="min-w-0">
 						<p className="text-sm font-semibold text-white truncate leading-tight">{companyName}</p>

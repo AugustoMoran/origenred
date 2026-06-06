@@ -38,6 +38,29 @@ const getAfipPointOfSale = () => {
   return Number.isFinite(raw) && raw > 0 ? Math.trunc(raw) : 1;
 };
 
+const getAfipEnqueueTimeoutMs = () => {
+  const raw = Number(process.env.AFIP_ENQUEUE_TIMEOUT_MS || 4000);
+  if (!Number.isFinite(raw) || raw <= 0) return 4000;
+  return Math.trunc(raw);
+};
+
+const enqueueAfipJobWithTimeout = async (afipQueue: any, payload: any) => {
+  const timeoutMs = getAfipEnqueueTimeoutMs();
+
+  await Promise.race([
+    afipQueue.add('afip-billing', payload),
+    new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error(`Timeout al encolar AFIP (${timeoutMs}ms). Verificar REDIS_URL/Redis.`));
+      }, timeoutMs);
+    }),
+  ]);
+};
+
+const isFiscalInvoiceType = (invoiceType?: string): boolean => {
+  return ['A', 'B', 'C'].includes(String(invoiceType || '').toUpperCase());
+};
+
 const mapSaleInvoiceTypeToCreditNoteType = (invoiceType: string): 'NC_A' | 'NC_B' | 'NC_C' => {
   if (invoiceType === 'A') return 'NC_A';
   if (invoiceType === 'B') return 'NC_B';
@@ -84,17 +107,11 @@ export const createCreditNote = async (input: any, userId: string) => {
   const sale = await Sale.findById(input.saleId);
   if (!sale) throw new Error('Venta no encontrada para emitir nota de crédito');
 
-  if (!['A', 'B', 'C'].includes(sale.invoiceType)) {
-    throw new Error('La venta debe ser fiscal (Factura A/B/C) para emitir nota de crédito AFIP');
-  }
-
-  if (sale.billingStatus !== 'COMPLETED' || !sale.cae) {
-    throw new Error('La factura original no está autorizada por AFIP');
-  }
-
-  if (!sale.voucherNumber) {
-    throw new Error('La factura original no tiene número de comprobante AFIP asociado');
-  }
+  const useAfipFlow =
+    isFiscalInvoiceType(sale.invoiceType) &&
+    sale.billingStatus === 'COMPLETED' &&
+    Boolean(sale.cae) &&
+    Boolean(sale.voucherNumber);
 
   const mode: 'TOTAL' | 'PARTIAL' = input.mode === 'PARTIAL' ? 'PARTIAL' : 'TOTAL';
   const affectsStock = Boolean(input.affectsStock);
@@ -142,7 +159,9 @@ export const createCreditNote = async (input: any, userId: string) => {
   const saleCost = getSaleCost(sale);
   const costAmount = affectsStock ? round2(-saleCost * ratio) : 0;
 
-  const invoiceType = mapSaleInvoiceTypeToCreditNoteType(sale.invoiceType);
+  const invoiceType = useAfipFlow
+    ? mapSaleInvoiceTypeToCreditNoteType((sale as any).invoiceType)
+    : 'NC_INTERNAL';
   const docTipo = sale.clientCuit ? 80 : 99;
   const docNro = sale.clientCuit ? Number(String(sale.clientCuit).replace(/-/g, '')) : 0;
   const ptoVta = getAfipPointOfSale();
@@ -170,24 +189,43 @@ export const createCreditNote = async (input: any, userId: string) => {
     total,
     costAmount,
     invoiceType,
-    associatedInvoiceType: sale.invoiceType,
+    associatedInvoiceType: (sale as any).invoiceType || 'NONE',
     associatedInvoiceNumber: sale.invoiceNumber,
-    associatedVoucherNumber: sale.voucherNumber,
-    billingStatus: 'PENDING',
+    associatedVoucherNumber: useAfipFlow ? sale.voucherNumber : undefined,
+    billingStatus: useAfipFlow ? 'PENDING' : 'COMPLETED',
+    processedAt: useAfipFlow ? undefined : new Date(),
     status: 'ACTIVE',
   });
 
-  if (process.env.ENABLE_AFIP_QUEUE === 'true') {
+  if (!useAfipFlow) {
+    if (['REFUNDED', 'CANCELLED'].includes(String((sale as any).status || '').toUpperCase())) {
+      throw new Error('La venta ya fue anulada/revertida');
+    }
+
+    if (affectsStock) {
+      for (const item of (sale as any).items || []) {
+        const productId = (item as any).product?._id || (item as any).product || (item as any).productId;
+        const quantity = Number((item as any).quantity || 0);
+
+        if (productId && quantity > 0) {
+          await Product.findByIdAndUpdate(productId, { $inc: { stock: quantity } });
+        }
+      }
+    }
+
+    (sale as any).status = 'REFUNDED';
+    await (sale as any).save();
+  } else if (process.env.ENABLE_AFIP_QUEUE === 'true') {
     try {
       const { afipQueue } = await import('../../../config/queues');
 
-      await afipQueue.add('afip-billing', {
+      await enqueueAfipJobWithTimeout(afipQueue, {
         entityType: 'credit-note',
         creditNoteId: creditNote._id,
         saleId: sale._id,
         invoiceData: {
           PtoVta: ptoVta,
-          CbteTipo: mapCreditNoteTypeToAfipType(invoiceType),
+          CbteTipo: mapCreditNoteTypeToAfipType(invoiceType as 'NC_A' | 'NC_B' | 'NC_C'),
           DocTipo: docTipo,
           DocNro: docNro,
           ImpTotal: total,
@@ -211,7 +249,7 @@ export const createCreditNote = async (input: any, userId: string) => {
         errorMessage: `No se pudo encolar AFIP: ${error?.message || error}`,
       });
     }
-  } else {
+  } else if (useAfipFlow) {
     await CreditNote.findByIdAndUpdate(creditNote._id, {
       billingStatus: 'FAILED',
       errorMessage: 'Cola AFIP deshabilitada. Habilitar ENABLE_AFIP_QUEUE=true para autorizar la nota de crédito.',
@@ -526,7 +564,7 @@ export const createSale = async (saleData: any, sellerId: string) => {
       try {
         const { afipQueue } = await import('../../../config/queues');
 
-        await afipQueue.add('afip-billing', {
+        await enqueueAfipJobWithTimeout(afipQueue, {
           saleId: newSale._id,
           invoiceData: {
             PtoVta: ptoVta,

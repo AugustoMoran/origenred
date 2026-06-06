@@ -21,10 +21,10 @@ export interface ICreditNote extends Document {
   totalIva: number;
   total: number;
   costAmount: number; // negativo cuando revierte COGS por devolución física
-  invoiceType: 'NC_A' | 'NC_B' | 'NC_C';
-  associatedInvoiceType: 'A' | 'B' | 'C';
+  invoiceType: 'NC_A' | 'NC_B' | 'NC_C' | 'NC_INTERNAL';
+  associatedInvoiceType: 'A' | 'B' | 'C' | 'Ticket' | 'NONE';
   associatedInvoiceNumber: string;
-  associatedVoucherNumber: number;
+  associatedVoucherNumber?: number;
   cae?: string;
   caeExpiration?: Date;
   voucherNumber?: number;
@@ -58,10 +58,10 @@ const CreditNoteSchema: Schema = new Schema({
   totalIva: { type: Number, required: true },
   total: { type: Number, required: true },
   costAmount: { type: Number, required: true, default: 0 },
-  invoiceType: { type: String, enum: ['NC_A', 'NC_B', 'NC_C'], required: true },
-  associatedInvoiceType: { type: String, enum: ['A', 'B', 'C'], required: true },
+  invoiceType: { type: String, enum: ['NC_A', 'NC_B', 'NC_C', 'NC_INTERNAL'], required: true },
+  associatedInvoiceType: { type: String, enum: ['A', 'B', 'C', 'Ticket', 'NONE'], required: true },
   associatedInvoiceNumber: { type: String, required: true },
-  associatedVoucherNumber: { type: Number, required: true },
+  associatedVoucherNumber: { type: Number },
   cae: { type: String },
   caeExpiration: { type: Date },
   voucherNumber: { type: Number },

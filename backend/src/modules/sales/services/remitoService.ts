@@ -1,5 +1,6 @@
 import PDFDocument from 'pdfkit';
 import { ISale } from '../models/Sale';
+import { getBrandLogoBuffer } from './brandLogo';
 
 type RemitoMode = 'logistico' | 'comercial';
 
@@ -26,11 +27,20 @@ export class RemitoService {
         const companyName = process.env.COMPANY_NAME || 'PLATAFORMA DE FACTURACION S.A.';
         const companyAddress = process.env.COMPANY_ADDRESS || '-';
         const companyCuit = process.env.COMPANY_CUIT || '-';
+        const brandLogo = getBrandLogoBuffer();
 
         doc.rect(0, 0, doc.page.width, 90).fill('#111827');
+        if (brandLogo) {
+          try {
+            doc.roundedRect(470, 14, 78, 62, 8).fillAndStroke('#FFFFFF', '#E2E8F0');
+            doc.image(brandLogo, 476, 18, { fit: [66, 54], align: 'center', valign: 'center' });
+          } catch {
+            // Ignorar fallo de imagen sin romper la generación del PDF
+          }
+        }
         doc.fillColor('#F8FAFC').font('Helvetica-Bold').fontSize(23).text(isLogistic ? 'Remito de Entrega' : 'Remito', 40, 30);
-        doc.fillColor('#CBD5E1').font('Helvetica').fontSize(11).text(`N° ${remitoNumber}`, 420, 36, { width: 130, align: 'right' });
-        doc.fillColor('#CBD5E1').fontSize(10).text(new Date(sale.createdAt).toLocaleString('es-AR'), 420, 54, { width: 130, align: 'right' });
+        doc.fillColor('#CBD5E1').font('Helvetica').fontSize(11).text(`N° ${remitoNumber}`, 330, 36, { width: 120, align: 'right' });
+        doc.fillColor('#CBD5E1').fontSize(10).text(new Date(sale.createdAt).toLocaleString('es-AR'), 305, 54, { width: 145, align: 'right' });
 
         let y = 120;
         doc.roundedRect(40, y, 515, 92, 8).fillAndStroke('#FFFFFF', '#E2E8F0');
