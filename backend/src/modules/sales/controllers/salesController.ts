@@ -87,7 +87,16 @@ export const downloadInvoiceController = async (req: Request, res: Response) => 
       return res.status(404).json({ message: 'Venta no encontrada' });
     }
 
-    const pdfBuffer = await InvoiceService.generatePDF(sale);
+    let pdfBuffer: Buffer;
+    try {
+      pdfBuffer = await InvoiceService.generatePDF(sale);
+    } catch (primaryError: any) {
+      console.error('[sales][download-invoice] primary render failed, retrying safe mode', {
+        saleId: req.params.id,
+        message: primaryError?.message,
+      });
+      pdfBuffer = await InvoiceService.generatePDF(sale, { disableLogo: true, disableQr: true });
+    }
     
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename=Factura-${sale.invoiceNumber}.pdf`);
@@ -111,7 +120,17 @@ export const downloadRemitoController = async (req: Request, res: Response) => {
 
     const mode = String(req.query.mode || 'logistico').toLowerCase() === 'comercial' ? 'comercial' : 'logistico';
 
-    const pdfBuffer = await RemitoService.generatePDF(sale, { mode });
+    let pdfBuffer: Buffer;
+    try {
+      pdfBuffer = await RemitoService.generatePDF(sale, { mode });
+    } catch (primaryError: any) {
+      console.error('[sales][download-remito] primary render failed, retrying safe mode', {
+        saleId: req.params.id,
+        mode,
+        message: primaryError?.message,
+      });
+      pdfBuffer = await RemitoService.generatePDF(sale, { mode, disableLogo: true });
+    }
     const remitoNumber = (sale as any).remitoNumber || sale.invoiceNumber || String(sale._id).slice(-8);
 
     res.setHeader('Content-Type', 'application/pdf');

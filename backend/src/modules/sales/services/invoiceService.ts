@@ -3,14 +3,20 @@ import QRCode from 'qrcode';
 import { ISale } from '../models/Sale';
 import { getBrandLogoBuffer } from './brandLogo';
 
+interface InvoicePdfOptions {
+  disableLogo?: boolean;
+  disableQr?: boolean;
+}
+
 export class InvoiceService {
-  static async generatePDF(sale: ISale): Promise<Buffer> {
+  static async generatePDF(sale: ISale, options: InvoicePdfOptions = {}): Promise<Buffer> {
     return new Promise(async (resolve, reject) => {
       try {
         const doc = new PDFDocument({ margin: 40, size: 'A4' });
         const buffers: Buffer[] = [];
 
         doc.on('data', buffers.push.bind(buffers));
+        doc.on('error', (err) => reject(err));
         doc.on('end', () => {
           resolve(Buffer.concat(buffers));
         });
@@ -40,7 +46,7 @@ export class InvoiceService {
         doc.rect(0, 0, doc.page.width, 95).fill('#111827');
         doc.restore();
 
-        const brandLogo = getBrandLogoBuffer();
+        const brandLogo = options.disableLogo ? null : getBrandLogoBuffer();
         if (brandLogo) {
           try {
             doc.roundedRect(470, 14, 78, 62, 8).fillAndStroke('#FFFFFF', '#E2E8F0');
@@ -172,7 +178,7 @@ export class InvoiceService {
         doc.font('Helvetica-Bold').fontSize(14).fillColor('#111827').text(formatMoney(sale.total || 0), 445, totalsY + 76, { width: 96, align: 'right' });
 
         // --- AFIP Compliance (QR) ---
-        if (isFiscal && hasApprovedCae) {
+        if (!options.disableQr && isFiscal && hasApprovedCae) {
           const invoiceNumberPart = (sale.invoiceNumber || '').split('-')[1] || '0';
           const clientDoc = Number((sale.clientCuit || '').replace(/\D/g, '')) || 0;
           const companyDoc = Number((process.env.COMPANY_CUIT || '30123456789').replace(/\D/g, ''));

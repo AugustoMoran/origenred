@@ -6,6 +6,7 @@ type RemitoMode = 'logistico' | 'comercial';
 
 interface RemitoPdfOptions {
   mode?: RemitoMode;
+  disableLogo?: boolean;
 }
 
 export class RemitoService {
@@ -18,6 +19,7 @@ export class RemitoService {
         const isLogistic = mode === 'logistico';
 
         doc.on('data', buffers.push.bind(buffers));
+        doc.on('error', (err) => reject(err));
         doc.on('end', () => resolve(Buffer.concat(buffers)));
 
         const formatMoney = (value: number) =>
@@ -27,7 +29,7 @@ export class RemitoService {
         const companyName = process.env.COMPANY_NAME || 'PLATAFORMA DE FACTURACION S.A.';
         const companyAddress = process.env.COMPANY_ADDRESS || '-';
         const companyCuit = process.env.COMPANY_CUIT || '-';
-        const brandLogo = getBrandLogoBuffer();
+        const brandLogo = options.disableLogo ? null : getBrandLogoBuffer();
 
         doc.rect(0, 0, doc.page.width, 90).fill('#111827');
         if (brandLogo) {
