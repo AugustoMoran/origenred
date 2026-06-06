@@ -7,13 +7,36 @@ import { inventoryApi } from '../services/inventoryApi';
 
 export const SalesHistory = () => {
   const dispatch = useDispatch();
-  const { user } = useSelector((state: any) => state.auth);
+  const { user, token } = useSelector((state: any) => state.auth);
   const isAdmin = Array.isArray(user?.roles) ? user.roles.includes('admin') : user?.role === 'admin';
   const { data: sales = [], isLoading } = useGetSalesQuery();
   const [downloadInvoice] = useLazyGetSaleInvoiceQuery();
   const [downloadRemito] = useLazyGetSaleRemitoQuery();
   const [deleteSale, { isLoading: deletingSale }] = useDeleteSaleMutation();
   const [createCreditNote, { isLoading: creatingCreditNote }] = useCreateCreditNoteMutation();
+  const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+
+  const fallbackBlobDownload = async (path: string) => {
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers.authorization = `Bearer ${token}`;
+    }
+
+    const separator = path.includes('?') ? '&' : '?';
+    const response = await fetch(`${apiBaseUrl}${path}${separator}cb=${Date.now()}`, {
+      method: 'GET',
+      credentials: 'include',
+      headers,
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      const details = await response.text().catch(() => '');
+      throw new Error(details || `HTTP ${response.status}`);
+    }
+
+    return response.blob();
+  };
 
   const getCreditNoteState = (sale: any) => {
     const invoiceType = String(sale?.invoiceType || '').toUpperCase();
@@ -50,7 +73,12 @@ export const SalesHistory = () => {
 
   const handleDownload = async (id: string, invoiceNumber: string) => {
     try {
-      const blob = await downloadInvoice(id).unwrap();
+      let blob: Blob;
+      try {
+        blob = await downloadInvoice(id).unwrap();
+      } catch {
+        blob = await fallbackBlobDownload(`/sales/${id}/download`);
+      }
       const url = window.URL.createObjectURL(blob as Blob);
       const a = document.createElement('a');
       a.href = url;
@@ -84,7 +112,12 @@ export const SalesHistory = () => {
     mode: 'logistico' | 'comercial' = 'logistico'
   ) => {
     try {
-      const blob = await downloadRemito({ id, mode }).unwrap();
+      let blob: Blob;
+      try {
+        blob = await downloadRemito({ id, mode }).unwrap();
+      } catch {
+        blob = await fallbackBlobDownload(`/sales/${id}/remito?mode=${mode}`);
+      }
       const url = window.URL.createObjectURL(blob as Blob);
       const a = document.createElement('a');
       a.href = url;
