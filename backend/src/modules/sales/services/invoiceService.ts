@@ -81,11 +81,15 @@ export class InvoiceService {
 
         let y = 120;
 
-        // Empresa desde variables de entorno
+        const populatedBranch =
+          sale.branch && typeof sale.branch === 'object' ? (sale.branch as any) : null;
+        const branchAddress = (populatedBranch?.address || '').trim();
+
+        // Empresa: mail fijo solicitado, CUIT desde env, dirección real de la sucursal de la venta
         const companyName = process.env.COMPANY_NAME || 'PLATAFORMA DE FACTURACION S.A.';
-        const companyCuit = process.env.COMPANY_CUIT || '30-12345678-9';
-        const companyAddress = process.env.COMPANY_ADDRESS || 'Av. Siempre Viva 742';
-        const companyEmail = process.env.COMPANY_EMAIL || 'venera@plataforma.com';
+        const companyCuit = process.env.COMPANY_CUIT || '-';
+        const companyAddress = branchAddress || process.env.COMPANY_ADDRESS || '-';
+        const companyEmail = 'Ososoundinstrumentosmusicales@gmail.com';
 
         // Company box
         doc.roundedRect(40, y, 255, 118, 10).fillAndStroke('#F8FAFC', '#E2E8F0');

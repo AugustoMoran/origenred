@@ -622,6 +622,6 @@ export const createSale = async (saleData: any, sellerId: string) => {
 export const getSaleById = async (id: string) => {
   return await Sale.findById(id)
     .populate('seller', 'email')
-    .populate('branch', 'name')
+    .populate('branch', 'name address')
     .populate('items.product', 'name');
 };
