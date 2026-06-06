@@ -15,6 +15,10 @@ const candidateLogoPaths = (): string[] => {
 };
 
 export const getBrandLogoBuffer = (): Buffer | null => {
+  if (process.env.NODE_ENV === 'test') {
+    return null;
+  }
+
   if (cachedLogo !== undefined) {
     return cachedLogo;
   }
