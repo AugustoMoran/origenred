@@ -41,8 +41,16 @@ export class RemitoService {
           }
         }
         doc.fillColor('#F8FAFC').font('Helvetica-Bold').fontSize(23).text(isLogistic ? 'Remito de Entrega' : 'Remito', 40, 30);
-        doc.fillColor('#CBD5E1').font('Helvetica').fontSize(11).text(`N° ${remitoNumber}`, 330, 36, { width: 120, align: 'right' });
-        doc.fillColor('#CBD5E1').fontSize(10).text(new Date(sale.createdAt).toLocaleString('es-AR'), 305, 54, { width: 145, align: 'right' });
+        doc.fillColor('#CBD5E1').font('Helvetica').fontSize(10).text(`N° ${remitoNumber}`, 250, 34, {
+          width: 200,
+          align: 'right',
+          lineBreak: false,
+        });
+        doc.fillColor('#CBD5E1').fontSize(9).text(new Date(sale.createdAt).toLocaleString('es-AR'), 250, 56, {
+          width: 200,
+          align: 'right',
+          lineBreak: false,
+        });
 
         let y = 120;
         doc.roundedRect(40, y, 515, 92, 8).fillAndStroke('#FFFFFF', '#E2E8F0');
