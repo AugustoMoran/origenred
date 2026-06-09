@@ -306,7 +306,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     status: 'COMPLETED',
     createdAt: { $gte: start, $lte: end },
   })
-    .populate('seller', 'name email')
+    .populate('seller', 'name email roles')
     .populate('branch', 'name')
     .sort({ createdAt: -1 });
 
@@ -319,7 +319,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
       path: 'sale',
       select: 'seller sellerCommissionRate branch',
       populate: [
-        { path: 'seller', select: 'name email' },
+        { path: 'seller', select: 'name email roles' },
         { path: 'branch', select: 'name' },
       ],
     })
@@ -420,6 +420,11 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     return bySellerBranchMap[key];
   };
 
+  const isAdminSeller = (seller: any) => {
+    const roles = seller && typeof seller === 'object' ? (seller.roles || []) : [];
+    return Array.isArray(roles) && roles.includes('admin');
+  };
+
   for (const sale of sales) {
     const isFiscalSale = sale.invoiceType !== 'NONE';
     const revenue = Number(sale.total || 0);
@@ -458,7 +463,9 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     totalNeto += neto;
     totalCost += cost;
     totalGain += gain;
-    totalCommission += commission;
+    if (!isAdminSeller((sale as any).seller)) {
+      totalCommission += commission;
+    }
 
     const paymentMethod = sale.paymentMethod || 'otro';
     if (!byPaymentMethod[paymentMethod]) {
@@ -491,15 +498,17 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     branchBucket.cost += cost;
     branchBucket.gain += gain;
 
-    const sellerBucket = ensureSellerBucket((sale as any).seller);
-    sellerBucket.sales += 1;
-    sellerBucket.revenue += revenue;
-    sellerBucket.commission += commission;
+    if (!isAdminSeller((sale as any).seller)) {
+      const sellerBucket = ensureSellerBucket((sale as any).seller);
+      sellerBucket.sales += 1;
+      sellerBucket.revenue += revenue;
+      sellerBucket.commission += commission;
 
-    const sellerBranchBucket = ensureSellerBranchBucket((sale as any).seller, (sale as any).branch);
-    sellerBranchBucket.sales += 1;
-    sellerBranchBucket.revenue += revenue;
-    sellerBranchBucket.commission += commission;
+      const sellerBranchBucket = ensureSellerBranchBucket((sale as any).seller, (sale as any).branch);
+      sellerBranchBucket.sales += 1;
+      sellerBranchBucket.revenue += revenue;
+      sellerBranchBucket.commission += commission;
+    }
   }
 
   for (const note of creditNotes) {
@@ -517,7 +526,9 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     totalNeto -= neto;
     totalCost += cost;
     totalGain -= gain;
-    totalCommission -= noteCommission;
+    if (!isAdminSeller(originalSale?.seller)) {
+      totalCommission -= noteCommission;
+    }
 
     const paymentMethod = note.paymentMethod || 'otro';
     if (!byPaymentMethod[paymentMethod]) {
@@ -542,13 +553,15 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     branchBucket.cost += cost;
     branchBucket.gain -= gain;
 
-    const sellerBucket = ensureSellerBucket(originalSale?.seller);
-    sellerBucket.revenue -= revenue;
-    sellerBucket.commission -= noteCommission;
+    if (!isAdminSeller(originalSale?.seller)) {
+      const sellerBucket = ensureSellerBucket(originalSale?.seller);
+      sellerBucket.revenue -= revenue;
+      sellerBucket.commission -= noteCommission;
 
-    const sellerBranchBucket = ensureSellerBranchBucket(originalSale?.seller, originalSale?.branch || (note as any).branch);
-    sellerBranchBucket.revenue -= revenue;
-    sellerBranchBucket.commission -= noteCommission;
+      const sellerBranchBucket = ensureSellerBranchBucket(originalSale?.seller, originalSale?.branch || (note as any).branch);
+      sellerBranchBucket.revenue -= revenue;
+      sellerBranchBucket.commission -= noteCommission;
+    }
   }
 
   const gainWithoutIva = totalGain;
