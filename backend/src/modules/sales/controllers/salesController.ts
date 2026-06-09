@@ -145,7 +145,8 @@ export const createSaleController = async (req: Request, res: Response) => {
   try {
     // El userID viene del middleware de autenticación
     const sellerId = (req as any).user.id;
-    const sale = await salesService.createSale(req.body, sellerId);
+    const requesterRoles = (req as any).user.roles || [];
+    const sale = await salesService.createSale(req.body, sellerId, requesterRoles);
     res.status(201).json(sale);
   } catch (error: any) {
     res.status(400).json({ message: error.message });

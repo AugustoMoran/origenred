@@ -52,6 +52,22 @@ export const authApi = createApi({
       }),
       invalidatesTags: ['Users' as any],
     }),
+    updateCommission: builder.mutation({
+      query: (data) => ({
+        url: 'users/commission',
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: ['Users' as any],
+    }),
+    updateBranch: builder.mutation({
+      query: (data) => ({
+        url: 'users/branch',
+        method: 'PATCH',
+        body: data,
+      }),
+      invalidatesTags: ['Users' as any],
+    }),
   }),
 });
 
@@ -61,5 +77,7 @@ export const {
   useLogoutMutation,
   useRefreshMutation,
   useGetUsersQuery,
-  useUpdatePermissionsMutation
+  useUpdatePermissionsMutation,
+  useUpdateCommissionMutation,
+  useUpdateBranchMutation,
 } = authApi;

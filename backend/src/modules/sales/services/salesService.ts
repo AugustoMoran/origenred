@@ -306,6 +306,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     status: 'COMPLETED',
     createdAt: { $gte: start, $lte: end },
   })
+    .populate('seller', 'name email')
     .populate('branch', 'name')
     .sort({ createdAt: -1 });
 
@@ -314,6 +315,14 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     billingStatus: 'COMPLETED',
     createdAt: { $gte: start, $lte: end },
   })
+    .populate({
+      path: 'sale',
+      select: 'seller sellerCommissionRate branch',
+      populate: [
+        { path: 'seller', select: 'name email' },
+        { path: 'branch', select: 'name' },
+      ],
+    })
     .populate('branch', 'name')
     .sort({ createdAt: -1 });
 
@@ -322,6 +331,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
   let totalCost = 0;
   let totalNeto = 0;
   let totalGain = 0;
+  let totalCommission = 0;
 
   const productCostCache = new Map<string, number>();
 
@@ -329,6 +339,8 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
   const byInvoiceType: Record<string, { count: number; revenue: number }> = {};
   const byDayMap: Record<string, { date: string; sales: number; revenue: number; iva: number; cost: number; gain: number }> = {};
   const byBranchMap: Record<string, { branchId: string; branchName: string; sales: number; revenue: number; iva: number; cost: number; gain: number }> = {};
+  const bySellerMap: Record<string, { sellerId: string; sellerName: string; sales: number; revenue: number; commission: number }> = {};
+  const bySellerBranchMap: Record<string, { sellerId: string; sellerName: string; branchId: string; branchName: string; sales: number; revenue: number; commission: number }> = {};
 
   const resolveBranchMeta = (branch: any) => {
     if (branch && typeof branch === 'object') {
@@ -339,6 +351,17 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
 
     const branchId = branch ? String(branch) : 'sin-sucursal';
     return { branchId, branchName: 'Sin sucursal' };
+  };
+
+  const resolveSellerMeta = (seller: any) => {
+    if (seller && typeof seller === 'object') {
+      const sellerId = String(seller._id || seller.id || 'sin-vendedor');
+      const sellerName = String(seller.name || seller.email || 'Sin vendedor');
+      return { sellerId, sellerName };
+    }
+
+    const sellerId = seller ? String(seller) : 'sin-vendedor';
+    return { sellerId, sellerName: 'Sin vendedor' };
   };
 
   const ensureBranchBucket = (branch: any) => {
@@ -358,6 +381,43 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     }
 
     return byBranchMap[key];
+  };
+
+  const ensureSellerBucket = (seller: any) => {
+    const { sellerId, sellerName } = resolveSellerMeta(seller);
+    const key = `${sellerId}::${sellerName}`;
+
+    if (!bySellerMap[key]) {
+      bySellerMap[key] = {
+        sellerId,
+        sellerName,
+        sales: 0,
+        revenue: 0,
+        commission: 0,
+      };
+    }
+
+    return bySellerMap[key];
+  };
+
+  const ensureSellerBranchBucket = (seller: any, branch: any) => {
+    const { sellerId, sellerName } = resolveSellerMeta(seller);
+    const { branchId, branchName } = resolveBranchMeta(branch);
+    const key = `${sellerId}::${sellerName}::${branchId}::${branchName}`;
+
+    if (!bySellerBranchMap[key]) {
+      bySellerBranchMap[key] = {
+        sellerId,
+        sellerName,
+        branchId,
+        branchName,
+        sales: 0,
+        revenue: 0,
+        commission: 0,
+      };
+    }
+
+    return bySellerBranchMap[key];
   };
 
   for (const sale of sales) {
@@ -390,12 +450,15 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     const gain = isFiscalSale
       ? revenue - iva - cost
       : revenue - cost;
+    const commissionRate = Number((sale as any).sellerCommissionRate || 0);
+    const commission = revenue * (commissionRate / 100);
 
     totalRevenue += revenue;
     totalIva += iva;
     totalNeto += neto;
     totalCost += cost;
     totalGain += gain;
+    totalCommission += commission;
 
     const paymentMethod = sale.paymentMethod || 'otro';
     if (!byPaymentMethod[paymentMethod]) {
@@ -427,6 +490,16 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     branchBucket.iva += iva;
     branchBucket.cost += cost;
     branchBucket.gain += gain;
+
+    const sellerBucket = ensureSellerBucket((sale as any).seller);
+    sellerBucket.sales += 1;
+    sellerBucket.revenue += revenue;
+    sellerBucket.commission += commission;
+
+    const sellerBranchBucket = ensureSellerBranchBucket((sale as any).seller, (sale as any).branch);
+    sellerBranchBucket.sales += 1;
+    sellerBranchBucket.revenue += revenue;
+    sellerBranchBucket.commission += commission;
   }
 
   for (const note of creditNotes) {
@@ -435,12 +508,16 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     const neto = Number(note.totalNeto || 0);
     const cost = Number(note.costAmount || 0);
     const gain = neto + cost;
+    const originalSale = (note as any).sale;
+    const noteCommissionRate = Number(originalSale?.sellerCommissionRate || 0);
+    const noteCommission = revenue * (noteCommissionRate / 100);
 
     totalRevenue -= revenue;
     totalIva -= iva;
     totalNeto -= neto;
     totalCost += cost;
     totalGain -= gain;
+    totalCommission -= noteCommission;
 
     const paymentMethod = note.paymentMethod || 'otro';
     if (!byPaymentMethod[paymentMethod]) {
@@ -464,6 +541,14 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     branchBucket.iva -= iva;
     branchBucket.cost += cost;
     branchBucket.gain -= gain;
+
+    const sellerBucket = ensureSellerBucket(originalSale?.seller);
+    sellerBucket.revenue -= revenue;
+    sellerBucket.commission -= noteCommission;
+
+    const sellerBranchBucket = ensureSellerBranchBucket(originalSale?.seller, originalSale?.branch || (note as any).branch);
+    sellerBranchBucket.revenue -= revenue;
+    sellerBranchBucket.commission -= noteCommission;
   }
 
   const gainWithoutIva = totalGain;
@@ -480,6 +565,20 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
       gain: Number(row.gain.toFixed(2)),
     }));
 
+  const bySeller = Object.values(bySellerMap)
+    .sort((a, b) => b.commission - a.commission)
+    .map((row) => ({
+      ...row,
+      effectiveRate: row.revenue !== 0 ? (row.commission / row.revenue) * 100 : 0,
+    }));
+
+  const bySellerBranch = Object.values(bySellerBranchMap)
+    .sort((a, b) => b.commission - a.commission)
+    .map((row) => ({
+      ...row,
+      effectiveRate: row.revenue !== 0 ? (row.commission / row.revenue) * 100 : 0,
+    }));
+
   return {
     range: {
       from: start,
@@ -492,6 +591,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
       totalIva: Number(totalIva.toFixed(2)),
       totalNeto: Number(totalNeto.toFixed(2)),
       totalGain: Number(totalGain.toFixed(2)),
+      totalCommission,
       gainWithoutIva: Number(gainWithoutIva.toFixed(2)),
       marginPercent: Number(marginPercent.toFixed(2)),
     },
@@ -506,6 +606,8 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
       revenue: Number(val.revenue.toFixed(2)),
     })),
     byBranch,
+    bySeller,
+    bySellerBranch,
     byDay: byDay.map((d) => ({
       ...d,
       revenue: Number(d.revenue.toFixed(2)),
@@ -516,7 +618,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
   };
 };
 
-export const createSale = async (saleData: any, sellerId: string) => {
+export const createSale = async (saleData: any, sellerId: string, requesterRoles: string[] = []) => {
   const runCreateSale = async (useTransaction: boolean) => {
     const session = useTransaction ? await mongoose.startSession() : null;
 
@@ -538,8 +640,23 @@ export const createSale = async (saleData: any, sellerId: string) => {
       : await User.findById(sellerId);
     if (!seller) throw new Error('Vendedor no encontrado');
 
-    const branchId = saleData.branchId || seller.branch;
-    if (!branchId) throw new Error('Se requiere una sucursal para la venta.');
+    const isAdminRequester = requesterRoles.includes('admin');
+    let branchId: any;
+
+    if (isAdminRequester) {
+      branchId = saleData.branchId || seller.branch;
+      if (!branchId) throw new Error('Se requiere una sucursal para la venta.');
+    } else {
+      if (!seller.branch) {
+        throw new Error('No tenés sucursal asignada. Solicitá al administrador que te asigne una sucursal.');
+      }
+
+      if (saleData.branchId && String(saleData.branchId) !== String(seller.branch)) {
+        throw new Error('No podés registrar ventas en una sucursal distinta a la asignada.');
+      }
+
+      branchId = seller.branch;
+    }
 
     for (const item of saleData.items) {
       const productId = item.id || item.product;

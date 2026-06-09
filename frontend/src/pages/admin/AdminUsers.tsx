@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PERMISSION_LABELS } from '../../constants/permissions';
-import { useGetUsersQuery, useRegisterMutation, useUpdatePermissionsMutation } from '../../services/authApi';
+import { useGetUsersQuery, useRegisterMutation, useUpdateBranchMutation, useUpdateCommissionMutation, useUpdatePermissionsMutation } from '../../services/authApi';
 import { useGetBranchesQuery } from '../../services/branchApi';
 
 interface User {
@@ -9,6 +9,7 @@ interface User {
   roles: string[];
   permissions: Record<string, boolean>;
   branch?: string;
+  commissionRate?: number;
 }
 
 export const AdminUsers: React.FC = () => {
@@ -16,14 +17,17 @@ export const AdminUsers: React.FC = () => {
   const { data: branches = [] } = useGetBranchesQuery({});
   const [registerUser, { isLoading: creatingUser }] = useRegisterMutation();
   const [updatePermissions, { isLoading: updatingPerms }] = useUpdatePermissionsMutation();
+  const [updateCommission, { isLoading: updatingCommission }] = useUpdateCommissionMutation();
+  const [updateBranch, { isLoading: updatingBranch }] = useUpdateBranchMutation();
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [branch, setBranch] = useState('');
+  const [commissionRate, setCommissionRate] = useState('0');
   const [selectedPermissions, setSelectedPermissions] = useState<Record<string, boolean>>({});
 
-  const loading = creatingUser || updatingPerms;
+  const loading = creatingUser || updatingPerms || updatingCommission || updatingBranch;
 
   const handleToggle = (perm: string) => {
     setSelectedPermissions(prev => ({ ...prev, [perm]: !prev[perm] }));
@@ -31,8 +35,15 @@ export const AdminUsers: React.FC = () => {
 
   const handleCreateUser = async () => {
     try {
-      await registerUser({ email, password, roles: ['vendedor'], permissions: selectedPermissions, branch }).unwrap();
-      setEmail(''); setPassword(''); setBranch(''); setSelectedPermissions({});
+      await registerUser({
+        email,
+        password,
+        roles: ['vendedor'],
+        permissions: selectedPermissions,
+        branch,
+        commissionRate: Number(commissionRate || 0),
+      }).unwrap();
+      setEmail(''); setPassword(''); setBranch(''); setCommissionRate('0'); setSelectedPermissions({});
     } catch (err) { console.error('Error creating user', err); }
   };
 
@@ -40,6 +51,8 @@ export const AdminUsers: React.FC = () => {
     if (!selectedUser) return;
     try {
       await updatePermissions({ userId: selectedUser._id, permissions: selectedPermissions }).unwrap();
+      await updateCommission({ userId: selectedUser._id, commissionRate: Number(commissionRate || 0) }).unwrap();
+      await updateBranch({ userId: selectedUser._id, branchId: branch || null }).unwrap();
       setSelectedUser(null); setSelectedPermissions({});
     } catch (err) { console.error('Error updating permissions', err); }
   };
@@ -47,6 +60,13 @@ export const AdminUsers: React.FC = () => {
   const selectUserToEdit = (user: User) => {
     setSelectedUser(user);
     setSelectedPermissions(user.permissions || {});
+    setCommissionRate(String(user.commissionRate ?? 0));
+    setBranch(String(user.branch || ''));
+  };
+
+  const getBranchName = (branchId?: string) => {
+    if (!branchId) return 'Sin sucursal';
+    return branches.find((b: any) => String(b._id) === String(branchId))?.name || 'Sucursal no encontrada';
   };
 
   return (
@@ -76,21 +96,40 @@ export const AdminUsers: React.FC = () => {
                   <input type="password" placeholder="••••••••" className="input"
                     value={password} onChange={e => setPassword(e.target.value)} />
                 </div>
-                <div>
-                  <label className="section-heading">Sucursal Asignada</label>
-                  <select 
-                    className="input py-2.5"
-                    value={branch}
-                    onChange={e => setBranch(e.target.value)}
-                  >
-                    <option value="">Seleccionar sucursal...</option>
-                    {branches.map((b: any) => (
-                      <option key={b._id} value={b._id}>{b.name}</option>
-                    ))}
-                  </select>
-                </div>
               </>
             )}
+
+            <div>
+              <label className="section-heading">Sucursal Asignada</label>
+              <select
+                className="input py-2.5"
+                value={branch}
+                onChange={e => setBranch(e.target.value)}
+              >
+                <option value="">Sin sucursal</option>
+                {branches.map((b: any) => (
+                  <option key={b._id} value={b._id}>{b.name}</option>
+                ))}
+              </select>
+              {!branch && (
+                <p className="text-[11px] text-amber-300 mt-1">
+                  ⚠️ Este usuario no podrá cargar ventas hasta que se le asigne una sucursal.
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className="section-heading">Comisión (%)</label>
+              <input
+                type="number"
+                step="0.000001"
+                min="0"
+                placeholder="0"
+                className="input"
+                value={commissionRate}
+                onChange={e => setCommissionRate(e.target.value)}
+              />
+            </div>
 
             <div>
               <label className="section-heading mb-3 block">Permisos</label>
@@ -143,6 +182,8 @@ export const AdminUsers: React.FC = () => {
                 <tr>
                   <th>Usuario</th>
                   <th>Rol</th>
+                  <th>Sucursal</th>
+                  <th className="text-right">Comisión</th>
                   <th className="text-center">Acciones</th>
                 </tr>
               </thead>
@@ -158,6 +199,13 @@ export const AdminUsers: React.FC = () => {
                         {u.roles[0]}
                       </span>
                     </td>
+                    <td>
+                      <div className="text-sm text-slate-200">{getBranchName(u.branch)}</div>
+                      {!u.roles.includes('admin') && !u.branch && (
+                        <div className="text-[11px] text-amber-300 mt-0.5">Asignar sucursal</div>
+                      )}
+                    </td>
+                    <td className="text-right text-brand-300 font-semibold">{Number(u.commissionRate || 0)}%</td>
                     <td className="text-center">
                       {!u.roles.includes('admin') && (
                         <button onClick={() => selectUserToEdit(u as any)} className="btn-icon mx-auto" title="Editar permisos">
@@ -171,7 +219,7 @@ export const AdminUsers: React.FC = () => {
                 ))}
                 {(loadingUsers || (Array.isArray(users) && users.length === 0)) && (
                   <tr>
-                    <td colSpan={3} className="text-center text-slate-600 py-10 text-sm">
+                    <td colSpan={5} className="text-center text-slate-600 py-10 text-sm">
                       {loadingUsers ? 'Cargando usuarios...' : 'Sin usuarios registrados'}
                     </td>
                   </tr>

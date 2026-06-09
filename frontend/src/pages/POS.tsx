@@ -87,13 +87,13 @@ export const POS = () => {
   const [selectedBranchId, setSelectedBranchId] = useState(user?.branch || '');
 
   const isAdmin = user?.roles?.includes('admin') || user?.role === 'admin';
-  const mustPickBranch = isAdmin || !user?.branch;
+  const hasAssignedBranch = Boolean(user?.branch);
 
   useEffect(() => {
-    if (mustPickBranch && !selectedBranchId && branches.length > 0) {
+    if (isAdmin && !selectedBranchId && branches.length > 0) {
       setSelectedBranchId(branches[0]._id);
     }
-  }, [mustPickBranch, selectedBranchId, branches]);
+  }, [isAdmin, selectedBranchId, branches]);
 
   const normalizedSearch = search.trim().toLowerCase();
 
@@ -183,25 +183,34 @@ export const POS = () => {
 
   const handleFinishSale = async () => {
     if (cart.length === 0) return;
-    
-    const branchId = selectedBranchId || user?.branch;
-    if (!branchId) {
+
+    if (isAdmin && !selectedBranchId) {
       alert('Debe seleccionar una sucursal para realizar la venta.');
+      return;
+    }
+
+    if (!isAdmin && !hasAssignedBranch) {
+      alert('No tenés sucursal asignada. Solicitá al administrador que te asigne una sucursal.');
       return;
     }
 
     try {
       const invoiceType = billingMode === 'nofiscal' ? 'NONE' : (clientData.cuit ? 'A' : 'B');
 
-      const result: any = await createSale({
+      const salePayload: any = {
         items: cart,
         paymentMethod,
-        branchId,
         invoiceType,
         clientName: clientData.name,
         clientCuit: clientData.cuit,
         clientAddress: clientData.address,
-      }).unwrap();
+      };
+
+      if (isAdmin) {
+        salePayload.branchId = selectedBranchId;
+      }
+
+      const result: any = await createSale(salePayload).unwrap();
 
       if (invoiceType !== 'NONE' && window.confirm('¡Venta registrada! ¿Descargar comprobante?')) {
         await handleDownload(result._id, result.invoiceNumber);
@@ -236,7 +245,7 @@ export const POS = () => {
           {/* Sucursal Selector */}
           <div className="mt-4">
              <label className="text-[10px] uppercase tracking-wider text-slate-500 font-bold mb-1.5 block">Sucursal</label>
-             {mustPickBranch ? (
+             {isAdmin ? (
                <select 
                    className="input py-2 text-sm"
                  value={selectedBranchId}
@@ -248,12 +257,19 @@ export const POS = () => {
                  ))}
                </select>
              ) : (
-               <div className="badge-gray w-full justify-start py-2 px-3 text-sm">
-                 <svg className="w-3.5 h-3.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                   <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
-                 </svg>
-                 {branches?.find((b: any) => b._id === user?.branch)?.name || 'Sucursal Asignada'}
-               </div>
+               <>
+                 <div className="badge-gray w-full justify-start py-2 px-3 text-sm">
+                   <svg className="w-3.5 h-3.5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                     <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
+                   </svg>
+                   {branches?.find((b: any) => b._id === user?.branch)?.name || 'Sin sucursal asignada'}
+                 </div>
+                 {!hasAssignedBranch && (
+                   <div className="mt-2 text-[11px] text-amber-300">
+                     ⚠️ No tenés sucursal asignada. Pedile al administrador que te asigne una para poder vender.
+                   </div>
+                 )}
+               </>
              )}
           </div>
 

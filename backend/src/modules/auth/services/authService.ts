@@ -16,7 +16,8 @@ export async function register(
   roles: string[] = ['vendedor'],
   permissions: Record<string, boolean> = {},
   name?: string,
-  branch?: string
+  branch?: string,
+  commissionRate?: number
 ) {
   const normalizedEmail = normalizeEmail(email);
   const hash = await bcrypt.hash(password, 10);
@@ -32,6 +33,7 @@ export async function register(
     roles: finalRoles,
     permissions,
     branch: branch || undefined,
+    commissionRate: Number.isFinite(Number(commissionRate)) ? Number(commissionRate) : 0,
   });
   return user;
 }

@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import { register, validateUser, tokenService } from '../services/authService';
 import { User } from '../models/User';
+import Branch from '../../branches/models/Branch';
 import { io } from '../../../app';
 
 const buildRefreshCookieOptions = () => {
@@ -14,11 +15,51 @@ const buildRefreshCookieOptions = () => {
 };
 
 export async function registerController(req: Request, res: Response) {
-  const { email, password, roles, permissions, name, branch } = req.body;
+  const { email, password, roles, permissions, name, branch, commissionRate } = req.body;
   
   // Note: authRoutes will protect this with 'admin' authorization or check for first user
-  const user = await register(email, password, roles, permissions, name, branch);
-  res.json({ id: user.id, name: user.name, email: user.email, roles: user.roles, permissions: user.permissions, branch: user.branch });
+  const user = await register(email, password, roles, permissions, name, branch, commissionRate);
+  res.json({ id: user.id, name: user.name, email: user.email, roles: user.roles, permissions: user.permissions, branch: user.branch, commissionRate: user.commissionRate });
+}
+
+export async function updateCommissionController(req: Request, res: Response) {
+  const { userId, commissionRate } = req.body;
+
+  const parsedRate = Number(commissionRate);
+  if (!Number.isFinite(parsedRate) || parsedRate < 0) {
+    return res.status(400).json({ message: 'commissionRate inválido' });
+  }
+
+  const user = await User.findById(userId);
+  if (!user) return res.status(404).json({ message: 'User not found' });
+
+  user.commissionRate = parsedRate;
+  await user.save();
+
+  res.json({ message: 'Commission updated successfully', commissionRate: user.commissionRate });
+}
+
+export async function updateBranchController(req: Request, res: Response) {
+  const { userId, branchId } = req.body;
+
+  const user = await User.findById(userId);
+  if (!user) return res.status(404).json({ message: 'User not found' });
+
+  if (!branchId) {
+    user.branch = undefined as any;
+    await user.save();
+    return res.json({ message: 'Branch unassigned successfully', branch: null });
+  }
+
+  const branch = await Branch.findOne({ _id: branchId, isActive: true });
+  if (!branch) {
+    return res.status(400).json({ message: 'Sucursal inválida o inactiva' });
+  }
+
+  user.branch = branch._id as any;
+  await user.save();
+
+  return res.json({ message: 'Branch updated successfully', branch: branch._id });
 }
 
 export async function updatePermissionsController(req: Request, res: Response) {

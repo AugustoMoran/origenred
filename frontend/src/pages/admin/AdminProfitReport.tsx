@@ -3,6 +3,7 @@ import { useGetProfitReportQuery } from '../../services/salesApi';
 
 const toInputDate = (date: Date) => date.toISOString().split('T')[0];
 const money = (value: number) => `$${(value || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+const exact = (value: number) => `${value ?? 0}`;
 
 export const AdminProfitReport: React.FC = () => {
   const today = useMemo(() => toInputDate(new Date()), []);
@@ -20,6 +21,7 @@ export const AdminProfitReport: React.FC = () => {
     totalIva: 0,
     totalNeto: 0,
     totalGain: 0,
+    totalCommission: 0,
     gainWithoutIva: 0,
     marginPercent: 0,
   };
@@ -96,7 +98,7 @@ export const AdminProfitReport: React.FC = () => {
         <div className="badge-red p-4">No se pudo cargar el informe de ganancias</div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4">
             <div className="card p-4">
               <p className="text-xs text-slate-500 mb-1">Ventas</p>
               <p className="text-2xl font-bold text-white">{summary.salesCount}</p>
@@ -116,6 +118,10 @@ export const AdminProfitReport: React.FC = () => {
             <div className="card p-4">
               <p className="text-xs text-slate-500 mb-1">Ganancia final</p>
               <p className="text-2xl font-bold text-brand-400">{money(summary.totalGain)}</p>
+            </div>
+            <div className="card p-4">
+              <p className="text-xs text-slate-500 mb-1">Liquidación vendedores</p>
+              <p className="text-2xl font-bold text-fuchsia-300">${exact(summary.totalCommission)}</p>
             </div>
           </div>
 
@@ -227,6 +233,80 @@ export const AdminProfitReport: React.FC = () => {
                         <td className="text-right text-rose-300 font-semibold">{money(row.cost)}</td>
                         <td className="text-right text-amber-300 font-semibold">{money(row.iva)}</td>
                         <td className="text-right text-brand-300 font-bold">{money(row.gain)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="card overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/[0.05]">
+              <h2 className="text-sm font-semibold text-white">Liquidación por vendedor</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="data-table min-w-[920px]">
+                <thead>
+                  <tr>
+                    <th>Vendedor</th>
+                    <th className="text-right">Ventas</th>
+                    <th className="text-right">Total bruto</th>
+                    <th className="text-right">% efectivo</th>
+                    <th className="text-right">Liquidación</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(data?.bySeller || []).length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="text-center text-slate-600 py-10 text-sm">Sin datos de liquidación para el período seleccionado</td>
+                    </tr>
+                  ) : (
+                    data.bySeller.map((row: any) => (
+                      <tr key={`${row.sellerId}-${row.sellerName}`}>
+                        <td className="text-white text-sm">{row.sellerName || 'Sin vendedor'}</td>
+                        <td className="text-right text-white">{row.sales}</td>
+                        <td className="text-right text-emerald-300 font-semibold">{money(row.revenue)}</td>
+                        <td className="text-right text-slate-200">{exact(row.effectiveRate)}%</td>
+                        <td className="text-right text-fuchsia-300 font-bold">${exact(row.commission)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <div className="card overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/[0.05]">
+              <h2 className="text-sm font-semibold text-white">Liquidación vendedor por sucursal</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="data-table min-w-[980px]">
+                <thead>
+                  <tr>
+                    <th>Vendedor</th>
+                    <th>Sucursal</th>
+                    <th className="text-right">Ventas</th>
+                    <th className="text-right">Total bruto</th>
+                    <th className="text-right">% efectivo</th>
+                    <th className="text-right">Liquidación</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(data?.bySellerBranch || []).length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center text-slate-600 py-10 text-sm">Sin datos vendedor/sucursal para el período seleccionado</td>
+                    </tr>
+                  ) : (
+                    data.bySellerBranch.map((row: any) => (
+                      <tr key={`${row.sellerId}-${row.branchId}-${row.sellerName}-${row.branchName}`}>
+                        <td className="text-white text-sm">{row.sellerName || 'Sin vendedor'}</td>
+                        <td className="text-slate-200 text-sm">{row.branchName || 'Sin sucursal'}</td>
+                        <td className="text-right text-white">{row.sales}</td>
+                        <td className="text-right text-emerald-300 font-semibold">{money(row.revenue)}</td>
+                        <td className="text-right text-slate-200">{exact(row.effectiveRate)}%</td>
+                        <td className="text-right text-fuchsia-300 font-bold">${exact(row.commission)}</td>
                       </tr>
                     ))
                   )}
