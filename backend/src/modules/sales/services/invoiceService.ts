@@ -25,6 +25,32 @@ export class InvoiceService {
         const displayNumber = sale.invoiceNumber || `NO-FISCAL-${String(sale._id).slice(-8).toUpperCase()}`;
         const hasApprovedCae = !!sale.cae && sale.billingStatus === 'COMPLETED';
 
+        // Visual-only fallback for PDFs: if stored IVA is 0 but items have ivaRate,
+        // show the IVA as if the sale were tax-discriminated, without changing persisted values.
+        const derivedIvaFromItems = Math.round(
+          ((sale.items || []).reduce((acc, item) => {
+            const qty = Number(item?.quantity || 0);
+            const unitPrice = Number(item?.price || 0);
+            const ivaRate = Number(item?.ivaRate || 0);
+            if (qty <= 0 || unitPrice <= 0 || ivaRate <= 0) return acc;
+
+            const subtotal = qty * unitPrice;
+            const divisor = 1 + ivaRate / 100;
+            if (divisor <= 0) return acc;
+
+            const net = subtotal / divisor;
+            const iva = subtotal - net;
+            return acc + iva;
+          }, 0) * 100)
+        ) / 100;
+
+        const storedIva = Number(sale.totalIva || 0);
+        const shouldUseVisualIvaFallback = storedIva === 0 && derivedIvaFromItems > 0;
+        const displayTotalIva = shouldUseVisualIvaFallback ? derivedIvaFromItems : storedIva;
+        const displayTotalNeto = shouldUseVisualIvaFallback
+          ? Math.round((Math.max(0, Number(sale.total || 0) - displayTotalIva)) * 100) / 100
+          : Number(sale.totalNeto || 0);
+
         const formatMoney = (value: number) =>
           `$${(value || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
@@ -168,10 +194,10 @@ export class InvoiceService {
         // --- Totals ---
         doc.roundedRect(350, totalsY, 205, 110, 10).fillAndStroke('#FFFFFF', '#CBD5E1');
         doc.font('Helvetica').fontSize(11).fillColor('#334155').text('Subtotal Neto', 364, totalsY + 16);
-        doc.font('Helvetica-Bold').fillColor('#0F172A').text(formatMoney(sale.totalNeto || 0), 445, totalsY + 16, { width: 96, align: 'right' });
+        doc.font('Helvetica-Bold').fillColor('#0F172A').text(formatMoney(displayTotalNeto), 445, totalsY + 16, { width: 96, align: 'right' });
 
         doc.font('Helvetica').fontSize(11).fillColor('#334155').text('IVA Total', 364, totalsY + 40);
-        doc.font('Helvetica-Bold').fillColor('#0F172A').text(formatMoney(sale.totalIva || 0), 445, totalsY + 40, { width: 96, align: 'right' });
+        doc.font('Helvetica-Bold').fillColor('#0F172A').text(formatMoney(displayTotalIva), 445, totalsY + 40, { width: 96, align: 'right' });
 
         doc.moveTo(364, totalsY + 66).lineTo(541, totalsY + 66).strokeColor('#E2E8F0').lineWidth(1).stroke();
         doc.font('Helvetica-Bold').fontSize(14).fillColor('#0F172A').text('TOTAL', 364, totalsY + 76);
