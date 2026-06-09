@@ -196,6 +196,44 @@ export const AdminProfitReport: React.FC = () => {
               </table>
             </div>
           </div>
+
+          <div className="card overflow-hidden">
+            <div className="px-5 py-4 border-b border-white/[0.05]">
+              <h2 className="text-sm font-semibold text-white">Ganancias por sucursal</h2>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="data-table min-w-[920px]">
+                <thead>
+                  <tr>
+                    <th>Sucursal</th>
+                    <th className="text-right">Ventas</th>
+                    <th className="text-right">Facturado</th>
+                    <th className="text-right">Costo</th>
+                    <th className="text-right">IVA</th>
+                    <th className="text-right">Ganancia</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(data?.byBranch || []).length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="text-center text-slate-600 py-10 text-sm">Sin datos por sucursal en el período seleccionado</td>
+                    </tr>
+                  ) : (
+                    data.byBranch.map((row: any) => (
+                      <tr key={`${row.branchId}-${row.branchName}`}>
+                        <td className="text-white text-sm">{row.branchName || 'Sin sucursal'}</td>
+                        <td className="text-right text-white">{row.sales}</td>
+                        <td className="text-right text-emerald-300 font-semibold">{money(row.revenue)}</td>
+                        <td className="text-right text-rose-300 font-semibold">{money(row.cost)}</td>
+                        <td className="text-right text-amber-300 font-semibold">{money(row.iva)}</td>
+                        <td className="text-right text-brand-300 font-bold">{money(row.gain)}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
         </>
       )}
     </div>

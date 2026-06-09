@@ -313,7 +313,9 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     status: 'ACTIVE',
     billingStatus: 'COMPLETED',
     createdAt: { $gte: start, $lte: end },
-  }).sort({ createdAt: -1 });
+  })
+    .populate('branch', 'name')
+    .sort({ createdAt: -1 });
 
   let totalRevenue = 0;
   let totalIva = 0;
@@ -326,6 +328,37 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
   const byPaymentMethod: Record<string, { count: number; revenue: number }> = {};
   const byInvoiceType: Record<string, { count: number; revenue: number }> = {};
   const byDayMap: Record<string, { date: string; sales: number; revenue: number; iva: number; cost: number; gain: number }> = {};
+  const byBranchMap: Record<string, { branchId: string; branchName: string; sales: number; revenue: number; iva: number; cost: number; gain: number }> = {};
+
+  const resolveBranchMeta = (branch: any) => {
+    if (branch && typeof branch === 'object') {
+      const branchId = String(branch._id || branch.id || 'sin-sucursal');
+      const branchName = String(branch.name || 'Sin sucursal');
+      return { branchId, branchName };
+    }
+
+    const branchId = branch ? String(branch) : 'sin-sucursal';
+    return { branchId, branchName: 'Sin sucursal' };
+  };
+
+  const ensureBranchBucket = (branch: any) => {
+    const { branchId, branchName } = resolveBranchMeta(branch);
+    const key = `${branchId}::${branchName}`;
+
+    if (!byBranchMap[key]) {
+      byBranchMap[key] = {
+        branchId,
+        branchName,
+        sales: 0,
+        revenue: 0,
+        iva: 0,
+        cost: 0,
+        gain: 0,
+      };
+    }
+
+    return byBranchMap[key];
+  };
 
   for (const sale of sales) {
     const isFiscalSale = sale.invoiceType !== 'NONE';
@@ -387,6 +420,13 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     byDayMap[dayKey].iva += iva;
     byDayMap[dayKey].cost += cost;
     byDayMap[dayKey].gain += gain;
+
+    const branchBucket = ensureBranchBucket((sale as any).branch);
+    branchBucket.sales += 1;
+    branchBucket.revenue += revenue;
+    branchBucket.iva += iva;
+    branchBucket.cost += cost;
+    branchBucket.gain += gain;
   }
 
   for (const note of creditNotes) {
@@ -418,12 +458,27 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     byDayMap[dayKey].iva -= iva;
     byDayMap[dayKey].cost += cost;
     byDayMap[dayKey].gain -= gain;
+
+    const branchBucket = ensureBranchBucket((note as any).branch);
+    branchBucket.revenue -= revenue;
+    branchBucket.iva -= iva;
+    branchBucket.cost += cost;
+    branchBucket.gain -= gain;
   }
 
   const gainWithoutIva = totalGain;
   const marginPercent = totalRevenue > 0 ? (totalGain / totalRevenue) * 100 : 0;
 
   const byDay = Object.values(byDayMap).sort((a, b) => b.date.localeCompare(a.date));
+  const byBranch = Object.values(byBranchMap)
+    .sort((a, b) => b.revenue - a.revenue)
+    .map((row) => ({
+      ...row,
+      revenue: Number(row.revenue.toFixed(2)),
+      iva: Number(row.iva.toFixed(2)),
+      cost: Number(row.cost.toFixed(2)),
+      gain: Number(row.gain.toFixed(2)),
+    }));
 
   return {
     range: {
@@ -450,6 +505,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
       count: val.count,
       revenue: Number(val.revenue.toFixed(2)),
     })),
+    byBranch,
     byDay: byDay.map((d) => ({
       ...d,
       revenue: Number(d.revenue.toFixed(2)),
