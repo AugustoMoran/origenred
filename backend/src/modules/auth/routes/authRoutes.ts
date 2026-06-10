@@ -5,6 +5,7 @@ import {
   logoutController, 
   refreshController, 
   getUsersController, 
+  deleteUserController,
   updatePermissionsController,
   updateCommissionController,
   updateBranchController,
@@ -26,6 +27,7 @@ const canRegister = async (req: any, res: any, next: any) => {
 
 router.post('/register', canRegister, registerController);
 router.get('/users', authenticate, authorize('admin'), getUsersController);
+router.delete('/users/:id', authenticate, authorize('admin'), deleteUserController);
 router.patch('/users/permissions', authenticate, authorize('admin'), updatePermissionsController);
 router.patch('/users/commission', authenticate, authorize('admin'), updateCommissionController);
 router.patch('/users/branch', authenticate, authorize('admin'), updateBranchController);

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { PERMISSION_LABELS } from '../../constants/permissions';
-import { useGetUsersQuery, useRegisterMutation, useUpdateBranchMutation, useUpdateCommissionMutation, useUpdatePermissionsMutation } from '../../services/authApi';
+import { useDeleteUserMutation, useGetUsersQuery, useRegisterMutation, useUpdateBranchMutation, useUpdateCommissionMutation, useUpdatePermissionsMutation } from '../../services/authApi';
 import { useGetBranchesQuery } from '../../services/branchApi';
 
 interface User {
@@ -19,6 +19,7 @@ export const AdminUsers: React.FC = () => {
   const [updatePermissions, { isLoading: updatingPerms }] = useUpdatePermissionsMutation();
   const [updateCommission, { isLoading: updatingCommission }] = useUpdateCommissionMutation();
   const [updateBranch, { isLoading: updatingBranch }] = useUpdateBranchMutation();
+  const [deleteUser, { isLoading: deletingUser }] = useDeleteUserMutation();
 
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [email, setEmail] = useState('');
@@ -27,7 +28,7 @@ export const AdminUsers: React.FC = () => {
   const [commissionRate, setCommissionRate] = useState('0');
   const [selectedPermissions, setSelectedPermissions] = useState<Record<string, boolean>>({});
 
-  const loading = creatingUser || updatingPerms || updatingCommission || updatingBranch;
+  const loading = creatingUser || updatingPerms || updatingCommission || updatingBranch || deletingUser;
 
   const handleToggle = (perm: string) => {
     setSelectedPermissions(prev => ({ ...prev, [perm]: !prev[perm] }));
@@ -67,6 +68,24 @@ export const AdminUsers: React.FC = () => {
   const getBranchName = (branchId?: string) => {
     if (!branchId) return 'Sin sucursal';
     return branches.find((b: any) => String(b._id) === String(branchId))?.name || 'Sucursal no encontrada';
+  };
+
+  const handleDeleteUser = async (user: User) => {
+    if (!user?._id) return;
+    const confirmed = window.confirm(`¿Eliminar el usuario ${user.email}? Esta acción no se puede deshacer.`);
+    if (!confirmed) return;
+
+    try {
+      await deleteUser(user._id).unwrap();
+      if (selectedUser?._id === user._id) {
+        setSelectedUser(null);
+        setSelectedPermissions({});
+        setCommissionRate('0');
+        setBranch('');
+      }
+    } catch (err: any) {
+      alert(err?.data?.message || 'No se pudo eliminar el usuario');
+    }
   };
 
   return (
@@ -208,11 +227,23 @@ export const AdminUsers: React.FC = () => {
                     <td className="text-right text-brand-300 font-semibold">{Number(u.commissionRate || 0)}%</td>
                     <td className="text-center">
                       {!u.roles.includes('admin') && (
-                        <button onClick={() => selectUserToEdit(u as any)} className="btn-icon mx-auto" title="Editar permisos">
-                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
-                          </svg>
-                        </button>
+                        <div className="flex items-center justify-center gap-2">
+                          <button onClick={() => selectUserToEdit(u as any)} className="btn-icon" title="Editar usuario">
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-5M16.5 3.5a2.121 2.121 0 013 3L7 19l-4 1 1-4L16.5 3.5z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => handleDeleteUser(u as any)}
+                            className="btn-icon text-rose-300 hover:text-rose-200"
+                            title="Eliminar usuario"
+                            disabled={loading}
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
                       )}
                     </td>
                   </tr>

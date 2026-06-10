@@ -85,6 +85,31 @@ export async function getUsersController(req: Request, res: Response) {
   res.json(users);
 }
 
+export async function deleteUserController(req: Request, res: Response) {
+  const targetUserId = String(req.params.id || '');
+  const requesterId = String((req as any)?.user?.id || '');
+
+  if (!targetUserId) {
+    return res.status(400).json({ message: 'userId requerido' });
+  }
+
+  if (targetUserId === requesterId) {
+    return res.status(400).json({ message: 'No podés eliminar tu propio usuario' });
+  }
+
+  const user = await User.findById(targetUserId);
+  if (!user) {
+    return res.status(404).json({ message: 'User not found' });
+  }
+
+  if ((user.roles || []).includes('admin')) {
+    return res.status(400).json({ message: 'No se puede eliminar un usuario administrador' });
+  }
+
+  await User.findByIdAndDelete(targetUserId);
+  return res.json({ message: 'Usuario eliminado correctamente' });
+}
+
 export async function loginController(req: Request, res: Response) {
   const { email, password } = req.body;
   const user = await validateUser(email, password);

@@ -44,6 +44,13 @@ export const authApi = createApi({
       query: () => 'users',
       providesTags: ['Users' as any],
     }),
+    deleteUser: builder.mutation<{ message: string }, string>({
+      query: (userId) => ({
+        url: `users/${userId}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Users' as any],
+    }),
     updatePermissions: builder.mutation({
       query: (data) => ({
         url: 'users/permissions',
@@ -77,6 +84,7 @@ export const {
   useLogoutMutation,
   useRefreshMutation,
   useGetUsersQuery,
+  useDeleteUserMutation,
   useUpdatePermissionsMutation,
   useUpdateCommissionMutation,
   useUpdateBranchMutation,
