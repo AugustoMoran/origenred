@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useGetProductsQuery, useGetProductStockByBranchQuery } from '../services/inventoryApi';
 import { useCreateSaleMutation, useLazyGetSaleInvoiceQuery, useLazyGetSaleRemitoQuery } from '../services/salesApi';
@@ -85,6 +85,8 @@ export const POS = () => {
   const [billingMode, setBillingMode] = useState<'fiscal' | 'nofiscal'>('fiscal');
   const [clientData, setClientData] = useState({ name: '', cuit: '', address: '' });
   const [selectedBranchId, setSelectedBranchId] = useState(user?.branch || '');
+  const [discountType, setDiscountType] = useState<'none' | 'percentage' | 'fixed'>('none');
+  const [discountValue, setDiscountValue] = useState<string>('');
 
   const isAdmin = user?.roles?.includes('admin') || user?.role === 'admin';
   const hasAssignedBranch = Boolean(user?.branch);
@@ -114,7 +116,35 @@ export const POS = () => {
     return matchesText && matchesCategory && matchesSupplier;
   });
 
-  const total = cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
+  const grossTotal = useMemo(
+    () => cart.reduce((acc, item) => acc + item.price * item.quantity, 0),
+    [cart]
+  );
+
+  const parsedDiscountValue = Number(discountValue || 0);
+  const safeDiscountValue = Number.isFinite(parsedDiscountValue) ? Math.max(0, parsedDiscountValue) : 0;
+
+  const discountAmount = useMemo(() => {
+    if (discountType === 'none' || safeDiscountValue <= 0 || grossTotal <= 0) return 0;
+    if (discountType === 'percentage') {
+      const percent = Math.min(100, safeDiscountValue);
+      return Number(((grossTotal * percent) / 100).toFixed(2));
+    }
+    return Number(Math.min(safeDiscountValue, grossTotal).toFixed(2));
+  }, [discountType, safeDiscountValue, grossTotal]);
+
+  const total = useMemo(
+    () => Number(Math.max(0, grossTotal - discountAmount).toFixed(2)),
+    [grossTotal, discountAmount]
+  );
+
+  const subtotal = useMemo(() => {
+    const baseSubtotal = grossTotal / 1.21;
+    const ratio = grossTotal > 0 ? total / grossTotal : 1;
+    return Number((baseSubtotal * ratio).toFixed(2));
+  }, [grossTotal, total]);
+
+  const ivaTotal = useMemo(() => Number((total - subtotal).toFixed(2)), [total, subtotal]);
 
   const addToCart = (p: any) => {
     // Verificar stock global antes de agregar (opcional, el backend validará por sucursal)
@@ -206,6 +236,13 @@ export const POS = () => {
         clientAddress: clientData.address,
       };
 
+      if (discountAmount > 0) {
+        salePayload.discount = {
+          type: discountType === 'percentage' ? 'PERCENTAGE' : 'FIXED',
+          value: safeDiscountValue,
+        };
+      }
+
       if (isAdmin) {
         salePayload.branchId = selectedBranchId;
       }
@@ -224,6 +261,8 @@ export const POS = () => {
 
       setCart([]);
       setClientData({ name: '', cuit: '', address: '' });
+      setDiscountType('none');
+      setDiscountValue('');
     } catch (err: any) {
       alert(`Error: ${err.data?.message || err.message}`);
     }
@@ -338,15 +377,46 @@ export const POS = () => {
           <div className="space-y-2">
             <div className="flex justify-between text-slate-400 text-sm">
               <span>Subtotal</span>
-              <span className="tabular-nums">${(total / 1.21).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="tabular-nums">${subtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
             <div className="flex justify-between text-slate-400 text-sm">
               <span>IVA (21%)</span>
-              <span className="tabular-nums">${(total - (total / 1.21)).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              <span className="tabular-nums">${ivaTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
+            <div className="grid grid-cols-2 gap-2 pt-1">
+              <select
+                className="input py-2 text-xs"
+                value={discountType}
+                onChange={(e) => {
+                  const next = e.target.value as 'none' | 'percentage' | 'fixed';
+                  setDiscountType(next);
+                  if (next === 'none') setDiscountValue('');
+                }}
+              >
+                <option value="none">Sin descuento</option>
+                <option value="percentage">Descuento %</option>
+                <option value="fixed">Descuento $</option>
+              </select>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                className="input py-2 text-xs"
+                placeholder={discountType === 'percentage' ? 'Ej: 10' : 'Ej: 1500'}
+                value={discountValue}
+                disabled={discountType === 'none'}
+                onChange={(e) => setDiscountValue(e.target.value)}
+              />
+            </div>
+            {discountAmount > 0 && (
+              <div className="flex justify-between text-amber-300 text-sm">
+                <span>Descuento aplicado</span>
+                <span className="tabular-nums">- ${discountAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+            )}
             <div className="flex justify-between text-white font-bold text-xl pt-2 border-t border-white/5">
               <span>Total</span>
-              <span className="text-brand-400 tabular-nums">${total.toLocaleString()}</span>
+              <span className="text-brand-400 tabular-nums">${total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
             </div>
           </div>
           <button 

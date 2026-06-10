@@ -157,6 +157,36 @@ describe('Sales Integration Tests', () => {
     expect((res.body as Buffer).length).toBeGreaterThan(0);
   });
 
+  it('should apply fixed discount and persist discount data', async () => {
+    const saleData = {
+      items: [
+        {
+          product: productId,
+          name: 'Test Product',
+          quantity: 2,
+          price: 1000,
+          ivaRate: 21,
+        },
+      ],
+      paymentMethod: 'efectivo',
+      invoiceType: 'B',
+      discount: {
+        type: 'FIXED',
+        value: 200,
+      },
+    };
+
+    const res = await request(app)
+      .post('/api/sales')
+      .set('Authorization', `Bearer ${token}`)
+      .send(saleData);
+
+    expect(res.status).toBe(201);
+    expect(res.body.total).toBe(1800);
+    expect(res.body.discountType).toBe('FIXED');
+    expect(res.body.discountAmount).toBe(200);
+  });
+
   it('should list sales', async () => {
     // Primero crear una venta
     const saleData = {

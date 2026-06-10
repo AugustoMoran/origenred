@@ -50,6 +50,7 @@ export class InvoiceService {
         const displayTotalNeto = shouldUseVisualIvaFallback
           ? Math.round((Math.max(0, Number(sale.total || 0) - displayTotalIva)) * 100) / 100
           : Number(sale.totalNeto || 0);
+        const displayDiscount = Math.max(0, Number((sale as any).discountAmount || 0));
 
         const formatMoney = (value: number) =>
           `$${(value || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -192,16 +193,26 @@ export class InvoiceService {
         const totalsY = Math.max(y + 16, 610);
 
         // --- Totals ---
-        doc.roundedRect(350, totalsY, 205, 110, 10).fillAndStroke('#FFFFFF', '#CBD5E1');
+        doc.roundedRect(350, totalsY, 205, displayDiscount > 0 ? 134 : 110, 10).fillAndStroke('#FFFFFF', '#CBD5E1');
         doc.font('Helvetica').fontSize(11).fillColor('#334155').text('Subtotal Neto', 364, totalsY + 16);
         doc.font('Helvetica-Bold').fillColor('#0F172A').text(formatMoney(displayTotalNeto), 445, totalsY + 16, { width: 96, align: 'right' });
 
         doc.font('Helvetica').fontSize(11).fillColor('#334155').text('IVA Total', 364, totalsY + 40);
         doc.font('Helvetica-Bold').fillColor('#0F172A').text(formatMoney(displayTotalIva), 445, totalsY + 40, { width: 96, align: 'right' });
 
-        doc.moveTo(364, totalsY + 66).lineTo(541, totalsY + 66).strokeColor('#E2E8F0').lineWidth(1).stroke();
-        doc.font('Helvetica-Bold').fontSize(14).fillColor('#0F172A').text('TOTAL', 364, totalsY + 76);
-        doc.font('Helvetica-Bold').fontSize(14).fillColor('#111827').text(formatMoney(sale.total || 0), 445, totalsY + 76, { width: 96, align: 'right' });
+        let dividerY = totalsY + 66;
+        let totalY = totalsY + 76;
+
+        if (displayDiscount > 0) {
+          doc.font('Helvetica').fontSize(11).fillColor('#334155').text('Descuento', 364, totalsY + 64);
+          doc.font('Helvetica-Bold').fillColor('#0F172A').text(`- ${formatMoney(displayDiscount)}`, 445, totalsY + 64, { width: 96, align: 'right' });
+          dividerY = totalsY + 90;
+          totalY = totalsY + 100;
+        }
+
+        doc.moveTo(364, dividerY).lineTo(541, dividerY).strokeColor('#E2E8F0').lineWidth(1).stroke();
+        doc.font('Helvetica-Bold').fontSize(14).fillColor('#0F172A').text('TOTAL', 364, totalY);
+        doc.font('Helvetica-Bold').fontSize(14).fillColor('#111827').text(formatMoney(sale.total || 0), 445, totalY, { width: 96, align: 'right' });
 
         // --- AFIP Compliance (QR) ---
         if (!options.disableQr && isFiscal && hasApprovedCae) {

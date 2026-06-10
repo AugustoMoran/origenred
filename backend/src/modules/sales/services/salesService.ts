@@ -33,6 +33,48 @@ const generateRemitoNumber = () => {
 
 const round2 = (value: number) => Math.round((Number(value) || 0) * 100) / 100;
 
+type ParsedDiscount = {
+  type: 'NONE' | 'PERCENTAGE' | 'FIXED';
+  value: number;
+  amount: number;
+};
+
+const parseSaleDiscount = (discountInput: any, grossTotal: number): ParsedDiscount => {
+  const safeGross = Math.max(0, round2(grossTotal));
+  if (!discountInput || safeGross <= 0) {
+    return { type: 'NONE', value: 0, amount: 0 };
+  }
+
+  const rawType = String(discountInput.type || discountInput.mode || '').toUpperCase();
+  const rawValue = Number(discountInput.value);
+  const value = Number.isFinite(rawValue) ? Math.max(0, rawValue) : 0;
+
+  if (value <= 0) {
+    return { type: 'NONE', value: 0, amount: 0 };
+  }
+
+  if (['PERCENTAGE', 'PERCENT', 'PORCENTAJE'].includes(rawType)) {
+    const normalizedPercent = Math.min(100, value);
+    const amount = round2((safeGross * normalizedPercent) / 100);
+    return {
+      type: amount > 0 ? 'PERCENTAGE' : 'NONE',
+      value: normalizedPercent,
+      amount,
+    };
+  }
+
+  if (['FIXED', 'AMOUNT', 'MONTO'].includes(rawType)) {
+    const amount = round2(Math.min(value, safeGross));
+    return {
+      type: amount > 0 ? 'FIXED' : 'NONE',
+      value,
+      amount,
+    };
+  }
+
+  return { type: 'NONE', value: 0, amount: 0 };
+};
+
 const getAfipPointOfSale = () => {
   const raw = Number(process.env.AFIP_PTO_VTA || 1);
   return Number.isFinite(raw) && raw > 0 ? Math.trunc(raw) : 1;
@@ -330,6 +372,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
   let totalIva = 0;
   let totalCost = 0;
   let totalNeto = 0;
+  let totalDiscount = 0;
   let totalGain = 0;
   let totalCommission = 0;
 
@@ -337,8 +380,8 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
 
   const byPaymentMethod: Record<string, { count: number; revenue: number }> = {};
   const byInvoiceType: Record<string, { count: number; revenue: number }> = {};
-  const byDayMap: Record<string, { date: string; sales: number; revenue: number; iva: number; cost: number; gain: number }> = {};
-  const byBranchMap: Record<string, { branchId: string; branchName: string; sales: number; revenue: number; iva: number; cost: number; gain: number }> = {};
+  const byDayMap: Record<string, { date: string; sales: number; revenue: number; iva: number; discount: number; cost: number; gain: number }> = {};
+  const byBranchMap: Record<string, { branchId: string; branchName: string; sales: number; revenue: number; iva: number; discount: number; cost: number; gain: number }> = {};
   const bySellerMap: Record<string, { sellerId: string; sellerName: string; sales: number; revenue: number; commission: number }> = {};
   const bySellerBranchMap: Record<string, { sellerId: string; sellerName: string; branchId: string; branchName: string; sales: number; revenue: number; commission: number }> = {};
 
@@ -375,6 +418,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
         sales: 0,
         revenue: 0,
         iva: 0,
+        discount: 0,
         cost: 0,
         gain: 0,
       };
@@ -430,6 +474,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     const revenue = Number(sale.total || 0);
     const iva = isFiscalSale ? Number(sale.totalIva || 0) : 0;
     const neto = Number(sale.totalNeto || 0);
+    const discount = Number((sale as any).discountAmount || 0);
 
     let cost = 0;
     for (const item of sale.items || []) {
@@ -461,6 +506,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     totalRevenue += revenue;
     totalIva += iva;
     totalNeto += neto;
+    totalDiscount += discount;
     totalCost += cost;
     totalGain += gain;
     if (!isAdminSeller((sale as any).seller)) {
@@ -483,11 +529,12 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
 
     const dayKey = new Date(sale.createdAt).toISOString().split('T')[0];
     if (!byDayMap[dayKey]) {
-      byDayMap[dayKey] = { date: dayKey, sales: 0, revenue: 0, iva: 0, cost: 0, gain: 0 };
+      byDayMap[dayKey] = { date: dayKey, sales: 0, revenue: 0, iva: 0, discount: 0, cost: 0, gain: 0 };
     }
     byDayMap[dayKey].sales += 1;
     byDayMap[dayKey].revenue += revenue;
     byDayMap[dayKey].iva += iva;
+    byDayMap[dayKey].discount += discount;
     byDayMap[dayKey].cost += cost;
     byDayMap[dayKey].gain += gain;
 
@@ -495,6 +542,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     branchBucket.sales += 1;
     branchBucket.revenue += revenue;
     branchBucket.iva += iva;
+    branchBucket.discount += discount;
     branchBucket.cost += cost;
     branchBucket.gain += gain;
 
@@ -539,7 +587,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
 
     const dayKey = new Date(note.createdAt).toISOString().split('T')[0];
     if (!byDayMap[dayKey]) {
-      byDayMap[dayKey] = { date: dayKey, sales: 0, revenue: 0, iva: 0, cost: 0, gain: 0 };
+      byDayMap[dayKey] = { date: dayKey, sales: 0, revenue: 0, iva: 0, discount: 0, cost: 0, gain: 0 };
     }
     byDayMap[dayKey].sales += 1;
     byDayMap[dayKey].revenue -= revenue;
@@ -574,6 +622,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
       ...row,
       revenue: Number(row.revenue.toFixed(2)),
       iva: Number(row.iva.toFixed(2)),
+      discount: Number(row.discount.toFixed(2)),
       cost: Number(row.cost.toFixed(2)),
       gain: Number(row.gain.toFixed(2)),
     }));
@@ -603,6 +652,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
       totalCost: Number(totalCost.toFixed(2)),
       totalIva: Number(totalIva.toFixed(2)),
       totalNeto: Number(totalNeto.toFixed(2)),
+      totalDiscount: Number(totalDiscount.toFixed(2)),
       totalGain: Number(totalGain.toFixed(2)),
       totalCommission,
       gainWithoutIva: Number(gainWithoutIva.toFixed(2)),
@@ -625,6 +675,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
       ...d,
       revenue: Number(d.revenue.toFixed(2)),
       iva: Number(d.iva.toFixed(2)),
+      discount: Number(d.discount.toFixed(2)),
       cost: Number(d.cost.toFixed(2)),
       gain: Number(d.gain.toFixed(2)),
     })),
@@ -714,11 +765,34 @@ export const createSale = async (saleData: any, sellerId: string, requesterRoles
       totalIva += unitIva * item.quantity;
     }
 
+    const grossTotal = round2(totalNeto + totalIva);
+    const parsedDiscount = parseSaleDiscount(saleData.discount, grossTotal);
+
+    let finalTotalNeto = round2(totalNeto);
+    let finalTotalIva = round2(totalIva);
+    let finalTotal = grossTotal;
+
+    if (parsedDiscount.amount > 0) {
+      finalTotal = round2(Math.max(0, grossTotal - parsedDiscount.amount));
+
+      if (isFiscalSale) {
+        const ratio = grossTotal > 0 ? finalTotal / grossTotal : 1;
+        finalTotalNeto = round2(totalNeto * ratio);
+        finalTotalIva = round2(finalTotal - finalTotalNeto);
+      } else {
+        finalTotalNeto = finalTotal;
+        finalTotalIva = 0;
+      }
+    }
+
     const newSale = new Sale({
       items: processedItems,
-      totalNeto: Math.round(totalNeto * 100) / 100,
-      totalIva: Math.round(totalIva * 100) / 100,
-      total: Math.round((totalNeto + totalIva) * 100) / 100,
+      totalNeto: finalTotalNeto,
+      totalIva: finalTotalIva,
+      total: finalTotal,
+      discountType: parsedDiscount.type,
+      discountValue: parsedDiscount.value,
+      discountAmount: parsedDiscount.amount,
       paymentMethod: saleData.paymentMethod || 'efectivo',
       invoiceType,
       invoiceNumber: saleData.invoiceNumber || generateInternalInvoiceNumber(),

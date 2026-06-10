@@ -20,6 +20,7 @@ export const AdminProfitReport: React.FC = () => {
     totalCost: 0,
     totalIva: 0,
     totalNeto: 0,
+    totalDiscount: 0,
     totalGain: 0,
     totalCommission: 0,
     gainWithoutIva: 0,
@@ -98,7 +99,7 @@ export const AdminProfitReport: React.FC = () => {
         <div className="badge-red p-4">No se pudo cargar el informe de ganancias</div>
       ) : (
         <>
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-7 gap-4">
             <div className="card p-4">
               <p className="text-xs text-slate-500 mb-1">Ventas</p>
               <p className="text-2xl font-bold text-white">{summary.salesCount}</p>
@@ -114,6 +115,10 @@ export const AdminProfitReport: React.FC = () => {
             <div className="card p-4">
               <p className="text-xs text-slate-500 mb-1">IVA total</p>
               <p className="text-2xl font-bold text-amber-300">{money(summary.totalIva)}</p>
+            </div>
+            <div className="card p-4">
+              <p className="text-xs text-slate-500 mb-1">Descuentos aplicados</p>
+              <p className="text-2xl font-bold text-orange-300">{money(summary.totalDiscount)}</p>
             </div>
             <div className="card p-4">
               <p className="text-xs text-slate-500 mb-1">Ganancia final</p>
@@ -136,6 +141,10 @@ export const AdminProfitReport: React.FC = () => {
                 <div className="flex justify-between">
                   <span className="text-slate-400">Neto total</span>
                   <span className="text-white font-semibold">{money(summary.totalNeto)}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-slate-400">Descuento total aplicado</span>
+                  <span className="text-orange-300 font-semibold">{money(summary.totalDiscount)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-400">Ganancia neta (regla fiscal)</span>
@@ -178,13 +187,14 @@ export const AdminProfitReport: React.FC = () => {
                     <th className="text-right">Facturado</th>
                     <th className="text-right">Costo</th>
                     <th className="text-right">IVA</th>
+                    <th className="text-right">Descuento</th>
                     <th className="text-right">Ganancia</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(data?.byDay || []).length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="text-center text-slate-600 py-10 text-sm">Sin movimientos en el período seleccionado</td>
+                      <td colSpan={7} className="text-center text-slate-600 py-10 text-sm">Sin movimientos en el período seleccionado</td>
                     </tr>
                   ) : (
                     data.byDay.map((d: any) => (
@@ -194,6 +204,7 @@ export const AdminProfitReport: React.FC = () => {
                         <td className="text-right text-emerald-300 font-semibold">{money(d.revenue)}</td>
                         <td className="text-right text-rose-300 font-semibold">{money(d.cost)}</td>
                         <td className="text-right text-amber-300 font-semibold">{money(d.iva)}</td>
+                        <td className="text-right text-orange-300 font-semibold">{money(d.discount)}</td>
                         <td className="text-right text-brand-300 font-bold">{money(d.gain)}</td>
                       </tr>
                     ))
@@ -216,13 +227,14 @@ export const AdminProfitReport: React.FC = () => {
                     <th className="text-right">Facturado</th>
                     <th className="text-right">Costo</th>
                     <th className="text-right">IVA</th>
+                    <th className="text-right">Descuento</th>
                     <th className="text-right">Ganancia</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(data?.byBranch || []).length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="text-center text-slate-600 py-10 text-sm">Sin datos por sucursal en el período seleccionado</td>
+                      <td colSpan={7} className="text-center text-slate-600 py-10 text-sm">Sin datos por sucursal en el período seleccionado</td>
                     </tr>
                   ) : (
                     data.byBranch.map((row: any) => (
@@ -232,6 +244,7 @@ export const AdminProfitReport: React.FC = () => {
                         <td className="text-right text-emerald-300 font-semibold">{money(row.revenue)}</td>
                         <td className="text-right text-rose-300 font-semibold">{money(row.cost)}</td>
                         <td className="text-right text-amber-300 font-semibold">{money(row.iva)}</td>
+                        <td className="text-right text-orange-300 font-semibold">{money(row.discount)}</td>
                         <td className="text-right text-brand-300 font-bold">{money(row.gain)}</td>
                       </tr>
                     ))

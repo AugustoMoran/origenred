@@ -15,6 +15,9 @@ export interface ISale extends Document {
   totalNeto: number; // Suma de subtotales sin IVA
   totalIva: number; // Suma de los IVAs
   total: number; // Total final
+  discountType?: 'NONE' | 'PERCENTAGE' | 'FIXED';
+  discountValue?: number;
+  discountAmount?: number;
   paymentMethod: 'efectivo' | 'tarjeta' | 'transferencia';
   invoiceType: 'A' | 'B' | 'C' | 'Ticket' | 'NONE'; // Factura AFIP o venta no fiscal
   invoiceNumber: string; // Formato 00001-00000001
@@ -47,6 +50,13 @@ const SaleSchema: Schema = new Schema({
   totalNeto: { type: Number, required: true },
   totalIva: { type: Number, required: true },
   total: { type: Number, required: true },
+  discountType: {
+    type: String,
+    enum: ['NONE', 'PERCENTAGE', 'FIXED'],
+    default: 'NONE'
+  },
+  discountValue: { type: Number, default: 0 },
+  discountAmount: { type: Number, default: 0 },
   paymentMethod: { 
     type: String, 
     enum: ['efectivo', 'tarjeta', 'transferencia'], 
