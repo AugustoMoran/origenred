@@ -5,6 +5,7 @@ import { User } from '../../auth/models/User';
 import { adjustStock } from '../../stock/services/stockService';
 import { MovementType } from '../../stock/models/StockMovement';
 import Product from '../../inventory/models/Product';
+import Expense from '../../expenses/models/Expense';
 
 const generateInternalInvoiceNumber = () => {
   const now = new Date();
@@ -359,7 +360,7 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
   })
     .populate({
       path: 'sale',
-      select: 'seller sellerCommissionRate branch',
+      select: 'seller sellerCommissionRate branch invoiceType billingStatus',
       populate: [
         { path: 'seller', select: 'name email roles' },
         { path: 'branch', select: 'name' },
@@ -375,6 +376,12 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
   let totalDiscount = 0;
   let totalGain = 0;
   let totalCommission = 0;
+  let invoicedRevenue = 0;
+  let nonInvoicedRevenue = 0;
+  let invoicedCount = 0;
+  let nonInvoicedCount = 0;
+  let pendingFiscalRevenue = 0;
+  let failedFiscalRevenue = 0;
 
   const productCostCache = new Map<string, number>();
 
@@ -470,7 +477,8 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
   };
 
   for (const sale of sales) {
-    const isFiscalSale = sale.invoiceType !== 'NONE';
+    const isFiscalSale = ['A', 'B', 'C'].includes(String(sale.invoiceType || '').toUpperCase());
+    const isSuccessfullyInvoiced = isFiscalSale && sale.billingStatus === 'COMPLETED';
     const revenue = Number(sale.total || 0);
     const iva = isFiscalSale ? Number(sale.totalIva || 0) : 0;
     const neto = Number(sale.totalNeto || 0);
@@ -509,6 +517,23 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     totalDiscount += discount;
     totalCost += cost;
     totalGain += gain;
+
+    if (isSuccessfullyInvoiced) {
+      invoicedRevenue += revenue;
+      invoicedCount += 1;
+    } else {
+      nonInvoicedRevenue += revenue;
+      nonInvoicedCount += 1;
+
+      if (isFiscalSale && sale.billingStatus === 'PENDING') {
+        pendingFiscalRevenue += revenue;
+      }
+
+      if (isFiscalSale && sale.billingStatus === 'FAILED') {
+        failedFiscalRevenue += revenue;
+      }
+    }
+
     if (!isAdminSeller((sale as any).seller)) {
       totalCommission += commission;
     }
@@ -559,6 +584,17 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     }
   }
 
+  const expenses = await Expense.find({
+    isActive: true,
+    date: { $gte: start, $lte: end },
+  }).sort({ date: -1, createdAt: -1 });
+
+  const totalExpenses = expenses.reduce((acc, e: any) => acc + Number(e.amount || 0), 0);
+  const totalExpensesAffectingProfit = expenses
+    .filter((e: any) => Boolean(e.affectsProfit))
+    .reduce((acc, e: any) => acc + Number(e.amount || 0), 0);
+  const totalExpensesInformative = totalExpenses - totalExpensesAffectingProfit;
+
   for (const note of creditNotes) {
     const revenue = Number(note.total || 0);
     const iva = Number(note.totalIva || 0);
@@ -566,6 +602,8 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     const cost = Number(note.costAmount || 0);
     const gain = neto + cost;
     const originalSale = (note as any).sale;
+    const originalIsFiscal = ['A', 'B', 'C'].includes(String(originalSale?.invoiceType || '').toUpperCase());
+    const originalIsSuccessfullyInvoiced = originalIsFiscal && originalSale?.billingStatus === 'COMPLETED';
     const noteCommissionRate = Number(originalSale?.sellerCommissionRate || 0);
     const noteCommission = revenue * (noteCommissionRate / 100);
 
@@ -574,6 +612,19 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     totalNeto -= neto;
     totalCost += cost;
     totalGain -= gain;
+
+    if (originalIsSuccessfullyInvoiced) {
+      invoicedRevenue -= revenue;
+    } else {
+      nonInvoicedRevenue -= revenue;
+      if (originalIsFiscal && originalSale?.billingStatus === 'PENDING') {
+        pendingFiscalRevenue -= revenue;
+      }
+      if (originalIsFiscal && originalSale?.billingStatus === 'FAILED') {
+        failedFiscalRevenue -= revenue;
+      }
+    }
+
     if (!isAdminSeller(originalSale?.seller)) {
       totalCommission -= noteCommission;
     }
@@ -612,6 +663,8 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     }
   }
 
+  const gainAfterExpenses = totalGain - totalExpensesAffectingProfit;
+
   const gainWithoutIva = totalGain;
   const marginPercent = totalRevenue > 0 ? (totalGain / totalRevenue) * 100 : 0;
 
@@ -649,11 +702,21 @@ export const getProfitReport = async (from?: Date, to?: Date) => {
     summary: {
       salesCount: sales.length,
       totalRevenue: Number(totalRevenue.toFixed(2)),
+      totalInvoicedRevenue: Number(invoicedRevenue.toFixed(2)),
+      totalNonInvoicedRevenue: Number(nonInvoicedRevenue.toFixed(2)),
+      invoicedSalesCount: invoicedCount,
+      nonInvoicedSalesCount: nonInvoicedCount,
+      pendingFiscalRevenue: Number(pendingFiscalRevenue.toFixed(2)),
+      failedFiscalRevenue: Number(failedFiscalRevenue.toFixed(2)),
       totalCost: Number(totalCost.toFixed(2)),
       totalIva: Number(totalIva.toFixed(2)),
       totalNeto: Number(totalNeto.toFixed(2)),
       totalDiscount: Number(totalDiscount.toFixed(2)),
+      totalExpenses: Number(totalExpenses.toFixed(2)),
+      totalExpensesAffectingProfit: Number(totalExpensesAffectingProfit.toFixed(2)),
+      totalExpensesInformative: Number(totalExpensesInformative.toFixed(2)),
       totalGain: Number(totalGain.toFixed(2)),
+      gainAfterExpenses: Number(gainAfterExpenses.toFixed(2)),
       totalCommission,
       gainWithoutIva: Number(gainWithoutIva.toFixed(2)),
       marginPercent: Number(marginPercent.toFixed(2)),

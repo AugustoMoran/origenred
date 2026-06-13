@@ -108,6 +108,8 @@ import branchRoutes from './modules/branches/routes/branchRoutes';
 import stockRoutes from './modules/stock/routes/stockRoutes';
 import categoryRoutes from './modules/categories/routes/categoryRoutes';
 import supplierRoutes from './modules/suppliers/routes/supplierRoutes';
+import expenseRoutes from './modules/expenses/routes/expenseRoutes';
+import supplierLedgerRoutes from './modules/supplierLedger/routes/supplierLedgerRoutes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/inventory', inventoryRoutes);
@@ -116,6 +118,8 @@ app.use('/api/branches', branchRoutes);
 app.use('/api/stock', stockRoutes);
 app.use('/api/categories', categoryRoutes);
 app.use('/api/suppliers', supplierRoutes);
+app.use('/api/expenses', expenseRoutes);
+app.use('/api/supplier-ledger', supplierLedgerRoutes);
 
 // Error handler
 app.use((err: any, req: any, res: any, next: any) => {

@@ -3,9 +3,7 @@ import { createBrowserRouter, RouterProvider, Navigate, Link } from 'react-route
 import { useSelector } from 'react-redux';
 import { RootState } from './store';
 import { Layout } from './components/Layout';
-import { AdminUsers } from './pages/admin/AdminUsers';
-import { AdminCatalog } from './pages/admin/AdminCatalog';
-import { AdminProfitReport } from './pages/admin/AdminProfitReport';
+import { AdminUsers, AdminCatalog, AdminProfitReport, AdminSupplierLedger } from './pages/admin';
 import { Inventory } from './pages/Inventory';
 import { POS } from './pages/POS';
 import { SalesHistory } from './pages/SalesHistory';
@@ -154,6 +152,7 @@ const Dashboard = () => {
             { label: 'Usuarios', sub: 'Gestión de accesos', to: '/admin/users', iconPath: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', accent: 'text-slate-400 bg-slate-500/10 ring-slate-500/20' },
             { label: 'Cat. y Sucursales', sub: 'Catálogo comercial', to: '/admin/catalog', iconPath: 'M4 6h16M4 12h16M4 18h16', accent: 'text-violet-400 bg-violet-500/10 ring-violet-500/20' },
             { label: 'Informe Ganancias', sub: 'Costos e IVA', to: '/admin/profit-report', iconPath: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', accent: 'text-amber-400 bg-amber-500/10 ring-amber-500/20' },
+            { label: 'Compras y Deuda', sub: 'Cuenta corriente', to: '/admin/supplier-ledger', iconPath: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 10v2m9-6a9 9 0 11-18 0 9 9 0 0118 0z', accent: 'text-rose-400 bg-rose-500/10 ring-rose-500/20' },
           ].map(a => (
             <Link key={a.to} to={a.to} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.04] transition-colors group">
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center ring-1 flex-shrink-0 ${a.accent}`}>
@@ -218,6 +217,10 @@ const router = createBrowserRouter([
   {
     path: "/admin/profit-report",
     element: <ProtectedRoute adminOnly={true}><AdminProfitReport /></ProtectedRoute>
+  },
+  {
+    path: "/admin/supplier-ledger",
+    element: <ProtectedRoute adminOnly={true}><AdminSupplierLedger /></ProtectedRoute>
   },
   {
     path: "/login",

@@ -3,6 +3,8 @@ import mongoose from 'mongoose';
 
 let mongoServer: any;
 
+jest.setTimeout(60000);
+
 process.env.NODE_ENV = 'test';
 process.env.ENABLE_AFIP_QUEUE = 'false';
 
@@ -16,8 +18,13 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  await mongoose.disconnect();
-  await mongoServer.stop();
+  if (mongoose.connection.readyState !== 0) {
+    await mongoose.disconnect();
+  }
+
+  if (mongoServer) {
+    await mongoServer.stop();
+  }
 });
 
 beforeEach(async () => {
