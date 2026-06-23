@@ -238,7 +238,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 			</aside>
 
 			{/* ── Main ── */}
-			<main className="flex-1 overflow-auto animate-fade-in">
+			<main className="flex-1 overflow-y-auto overflow-x-hidden animate-fade-in">
 				<div className="px-4 sm:px-6 lg:px-8 py-6 lg:py-8 max-w-7xl mx-auto pt-20 lg:pt-8">
 					{children}
 				</div>

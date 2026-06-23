@@ -201,18 +201,18 @@ export const SalesHistory = () => {
       {/* Table */}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-        <table className="data-table min-w-[1060px]">
+        <table className="data-table w-full">
           <thead>
             <tr>
               <th>Fecha</th>
-              <th>Sucursal</th>
+              <th className="hidden sm:table-cell">Sucursal</th>
               <th>Comprobante</th>
-              <th>Remito</th>
-              <th>Cliente</th>
-              <th>Método</th>
+              <th className="hidden lg:table-cell">Remito</th>
+              <th className="hidden md:table-cell">Cliente</th>
+              <th className="hidden xl:table-cell">Método</th>
               <th className="text-right">Total</th>
               <th className="text-center">Estado</th>
-              <th className="text-center">PDF</th>
+              <th className="text-center">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -231,7 +231,7 @@ export const SalesHistory = () => {
                   <div className="text-sm font-medium text-white">{new Date(s.createdAt).toLocaleDateString('es-AR')}</div>
                   <div className="text-xs text-slate-500">{new Date(s.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}</div>
                 </td>
-                <td>
+                <td className="hidden sm:table-cell">
                   <span className="text-xs text-slate-400 font-medium">
                     {s.branch?.name || s.branchId?.name || 'Central'}
                   </span>
@@ -239,14 +239,14 @@ export const SalesHistory = () => {
                 <td>
                   <span className="font-mono text-xs font-semibold text-brand-400">{s.invoiceNumber || '—'}</span>
                 </td>
-                <td>
+                <td className="hidden lg:table-cell">
                   <span className="font-mono text-xs font-semibold text-sky-300">{s.remitoNumber || '—'}</span>
                 </td>
-                <td>
+                <td className="hidden md:table-cell">
                   <div className="text-sm text-white">{s.clientName || 'Consumidor final'}</div>
                   {s.clientCuit && <div className="text-xs text-slate-500">{s.clientCuit}</div>}
                 </td>
-                <td><span className="badge-gray capitalize">{s.paymentMethod}</span></td>
+                <td className="hidden xl:table-cell"><span className="badge-gray capitalize">{s.paymentMethod}</span></td>
                 <td className="text-right font-semibold text-white">${s.total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
                 <td className="text-center">
                   {s.cae ? (

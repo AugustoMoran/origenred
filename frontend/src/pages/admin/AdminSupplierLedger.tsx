@@ -274,14 +274,14 @@ export const AdminSupplierLedger: React.FC = () => {
           <div className="p-4 text-sm text-red-300">No se pudo cargar el historial</div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="data-table min-w-[980px]">
+            <table className="data-table w-full">
               <thead>
                 <tr>
                   <th>Fecha</th>
-                  <th>Tipo</th>
+                  <th className="hidden sm:table-cell">Tipo</th>
                   <th>Proveedor / Otro</th>
-                  <th>Referencia</th>
-                  <th>Descripción</th>
+                  <th className="hidden lg:table-cell">Referencia</th>
+                  <th className="hidden md:table-cell">Descripción</th>
                   <th className="text-right">Monto</th>
                   <th className="text-right">Impacto deuda</th>
                   <th className="text-right">Acciones</th>
@@ -296,10 +296,10 @@ export const AdminSupplierLedger: React.FC = () => {
                   ledgerData.items.map((item: any) => (
                     <tr key={item._id}>
                       <td className="text-white text-sm">{new Date(`${new Date(item.date).toISOString().split('T')[0]}T00:00:00`).toLocaleDateString('es-AR')}</td>
-                      <td className="text-slate-200 text-sm">{item.entryType === 'INVOICE' ? 'Factura' : item.entryType === 'PAYMENT' ? 'Pago' : 'Ajuste'}</td>
+                      <td className="text-slate-200 text-sm hidden sm:table-cell">{item.entryType === 'INVOICE' ? 'Factura' : item.entryType === 'PAYMENT' ? 'Pago' : 'Ajuste'}</td>
                       <td className="text-white text-sm">{item?.supplier?.name || item.counterpartyName || 'Otro'}</td>
-                      <td className="text-slate-300 text-sm">{item.reference || '—'}</td>
-                      <td className="text-slate-300 text-sm">{item.description || '—'}</td>
+                      <td className="text-slate-300 text-sm hidden lg:table-cell">{item.reference || '—'}</td>
+                      <td className="text-slate-300 text-sm hidden md:table-cell">{item.description || '—'}</td>
                       <td className="text-right text-slate-100 font-semibold">{money(item.amount)}</td>
                       <td className={`text-right font-bold ${Number(item.signedAmount || 0) >= 0 ? 'text-rose-300' : 'text-emerald-300'}`}>
                         {Number(item.signedAmount || 0) >= 0 ? '+' : ''}{money(item.signedAmount || 0)}

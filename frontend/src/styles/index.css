@@ -13,10 +13,12 @@
     background-color: #030712;
     color: #CBD5E1;
     font-family: 'Inter', system-ui, sans-serif;
+    overflow-x: hidden;
   }
   html, body, #root {
     height: 100%;
     background-color: #030712;
+    overflow-x: hidden;
   }
 }
 

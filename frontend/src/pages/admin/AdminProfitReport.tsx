@@ -350,7 +350,7 @@ export const AdminProfitReport: React.FC = () => {
                 <div className="p-4 text-sm text-red-300">No se pudieron cargar los gastos</div>
               ) : (
                 <div className="overflow-x-auto">
-                  <table className="data-table min-w-[700px]">
+                  <table className="data-table w-full">
                     <thead>
                       <tr>
                         <th>Fecha</th>
@@ -408,7 +408,7 @@ export const AdminProfitReport: React.FC = () => {
               <h2 className="text-sm font-semibold text-white">Evolución diaria (rango seleccionado)</h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="data-table min-w-[840px]">
+              <table className="data-table w-full">
                 <thead>
                   <tr>
                     <th>Fecha</th>
@@ -448,7 +448,7 @@ export const AdminProfitReport: React.FC = () => {
               <h2 className="text-sm font-semibold text-white">Ganancias por sucursal</h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="data-table min-w-[920px]">
+              <table className="data-table w-full">
                 <thead>
                   <tr>
                     <th>Sucursal</th>
@@ -488,7 +488,7 @@ export const AdminProfitReport: React.FC = () => {
               <h2 className="text-sm font-semibold text-white">Liquidación por vendedor</h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="data-table min-w-[920px]">
+              <table className="data-table w-full">
                 <thead>
                   <tr>
                     <th>Vendedor</th>
@@ -524,14 +524,14 @@ export const AdminProfitReport: React.FC = () => {
               <h2 className="text-sm font-semibold text-white">Liquidación vendedor por sucursal</h2>
             </div>
             <div className="overflow-x-auto">
-              <table className="data-table min-w-[980px]">
+              <table className="data-table w-full">
                 <thead>
                   <tr>
                     <th>Vendedor</th>
-                    <th>Sucursal</th>
+                    <th className="hidden sm:table-cell">Sucursal</th>
                     <th className="text-right">Ventas</th>
                     <th className="text-right">Total bruto</th>
-                    <th className="text-right">% efectivo</th>
+                    <th className="text-right hidden md:table-cell">% efectivo</th>
                     <th className="text-right">Liquidación</th>
                   </tr>
                 </thead>
@@ -544,10 +544,10 @@ export const AdminProfitReport: React.FC = () => {
                     data.bySellerBranch.map((row: any) => (
                       <tr key={`${row.sellerId}-${row.branchId}-${row.sellerName}-${row.branchName}`}>
                         <td className="text-white text-sm">{row.sellerName || 'Sin vendedor'}</td>
-                        <td className="text-slate-200 text-sm">{row.branchName || 'Sin sucursal'}</td>
+                        <td className="text-slate-200 text-sm hidden sm:table-cell">{row.branchName || 'Sin sucursal'}</td>
                         <td className="text-right text-white">{row.sales}</td>
                         <td className="text-right text-emerald-300 font-semibold">{money(row.revenue)}</td>
-                        <td className="text-right text-slate-200">{exact(row.effectiveRate)}%</td>
+                        <td className="text-right text-slate-200 hidden md:table-cell">{exact(row.effectiveRate)}%</td>
                         <td className="text-right text-fuchsia-300 font-bold">${exact(row.commission)}</td>
                       </tr>
                     ))

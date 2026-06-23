@@ -104,7 +104,7 @@ const StockCell = ({ product }: { product: any }) => {
   const displayTotal = branchTotal !== null ? branchTotal : product.stock;
   
   return (
-    <div className="space-y-1.5 min-w-[170px] mx-auto">
+    <div className="space-y-1.5 min-w-[140px] mx-auto">
       <div className="flex items-center justify-center gap-1 text-[11px]">
         <span className="text-slate-400">Total:</span>
         <span className={`font-bold ${displayTotal <= product.minStock ? 'text-rose-400' : 'text-emerald-400'}`}>
@@ -786,7 +786,7 @@ export const Inventory = () => {
                 <span className="font-bold text-brand-300"> {bulkPreview.percentage}%</span>.
               </p>
               <div className="overflow-x-auto">
-                <table className="data-table min-w-[720px]">
+                <table className="data-table w-full border-separate border-spacing-0">
                   <thead>
                     <tr>
                       <th>Producto</th>
@@ -819,7 +819,7 @@ export const Inventory = () => {
       {/* Table */}
       <div className="card overflow-hidden">
         <div className="overflow-x-auto">
-        <table className="data-table min-w-[980px]">
+        <table className="data-table w-full">
           <thead>
             <tr>
               {isAdmin && (
@@ -833,10 +833,10 @@ export const Inventory = () => {
                 </th>
               )}
               <th className="w-16">Foto</th>
-              <th>SKU</th>
+              <th className="hidden lg:table-cell">SKU</th>
               <th>Producto</th>
-              <th>Categoría</th>
-              <th>Proveedor</th>
+              <th className="hidden sm:table-cell">Categoría</th>
+              <th className="hidden md:table-cell">Proveedor</th>
               <th className="text-center">Stock</th>
               <th className="text-right">Precio</th>
               <th className="text-center">Acciones</th>
@@ -866,13 +866,13 @@ export const Inventory = () => {
                     )}
                   </div>
                 </td>
-                <td className="font-mono text-xs text-brand-400 font-semibold">{p.sku}</td>
+                <td className="font-mono text-xs text-brand-400 font-semibold hidden lg:table-cell">{p.sku}</td>
                 <td>
                   <div className="font-medium text-white text-sm">{p.name}</div>
                   {p.description && <div className="text-xs text-slate-500 mt-0.5 truncate max-w-xs">{p.description}</div>}
                 </td>
-                <td><span className="badge-gray">{p.category || 'Sin categoría'}</span></td>
-                <td>
+                <td className="hidden sm:table-cell"><span className="badge-gray">{p.category || 'Sin categoría'}</span></td>
+                <td className="hidden md:table-cell">
                   <span className="text-xs text-slate-300">{p.supplier?.name || 'Sin proveedor'}</span>
                 </td>
                 <td className="text-center">

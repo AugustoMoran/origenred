@@ -196,13 +196,13 @@ export const AdminUsers: React.FC = () => {
         <div className="lg:col-span-7">
           <div className="card overflow-hidden">
             <div className="overflow-x-auto">
-            <table className="data-table min-w-[620px]">
+            <table className="data-table w-full">
               <thead>
                 <tr>
                   <th>Usuario</th>
-                  <th>Rol</th>
-                  <th>Sucursal</th>
-                  <th className="text-right">Comisión</th>
+                  <th className="hidden sm:table-cell">Rol</th>
+                  <th className="hidden lg:table-cell">Sucursal</th>
+                  <th className="text-right hidden md:table-cell">Comisión</th>
                   <th className="text-center">Acciones</th>
                 </tr>
               </thead>
@@ -211,20 +211,20 @@ export const AdminUsers: React.FC = () => {
                   <tr key={u._id}>
                     <td>
                       <div className="text-sm font-medium text-white">{u.email}</div>
-                      <div className="text-xs font-mono text-brand-400 mt-0.5">{u._id.slice(-8)}</div>
+                      <div className="text-xs font-mono text-brand-400 mt-0.5 hidden sm:block">{u._id.slice(-8)}</div>
                     </td>
-                    <td>
+                    <td className="hidden sm:table-cell">
                       <span className={u.roles.includes('admin') ? 'badge-blue' : 'badge-gray'}>
                         {u.roles[0]}
                       </span>
                     </td>
-                    <td>
+                    <td className="hidden lg:table-cell">
                       <div className="text-sm text-slate-200">{getBranchName(u.branch)}</div>
                       {!u.roles.includes('admin') && !u.branch && (
                         <div className="text-[11px] text-amber-300 mt-0.5">Asignar sucursal</div>
                       )}
                     </td>
-                    <td className="text-right text-brand-300 font-semibold">{Number(u.commissionRate || 0)}%</td>
+                    <td className="text-right text-brand-300 font-semibold hidden md:table-cell">{Number(u.commissionRate || 0)}%</td>
                     <td className="text-center">
                       {!u.roles.includes('admin') && (
                         <div className="flex items-center justify-center gap-2">

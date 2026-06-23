@@ -118,12 +118,12 @@ const Dashboard = () => {
             <div className="px-5 py-10 text-center text-slate-600 text-sm">Sin ventas registradas aún</div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="data-table min-w-[680px]">
+              <table className="data-table w-full">
                 <thead>
                   <tr>
                     <th>Comprobante</th>
-                    <th>Fecha</th>
-                    <th>Método</th>
+                    <th className="hidden sm:table-cell">Fecha</th>
+                    <th className="hidden md:table-cell">Método</th>
                     <th className="text-right">Total</th>
                   </tr>
                 </thead>
@@ -131,8 +131,8 @@ const Dashboard = () => {
                   {recentSales.map((s: any) => (
                     <tr key={s._id}>
                       <td className="font-medium text-white text-sm">{s.invoiceNumber || '—'}</td>
-                      <td className="text-slate-500 text-xs">{new Date(s.createdAt).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}</td>
-                      <td><span className="badge-gray">{s.paymentMethod}</span></td>
+                      <td className="text-slate-500 text-xs hidden sm:table-cell">{new Date(s.createdAt).toLocaleString('es-AR', { dateStyle: 'short', timeStyle: 'short' })}</td>
+                      <td className="hidden md:table-cell"><span className="badge-gray">{s.paymentMethod}</span></td>
                       <td className="text-right font-semibold text-white text-sm">${s.total?.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
                     </tr>
                   ))}
