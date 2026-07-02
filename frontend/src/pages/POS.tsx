@@ -115,11 +115,23 @@ export const POS = () => {
           suggestedType = 'B';
         }
 
-        setClientData(prev => ({
-          ...prev,
-          name: data.nombre || data.razonSocial || prev.name,
-          address: data.domicilioFiscal?.direccion || prev.address
-        }));
+        setClientData(prev => {
+          // Intentar obtener el nombre de cualquier campo posible que devuelva AFIP
+          const name = data.nombre || 
+                       data.razonSocial || 
+                       (data.apellido ? `${data.apellido}${data.nombre ? ' ' + data.nombre : ''}` : '') ||
+                       data.datosGenerales?.razonSocial ||
+                       (data.datosGenerales?.apellido ? `${data.datosGenerales.apellido} ${data.datosGenerales.nombre || ''}` : '') ||
+                       prev.name;
+
+          return {
+            ...prev,
+            name: name.trim(),
+            address: data.domicilioFiscal?.direccion || 
+                     data.datosGenerales?.domicilioFiscal?.direccion || 
+                     prev.address
+          };
+        });
         setFiscalCondition(condition);
         setInvoiceType(suggestedType);
         setLookupSource('arca');

@@ -126,37 +126,61 @@ class AfipService {
     try {
       console.log(`[AFIP] Consultando padrón para CUIT: ${cleanCuit}`);
       
-      // Intentar primero con Padron A5 (Monotributo/Inscriptos)
+      let details: any = null;
+      let source = '';
+
+      // Tactic 1: Padron A5 (Active taxpayers)
       try {
-        const details = await this.afip.RegisterScopeFive.getTaxpayerDetails(cleanCuit);
-        if (details) return { ...details, _source: 'A5' };
-      } catch (e: any) {
-        console.log(`[AFIP] A5 no encontró resultados para ${cleanCuit}: ${e.message}`);
+        details = await this.afip.RegisterScopeFive.getTaxpayerDetails(cleanCuit);
+        if (details) source = 'A5';
+      } catch (e) {}
+
+      // Tactic 2: Padron A4
+      if (!details) {
+        try {
+          details = await this.afip.RegisterScopeFour.getTaxpayerDetails(cleanCuit);
+          if (details) source = 'A4';
+        } catch (e) {}
       }
 
-      // Intentar con Padron A4 (Empresas/Sociedades)
-      try {
-        const details = await this.afip.RegisterScopeFour.getTaxpayerDetails(cleanCuit);
-        if (details) return { ...details, _source: 'A4' };
-      } catch (e: any) {
-        console.log(`[AFIP] A4 no encontró resultados para ${cleanCuit}: ${e.message}`);
+      // Tactic 3: Padron A10 (Physical persons - VERY common for CUILs)
+      if (!details) {
+        try {
+          details = await this.afip.RegisterScopeTen.getTaxpayerDetails(cleanCuit);
+          if (details) source = 'A10';
+        } catch (e) {}
       }
 
-      // Intentar con Padron A10 (Personas Físicas / Consumidores Finales)
-      try {
-        const details = await this.afip.RegisterScopeTen.getTaxpayerDetails(cleanCuit);
-        if (details) return { ...details, _source: 'A10' };
-      } catch (e: any) {
-        console.log(`[AFIP] A10 no encontró resultados para ${cleanCuit}: ${e.message}`);
+      // Tactic 4: Padron A13
+      if (!details) {
+        try {
+          details = await this.afip.RegisterScopeThirteen.getTaxpayerDetails(cleanCuit);
+          if (details) source = 'A13';
+        } catch (e) {}
       }
 
-      // Si ninguno devuelve, probar el método genérico si existe
-      try {
-        const details = await this.afip.RegisterScopeThirteen.getTaxpayerDetails(cleanCuit);
-        if (details) return { ...details, _source: 'A13' };
-      } catch (e: any) {}
+      if (!details) return null;
 
-      return null;
+      // NORMALIZACIÓN DE NOMBRE PARA PERSONAS FÍSICAS (CUIL)
+      // AFIP suele devolver apellido y nombre por separado para personas
+      let fullName = details.nombre || details.razonSocial || '';
+      
+      if (!fullName && details.apellido) {
+        fullName = `${details.apellido}${details.nombre ? ' ' + details.nombre : ''}`;
+      }
+      
+      // Si aún no hay nombre (algunos padrones lo traen en 'personaReturn.datosGenerales')
+      if (!fullName && details.datosGenerales) {
+        fullName = details.datosGenerales.razonSocial || 
+                   `${details.datosGenerales.apellido || ''} ${details.datosGenerales.nombre || ''}`.trim();
+      }
+
+      return {
+        ...details,
+        nombre: fullName, // Aseguramos que el campo 'nombre' tenga algo
+        razonSocial: fullName, // Aseguramos que 'razonSocial' también esté
+        _source: source
+      };
     } catch (error: any) {
       console.error(`[AFIP] Error crítico buscando CUIT ${cleanCuit}:`, error.message);
       return null;
