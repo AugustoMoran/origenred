@@ -118,23 +118,48 @@ class AfipService {
   async getTaxpayerDetails(cuit: string) {
     if (!this.afip) throw new Error('AFIP no configurado');
     
-    // El CUIT debe ser numérico y de 11 dígitos
     const cleanCuit = cuit.replace(/\D/g, '');
     if (cleanCuit.length !== 11) {
       throw new Error('CUIT inválido: debe tener 11 dígitos');
     }
 
     try {
-      // Intentar primero con Padron A5 (más común para monotributo/inscriptos)
-      return await this.afip.RegisterScopeFive.getTaxpayerDetails(cleanCuit);
-    } catch (error: any) {
+      console.log(`[AFIP] Consultando padrón para CUIT: ${cleanCuit}`);
+      
+      // Intentar primero con Padron A5 (Monotributo/Inscriptos)
       try {
-        // Reintentar con Padron A4 (empresas/sociedades)
-        return await this.afip.RegisterScopeFour.getTaxpayerDetails(cleanCuit);
-      } catch (err: any) {
-        console.error(`[AFIP] Error buscando CUIT ${cleanCuit}:`, err.message);
-        return null;
+        const details = await this.afip.RegisterScopeFive.getTaxpayerDetails(cleanCuit);
+        if (details) return { ...details, _source: 'A5' };
+      } catch (e: any) {
+        console.log(`[AFIP] A5 no encontró resultados para ${cleanCuit}: ${e.message}`);
       }
+
+      // Intentar con Padron A4 (Empresas/Sociedades)
+      try {
+        const details = await this.afip.RegisterScopeFour.getTaxpayerDetails(cleanCuit);
+        if (details) return { ...details, _source: 'A4' };
+      } catch (e: any) {
+        console.log(`[AFIP] A4 no encontró resultados para ${cleanCuit}: ${e.message}`);
+      }
+
+      // Intentar con Padron A10 (Personas Físicas / Consumidores Finales)
+      try {
+        const details = await this.afip.RegisterScopeTen.getTaxpayerDetails(cleanCuit);
+        if (details) return { ...details, _source: 'A10' };
+      } catch (e: any) {
+        console.log(`[AFIP] A10 no encontró resultados para ${cleanCuit}: ${e.message}`);
+      }
+
+      // Si ninguno devuelve, probar el método genérico si existe
+      try {
+        const details = await this.afip.RegisterScopeThirteen.getTaxpayerDetails(cleanCuit);
+        if (details) return { ...details, _source: 'A13' };
+      } catch (e: any) {}
+
+      return null;
+    } catch (error: any) {
+      console.error(`[AFIP] Error crítico buscando CUIT ${cleanCuit}:`, error.message);
+      return null;
     }
   }
 }
