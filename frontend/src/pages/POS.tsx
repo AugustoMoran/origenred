@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
 import { useGetProductsQuery, useGetProductStockByBranchQuery } from '../services/inventoryApi';
 import { useCreateSaleMutation, useLazyGetSaleInvoiceQuery, useLazyGetSaleRemitoQuery } from '../services/salesApi';
@@ -92,10 +92,15 @@ export const POS = () => {
   const [triggerLookup, { isFetching: isSearchingTaxpayer }] = useLazyGetTaxpayerQuery();
 
   const [selectedBranchId, setSelectedBranchId] = useState(user?.branch || '');
+  const lastLookupCuitRef = useRef('');
+  const [showBranchStock, setShowBranchStock] = useState(false);
 
-  const handleTaxpayerLookup = async (cuitValue?: string) => {
+  const handleTaxpayerLookup = async (cuitValue?: string, force = false) => {
     const targetCuit = (cuitValue || clientData.cuit).replace(/\D/g, '');
     if (targetCuit.length !== 11) return;
+
+    if (!force && lastLookupCuitRef.current === targetCuit) return;
+    lastLookupCuitRef.current = targetCuit;
 
     console.log('[DEBUG] Iniciando búsqueda para CUIT:', targetCuit);
 
@@ -108,6 +113,9 @@ export const POS = () => {
         let suggestedType: 'A' | 'B' | 'C' = 'B';
 
         if (data._notFound) {
+          if (data._afipAuthError) {
+            alert('ARCA rechazó la autenticación (401). Revisá AFIP_PRODUCTION y las credenciales del backend.');
+          }
           // Si AFIP no lo tiene, dejamos que el usuario lo escriba sin mostrar error de alerta
           setLookupSource('manual');
           return;
@@ -166,6 +174,7 @@ export const POS = () => {
     if (cleanCuit.length === 11 && lookupSource !== 'arca') {
       handleTaxpayerLookup(cleanCuit);
     } else if (cleanCuit.length < 11) {
+      lastLookupCuitRef.current = '';
       setLookupSource(null);
     }
   }, [clientData.cuit]);
@@ -573,6 +582,18 @@ export const POS = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2 justify-start 2xl:justify-end">
+            <button
+              type="button"
+              onClick={() => setShowBranchStock((prev) => !prev)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all border ${
+                showBranchStock
+                  ? 'bg-brand-500/20 border-brand-500 text-brand-400'
+                  : 'bg-white/5 border-transparent text-slate-500 hover:bg-white/10'
+              }`}
+              title="Mostrar/ocultar desglose de stock por sucursal"
+            >
+              {showBranchStock ? 'Ocultar stock por sucursal' : 'Mostrar stock por sucursal'}
+            </button>
             {PAYMENT_METHODS.map((m) => (
               <button
                 key={m.id}
@@ -622,7 +643,7 @@ export const POS = () => {
                 </div>
                 
                 {/* Stock por sucursal breakdown mini */}
-                <StockMini productId={p._id} />
+                {showBranchStock && <StockMini productId={p._id} />}
               </button>
             ))}
           </div>
@@ -639,7 +660,7 @@ export const POS = () => {
                   onChange={e => setClientData({...clientData, cuit: e.target.value})}
                 />
                 <button 
-                  onClick={() => handleTaxpayerLookup()}
+                  onClick={() => handleTaxpayerLookup(undefined, true)}
                   disabled={isSearchingTaxpayer || clientData.cuit.replace(/\D/g, '').length !== 11}
                   className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-brand-400 disabled:opacity-30 p-1"
                   title="Buscar en ARCA"

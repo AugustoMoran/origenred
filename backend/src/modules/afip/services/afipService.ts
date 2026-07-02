@@ -23,6 +23,11 @@ const resolveSecretContent = (pemEnvName: string, pathEnvName: string) => {
   }
 };
 
+const parseBooleanEnv = (value: string | undefined, defaultValue = false) => {
+  if (value === undefined) return defaultValue;
+  return ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase());
+};
+
 class AfipService {
   private afip: any;
 
@@ -33,6 +38,7 @@ class AfipService {
   private initAfip() {
     const cert = resolveSecretContent('AFIP_CERT_PEM', 'AFIP_CERT_PATH');
     const key = resolveSecretContent('AFIP_KEY_PEM', 'AFIP_KEY_PATH');
+    const production = parseBooleanEnv(process.env.AFIP_PRODUCTION, false);
 
     if (!cert || !key) {
       this.afip = null;
@@ -43,11 +49,12 @@ class AfipService {
     try {
       this.afip = new Afip({
         CUIT: process.env.COMPANY_CUIT || '20123456789',
-        production: process.env.NODE_ENV === 'production',
+        production,
         cert,
         key,
         access_token: ''
       });
+      console.log(`[AFIP] SDK inicializado en modo ${production ? 'PRODUCCIÓN' : 'HOMOLOGACIÓN'} (AFIP_PRODUCTION=${String(process.env.AFIP_PRODUCTION)})`);
     } catch (e: any) {
       console.error('[AFIP] Error al inicializar SDK:', e.message);
     }
@@ -69,38 +76,66 @@ class AfipService {
 
     let details: any = null;
     let usedMethod = '';
+    let hadAuthError = false;
 
     for (const method of methods) {
+      const lookupFn = this.afip?.[method]?.getTaxpayerDetails;
+      if (typeof lookupFn !== 'function') {
+        console.log(`[AFIP] ${method} no está disponible en esta versión del SDK`);
+        continue;
+      }
+
       try {
         console.log('[AFIP] Intentando ' + method + ' para ' + cleanCuit + '...');
-        details = await this.afip[method].getTaxpayerDetails(cleanCuit);
+        details = await lookupFn.call(this.afip[method], cleanCuit);
         if (details) {
           usedMethod = method;
           console.log('[AFIP] ¡Éxito con ' + method + '!');
           break;
         }
       } catch (e: any) {
-        const errMsg = e.message.toLowerCase();
-        console.log('[AFIP] Falló ' + method + ': ' + e.message);
+        const errMsg = String(e?.message || '').toLowerCase();
+        console.log('[AFIP] Falló ' + method + ': ' + String(e?.message || e));
         
         // Si el error es de TOKEN o 401, reiniciamos y REINTENTAMOS este mismo método una vez
         if (errMsg.includes('token') || errMsg.includes('401') || errMsg.includes('unauthorized')) {
+          hadAuthError = true;
           console.warn('[AFIP] Error de autenticación detectado. Re-inicializando...');
           this.initAfip();
           try {
-            details = await this.afip[method].getTaxpayerDetails(cleanCuit);
+            const retryFn = this.afip?.[method]?.getTaxpayerDetails;
+            if (typeof retryFn !== 'function') {
+              continue;
+            }
+            details = await retryFn.call(this.afip[method], cleanCuit);
             if (details) {
               usedMethod = method;
               break;
             }
           } catch (retryErr: any) {
-            console.log('[AFIP] Reintento fallido para ' + method);
+            const retryMsg = String(retryErr?.message || '').toLowerCase();
+            if (retryMsg.includes('token') || retryMsg.includes('401') || retryMsg.includes('unauthorized')) {
+              hadAuthError = true;
+            }
+            console.log('[AFIP] Reintento fallido para ' + method + ': ' + String(retryErr?.message || retryErr));
           }
         }
       }
     }
 
     if (!details) {
+      if (hadAuthError) {
+        console.warn(`[AFIP] Sin datos para ${cleanCuit}: autenticación rechazada por ARCA (401). Revisar certificado/clave y AFIP_PRODUCTION.`);
+        return {
+          nombre: '',
+          razonSocial: '',
+          cuit: cleanCuit,
+          _notFound: true,
+          _afipAuthError: true,
+          _message: 'ARCA rechazó la autenticación (401). Revisar credenciales y modo de entorno.'
+        };
+      }
+
       console.log('[AFIP] No se encontró información en ningún padrón para ' + cleanCuit);
       return { nombre: '', razonSocial: '', cuit: cleanCuit, _notFound: true };
     }
@@ -152,6 +187,16 @@ class AfipService {
       const result = await this.afip.ElectronicBilling.createVoucher(voucherData);
       return { cae: result.CAE, caeFchVto: result.CAEFchVto || result.CAEAfterVTo, voucherNumber: nextNumber, fullResult: result };
     } catch (error: any) { throw new Error('AFIP: ' + error.message); }
+  }
+
+  async getPointsOfSale() {
+    if (!this.afip) throw new Error('AFIP no configurado');
+    return await this.afip.ElectronicBilling.getSalesPoints();
+  }
+
+  async getVoucherTypes() {
+    if (!this.afip) throw new Error('AFIP no configurado');
+    return await this.afip.ElectronicBilling.getVoucherTypes();
   }
 }
 
