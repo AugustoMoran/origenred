@@ -114,7 +114,7 @@ export const POS = () => {
 
         if (data._notFound) {
           if (data._afipAuthError) {
-            alert('ARCA rechazó la autenticación (401). Revisá AFIP_PRODUCTION y las credenciales del backend.');
+            alert(data._message || 'ARCA rechazó la autenticación (401). Revisá AFIP_PRODUCTION y las credenciales del backend.');
           }
           // Si AFIP no lo tiene, dejamos que el usuario lo escriba sin mostrar error de alerta
           setLookupSource('manual');

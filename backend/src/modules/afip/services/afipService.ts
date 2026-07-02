@@ -1,6 +1,7 @@
 import Afip from '@afipsdk/afip.js';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import { X509Certificate } from 'crypto';
 
 dotenv.config();
 
@@ -25,6 +26,25 @@ const resolveSecretContent = (pemEnvName: string, pathEnvName: string) => {
 
 const normalizePemContent = (value: string) => value.trim();
 
+const parseCuit = (value: string | undefined) => (value || '').replace(/\D/g, '');
+
+const extractCuitFromCert = (certPem: string) => {
+  try {
+    const cert = new X509Certificate(certPem);
+    const subject = cert.subject || '';
+
+    // Ejemplos comunes: SERIALNUMBER=CUIT 20301234567 / serialNumber=CUIT 20301234567
+    const cuitMatch = subject.match(/serialnumber\s*=\s*cuit\s*(\d{11})/i);
+    if (cuitMatch?.[1]) return cuitMatch[1];
+
+    // Fallback defensivo: primer bloque de 11 dígitos en el subject
+    const any11Digits = subject.match(/(\d{11})/);
+    return any11Digits?.[1];
+  } catch {
+    return undefined;
+  }
+};
+
 const parseBooleanEnv = (value: string | undefined, defaultValue = false) => {
   if (value === undefined) return defaultValue;
   return ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase());
@@ -41,6 +61,7 @@ class AfipService {
   private initAfip(productionOverride?: boolean) {
     const cert = resolveSecretContent('AFIP_CERT_PEM', 'AFIP_CERT_PATH');
     const key = resolveSecretContent('AFIP_KEY_PEM', 'AFIP_KEY_PATH');
+    const companyCuit = parseCuit(process.env.COMPANY_CUIT);
     const production = productionOverride ?? parseBooleanEnv(process.env.AFIP_PRODUCTION, false);
 
     if (!cert || !key) {
@@ -49,12 +70,28 @@ class AfipService {
       return;
     }
 
+    if (companyCuit.length !== 11) {
+      this.afip = null;
+      console.error('[AFIP] COMPANY_CUIT inválido o ausente. Debe contener 11 dígitos.');
+      return;
+    }
+
+    const normalizedCert = normalizePemContent(cert);
+    const normalizedKey = normalizePemContent(key);
+    const certCuit = extractCuitFromCert(normalizedCert);
+
+    if (certCuit && certCuit !== companyCuit) {
+      this.afip = null;
+      console.error(`[AFIP] Mismatch de credenciales: COMPANY_CUIT=${companyCuit} pero certificado pertenece a CUIT=${certCuit}.`);
+      return;
+    }
+
     try {
       const options: any = {
-        CUIT: process.env.COMPANY_CUIT || '20123456789',
+        CUIT: companyCuit,
         production,
-        cert: normalizePemContent(cert),
-        key: normalizePemContent(key),
+        cert: normalizedCert,
+        key: normalizedKey,
       };
 
       // Importante: NO enviar access_token vacío, deja que el SDK gestione WSAA.
@@ -129,7 +166,16 @@ class AfipService {
   }
 
   async getTaxpayerDetails(cuit: string) {
-    if (!this.afip) throw new Error('AFIP no configurado');
+    if (!this.afip) {
+      return {
+        nombre: '',
+        razonSocial: '',
+        cuit: cuit.replace(/\D/g, ''),
+        _notFound: true,
+        _afipAuthError: true,
+        _message: 'AFIP no configurado correctamente. Revisá COMPANY_CUIT (11 dígitos) y que cert/key pertenezcan al mismo CUIT emisor.'
+      };
+    }
     const cleanCuit = cuit.replace(/\D/g, '');
     if (cleanCuit.length !== 11) throw new Error('CUIT inválido');
 
