@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 export const afipApi = createApi({
   reducerPath: 'afipApi',
   baseQuery: fetchBaseQuery({
-    baseUrl: '/api/afip',
+    baseUrl: `${import.meta.env.VITE_API_URL || ''}/api/afip`,
     prepareHeaders: (headers, { getState }: any) => {
       const token = getState().auth.token;
       if (token) {
