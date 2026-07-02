@@ -146,9 +146,16 @@ class AfipService {
       // Tactic 3: Padron A10 (Physical persons - VERY common for CUILs)
       if (!details) {
         try {
+          console.log(`[AFIP] Probando A10 para ${cleanCuit}...`);
+          // @ts-ignore - Algunas versiones del SDK no tienen los tipos actualizados
           details = await this.afip.RegisterScopeTen.getTaxpayerDetails(cleanCuit);
-          if (details) source = 'A10';
-        } catch (e) {}
+          if (details) {
+            source = 'A10';
+            console.log(`[AFIP] Encontrado en A10:`, details.apellido || details.razonSocial || 'Sin nombre');
+          }
+        } catch (e: any) {
+          console.log(`[AFIP] Error en A10 para ${cleanCuit}: ${e.message}`);
+        }
       }
 
       // Tactic 4: Padron A13
