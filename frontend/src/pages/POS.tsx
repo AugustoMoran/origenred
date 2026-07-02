@@ -140,7 +140,10 @@ export const POS = () => {
         setInvoiceType('B');
         setLookupSource('manual');
       }
-    } catch (err) {
+    } catch (err: any) {
+      console.error('Lookup Error:', err);
+      const errorMsg = err.data?.message || err.message || 'Error desconocido';
+      alert(`ARCA/AFIP: ${errorMsg}`);
       setFiscalCondition('Consumidor Final');
       setInvoiceType('B');
       setLookupSource('manual');
