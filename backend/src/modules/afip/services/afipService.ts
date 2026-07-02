@@ -129,24 +129,36 @@ class AfipService {
       let details: any = null;
       let source = '';
 
-      // Tactic 1: Padron A5 (Active taxpayers)
+      // Tactic 1: RegisterScopeFive (Monotributo/Inscriptos)
       try {
+        console.log(`[AFIP] Consultando RegisterScopeFive...`);
         details = await this.afip.RegisterScopeFive.getTaxpayerDetails(cleanCuit);
-        if (details) source = 'A5';
-      } catch (e) {}
-
-      // Tactic 2: Padron A4
-      if (!details) {
-        try {
-          details = await this.afip.RegisterScopeFour.getTaxpayerDetails(cleanCuit);
-          if (details) source = 'A4';
-        } catch (e) {}
+        if (details) {
+          source = 'A5';
+          console.log(`[AFIP] Encontrado en A5`);
+        }
+      } catch (e: any) {
+        console.log(`[AFIP] A5 Error: ${e.message}`);
       }
 
-      // Tactic 3: Padron A10 (Physical persons - VERY common for CUILs)
+      // Tactic 2: RegisterScopeFour (Empresas)
       if (!details) {
         try {
-          console.log(`[AFIP] Probando A10 para ${cleanCuit}...`);
+          console.log(`[AFIP] Consultando RegisterScopeFour...`);
+          details = await this.afip.RegisterScopeFour.getTaxpayerDetails(cleanCuit);
+          if (details) {
+            source = 'A4';
+            console.log(`[AFIP] Encontrado en A4`);
+          }
+        } catch (e: any) {
+          console.log(`[AFIP] A4 Error: ${e.message}`);
+        }
+      }
+
+      // Tactic 3: RegisterScopeTen (Personas físicas)
+      if (!details) {
+        try {
+          console.log(`[AFIP] Consultando RegisterScopeTen...`);
           // @ts-ignore
           details = await this.afip.RegisterScopeTen.getTaxpayerDetails(cleanCuit);
           if (details) {
@@ -154,30 +166,35 @@ class AfipService {
             console.log(`[AFIP] Encontrado en A10`);
           }
         } catch (e: any) {
-          console.log(`[AFIP] Error A10: ${e.message}`);
+          console.log(`[AFIP] A10 Error: ${e.message}`);
         }
       }
 
-      // Tactic 5: RegisterInscriptionProof (Último recurso para obtener el nombre)
+      // Tactic 4: RegisterInscriptionProof (Constancia)
       if (!details) {
         try {
-          console.log(`[AFIP] Probando Constancia de Inscripción para ${cleanCuit}...`);
+          console.log(`[AFIP] Consultando RegisterInscriptionProof...`);
           // @ts-ignore
           details = await this.afip.RegisterInscriptionProof.getTaxpayerDetails(cleanCuit);
           if (details) {
             source = 'Proof';
-            console.log(`[AFIP] Encontrado en Constancia de Inscripción`);
+            console.log(`[AFIP] Encontrado en Proof`);
           }
         } catch (e: any) {
-          console.log(`[AFIP] Error Constancia: ${e.message}`);
+          console.log(`[AFIP] Proof Error: ${e.message}`);
         }
       }
 
-      // Tactic 6: SIEMPRE devolver algo si AFIP no responde pero el formato es válido
+      // Si después de todos los intentos no hay nada y el error fue "Invalid token", 
+      // probablemente el objeto Afip necesite reiniciarse o el certificado sea inválido
       if (!details) {
-        console.log(`[AFIP] No se encontró información pública para ${cleanCuit}. Devolviendo objeto vacío para permitir edición manual.`);
         return {
           nombre: '',
+          razonSocial: '',
+          cuit: cleanCuit,
+          _notFound: true
+        };
+      }
           razonSocial: '',
           cuit: cleanCuit,
           _notFound: true
