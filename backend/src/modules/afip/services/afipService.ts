@@ -30,15 +30,16 @@ const parseBooleanEnv = (value: string | undefined, defaultValue = false) => {
 
 class AfipService {
   private afip: any;
+  private currentProduction = false;
 
   constructor() {
     this.initAfip();
   }
 
-  private initAfip() {
+  private initAfip(productionOverride?: boolean) {
     const cert = resolveSecretContent('AFIP_CERT_PEM', 'AFIP_CERT_PATH');
     const key = resolveSecretContent('AFIP_KEY_PEM', 'AFIP_KEY_PATH');
-    const production = parseBooleanEnv(process.env.AFIP_PRODUCTION, false);
+    const production = productionOverride ?? parseBooleanEnv(process.env.AFIP_PRODUCTION, false);
 
     if (!cert || !key) {
       this.afip = null;
@@ -54,17 +55,14 @@ class AfipService {
         key,
         access_token: ''
       });
+      this.currentProduction = production;
       console.log(`[AFIP] SDK inicializado en modo ${production ? 'PRODUCCIÓN' : 'HOMOLOGACIÓN'} (AFIP_PRODUCTION=${String(process.env.AFIP_PRODUCTION)})`);
     } catch (e: any) {
       console.error('[AFIP] Error al inicializar SDK:', e.message);
     }
   }
 
-  async getTaxpayerDetails(cuit: string) {
-    if (!this.afip) throw new Error('AFIP no configurado');
-    const cleanCuit = cuit.replace(/\D/g, '');
-    if (cleanCuit.length !== 11) throw new Error('CUIT inválido');
-    
+  private async executePadronLookups(cleanCuit: string) {
     // Lista de servicios en orden de prioridad
     const methods = [
       'RegisterScopeFive',
@@ -101,7 +99,7 @@ class AfipService {
         if (errMsg.includes('token') || errMsg.includes('401') || errMsg.includes('unauthorized')) {
           hadAuthError = true;
           console.warn('[AFIP] Error de autenticación detectado. Re-inicializando...');
-          this.initAfip();
+          this.initAfip(this.currentProduction);
           try {
             const retryFn = this.afip?.[method]?.getTaxpayerDetails;
             if (typeof retryFn !== 'function') {
@@ -121,6 +119,28 @@ class AfipService {
           }
         }
       }
+    }
+
+    return { details, usedMethod, hadAuthError };
+  }
+
+  async getTaxpayerDetails(cuit: string) {
+    if (!this.afip) throw new Error('AFIP no configurado');
+    const cleanCuit = cuit.replace(/\D/g, '');
+    if (cleanCuit.length !== 11) throw new Error('CUIT inválido');
+
+    let { details, usedMethod, hadAuthError } = await this.executePadronLookups(cleanCuit);
+
+    // Fallback automático: si hay 401 en un entorno, probamos el otro una sola vez
+    if (!details && hadAuthError) {
+      const switchedProduction = !this.currentProduction;
+      console.warn(`[AFIP] 401 detectado. Probando fallback automático en modo ${switchedProduction ? 'PRODUCCIÓN' : 'HOMOLOGACIÓN'}...`);
+      this.initAfip(switchedProduction);
+
+      const secondTry = await this.executePadronLookups(cleanCuit);
+      details = secondTry.details;
+      usedMethod = secondTry.usedMethod;
+      hadAuthError = secondTry.hadAuthError;
     }
 
     if (!details) {
