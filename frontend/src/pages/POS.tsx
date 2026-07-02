@@ -97,8 +97,12 @@ export const POS = () => {
     const targetCuit = (cuitValue || clientData.cuit).replace(/\D/g, '');
     if (targetCuit.length !== 11) return;
 
+    console.log('[DEBUG] Iniciando búsqueda para CUIT:', targetCuit);
+
     try {
       const data = await triggerLookup(targetCuit).unwrap();
+      console.log('[DEBUG] Datos recibidos de AFIP:', data);
+      
       if (data) {
         let condition = 'Consumidor Final';
         let suggestedType: 'A' | 'B' | 'C' = 'B';
