@@ -27,6 +27,10 @@ class AfipService {
   private afip: any;
 
   constructor() {
+    this.initAfip();
+  }
+
+  private initAfip() {
     const cert = resolveSecretContent('AFIP_CERT_PEM', 'AFIP_CERT_PATH');
     const key = resolveSecretContent('AFIP_KEY_PEM', 'AFIP_KEY_PATH');
 
@@ -36,13 +40,17 @@ class AfipService {
       return;
     }
 
-    this.afip = new Afip({
-      CUIT: process.env.COMPANY_CUIT || '20123456789',
-      production: process.env.NODE_ENV === 'production',
-      cert,
-      key,
-      access_token: '', // requerido por tipos del SDK al inicializar con cert/key
-    });
+    try {
+      this.afip = new Afip({
+        CUIT: process.env.COMPANY_CUIT || '20123456789',
+        production: process.env.NODE_ENV === 'production',
+        cert,
+        key,
+        access_token: '', // Requerido por tipos
+      });
+    } catch (e: any) {
+      console.error('[AFIP] Error al inicializar SDK:', e.message);
+    }
   }
 
   /**
