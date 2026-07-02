@@ -1,7 +1,7 @@
 import Afip from '@afipsdk/afip.js';
 import dotenv from 'dotenv';
 import fs from 'fs';
-import { X509Certificate } from 'crypto';
+import { X509Certificate, createPrivateKey, createPublicKey } from 'crypto';
 
 dotenv.config();
 
@@ -42,6 +42,33 @@ const extractCuitFromCert = (certPem: string) => {
     return any11Digits?.[1];
   } catch {
     return undefined;
+  }
+};
+
+const getCertValidity = (certPem: string) => {
+  try {
+    const cert = new X509Certificate(certPem);
+    return {
+      validFrom: cert.validFrom,
+      validTo: cert.validTo,
+      isExpired: new Date(cert.validTo).getTime() < Date.now(),
+    };
+  } catch {
+    return undefined;
+  }
+};
+
+const isMatchingCertAndKey = (certPem: string, keyPem: string) => {
+  try {
+    const cert = new X509Certificate(certPem);
+    const certPub = cert.publicKey.export({ type: 'spki', format: 'der' }).toString('base64');
+
+    const privateKey = createPrivateKey(keyPem);
+    const keyPub = createPublicKey(privateKey).export({ type: 'spki', format: 'der' }).toString('base64');
+
+    return certPub === keyPub;
+  } catch {
+    return false;
   }
 };
 
@@ -86,6 +113,22 @@ class AfipService {
     const normalizedCert = normalizePemContent(cert);
     const normalizedKey = normalizePemContent(key);
     const certCuit = extractCuitFromCert(normalizedCert);
+    const validity = getCertValidity(normalizedCert);
+
+    if (validity) {
+      console.log(`[AFIP] Cert validez -> desde=${validity.validFrom} hasta=${validity.validTo}`);
+      if (validity.isExpired) {
+        this.afip = null;
+        console.error('[AFIP] Certificado AFIP vencido. Renovar certificado en ARCA y actualizar AFIP_CERT_PEM/AFIP_KEY_PEM.');
+        return;
+      }
+    }
+
+    if (!isMatchingCertAndKey(normalizedCert, normalizedKey)) {
+      this.afip = null;
+      console.error('[AFIP] Certificado y clave privada no coinciden. Revisar AFIP_CERT_PEM y AFIP_KEY_PEM.');
+      return;
+    }
 
     if (certCuit) {
       console.log(`[AFIP] CUIT detectado en certificado: ${certCuit}`);
