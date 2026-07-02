@@ -64,6 +64,13 @@ class AfipService {
     const companyCuit = parseCuit(process.env.COMPANY_CUIT);
     const production = productionOverride ?? parseBooleanEnv(process.env.AFIP_PRODUCTION, false);
 
+    console.log(
+      `[AFIP] Config vars -> AFIP_PRODUCTION=${String(process.env.AFIP_PRODUCTION)}, ` +
+      `COMPANY_CUIT=${companyCuit || 'EMPTY'}, ` +
+      `AFIP_CERT_PEM=${cert ? 'OK' : 'MISSING'}, AFIP_KEY_PEM=${key ? 'OK' : 'MISSING'}, ` +
+      `AFIP_CERT_PATH=${process.env.AFIP_CERT_PATH ? 'SET' : 'EMPTY'}, AFIP_KEY_PATH=${process.env.AFIP_KEY_PATH ? 'SET' : 'EMPTY'}`
+    );
+
     if (!cert || !key) {
       this.afip = null;
       console.warn('[AFIP] Certificado/clave no configurados.');
@@ -79,6 +86,19 @@ class AfipService {
     const normalizedCert = normalizePemContent(cert);
     const normalizedKey = normalizePemContent(key);
     const certCuit = extractCuitFromCert(normalizedCert);
+
+    if (certCuit) {
+      console.log(`[AFIP] CUIT detectado en certificado: ${certCuit}`);
+    } else {
+      console.warn('[AFIP] No se pudo detectar CUIT dentro del certificado (subject sin SERIALNUMBER=CUIT ...).');
+    }
+
+    if (process.env.AFIP_WSAA_URL || process.env.AFIP_WSFE_URL) {
+      console.warn(
+        `[AFIP] URLs custom detectadas (AFIP_WSAA_URL=${process.env.AFIP_WSAA_URL ? 'SET' : 'EMPTY'}, ` +
+        `AFIP_WSFE_URL=${process.env.AFIP_WSFE_URL ? 'SET' : 'EMPTY'}). Si son incorrectas, pueden causar 401.`
+      );
+    }
 
     if (certCuit && certCuit !== companyCuit) {
       this.afip = null;
