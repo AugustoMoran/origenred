@@ -28,6 +28,29 @@ const normalizePemContent = (value: string) => value.trim();
 
 const parseCuit = (value: string | undefined) => (value || '').replace(/\D/g, '');
 
+const getAfipErrorDetails = (error: any) => {
+  try {
+    const status = error?.response?.status;
+    const data = error?.response?.data;
+
+    let payload = '';
+    if (typeof data === 'string') {
+      payload = data;
+    } else if (data) {
+      payload = JSON.stringify(data);
+    }
+
+    if (payload.length > 500) payload = `${payload.slice(0, 500)}...`;
+
+    return {
+      status,
+      payload,
+    };
+  } catch {
+    return { status: undefined, payload: '' };
+  }
+};
+
 const extractCuitFromCert = (certPem: string) => {
   try {
     const cert = new X509Certificate(certPem);
@@ -197,7 +220,11 @@ class AfipService {
         }
       } catch (e: any) {
         const errMsg = String(e?.message || '').toLowerCase();
+        const errorDetails = getAfipErrorDetails(e);
         console.log('[AFIP] Falló ' + method + ': ' + String(e?.message || e));
+        if (errorDetails.status || errorDetails.payload) {
+          console.log(`[AFIP] Detalle ${method} -> status=${String(errorDetails.status)} payload=${errorDetails.payload || 'N/A'}`);
+        }
         
         // Si el error es de TOKEN o 401, reiniciamos y REINTENTAMOS este mismo método una vez
         if (errMsg.includes('token') || errMsg.includes('401') || errMsg.includes('unauthorized')) {
@@ -216,10 +243,14 @@ class AfipService {
             }
           } catch (retryErr: any) {
             const retryMsg = String(retryErr?.message || '').toLowerCase();
+            const retryDetails = getAfipErrorDetails(retryErr);
             if (retryMsg.includes('token') || retryMsg.includes('401') || retryMsg.includes('unauthorized')) {
               hadAuthError = true;
             }
             console.log('[AFIP] Reintento fallido para ' + method + ': ' + String(retryErr?.message || retryErr));
+            if (retryDetails.status || retryDetails.payload) {
+              console.log(`[AFIP] Detalle reintento ${method} -> status=${String(retryDetails.status)} payload=${retryDetails.payload || 'N/A'}`);
+            }
           }
         }
       }
