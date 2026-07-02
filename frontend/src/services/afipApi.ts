@@ -25,3 +25,4 @@ export const afipApi = createApi({
 });
 
 export const { useGetTaxpayerQuery, useLazyGetTaxpayerQuery, useGetAfipStatusQuery } = afipApi;
+// Redeploy forced 07/01/2026 23:40:15
