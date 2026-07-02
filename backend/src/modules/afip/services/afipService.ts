@@ -23,6 +23,8 @@ const resolveSecretContent = (pemEnvName: string, pathEnvName: string) => {
   }
 };
 
+const normalizePemContent = (value: string) => value.trim();
+
 const parseBooleanEnv = (value: string | undefined, defaultValue = false) => {
   if (value === undefined) return defaultValue;
   return ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase());
@@ -48,13 +50,15 @@ class AfipService {
     }
 
     try {
-      this.afip = new Afip({
+      const options: any = {
         CUIT: process.env.COMPANY_CUIT || '20123456789',
         production,
-        cert,
-        key,
-        access_token: ''
-      });
+        cert: normalizePemContent(cert),
+        key: normalizePemContent(key),
+      };
+
+      // Importante: NO enviar access_token vacío, deja que el SDK gestione WSAA.
+      this.afip = new Afip(options);
       this.currentProduction = production;
       console.log(`[AFIP] SDK inicializado en modo ${production ? 'PRODUCCIÓN' : 'HOMOLOGACIÓN'} (AFIP_PRODUCTION=${String(process.env.AFIP_PRODUCTION)})`);
     } catch (e: any) {
