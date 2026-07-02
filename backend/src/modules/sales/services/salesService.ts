@@ -863,6 +863,7 @@ export const createSale = async (saleData: any, sellerId: string, requesterRoles
       clientName: saleData.clientName,
       clientCuit: saleData.clientCuit,
       clientAddress: saleData.clientAddress,
+      clientFiscalCondition: saleData.clientFiscalCondition,
       seller: sellerId,
       sellerCommissionRate: seller.commissionRate || 0,
       branch: branchId,
@@ -880,7 +881,10 @@ export const createSale = async (saleData: any, sellerId: string, requesterRoles
     // 4. Si requiere factura AFIP, enviar a la cola (solo si está habilitada)
     if (process.env.ENABLE_AFIP_QUEUE === 'true' && requiresAfip) {
       const ptoVta = getAfipPointOfSale();
-      const tipoComprobante = newSale.invoiceType === 'A' ? 1 : 6;
+      let tipoComprobante = 6; // Default B
+      if (newSale.invoiceType === 'A') tipoComprobante = 1;
+      else if (newSale.invoiceType === 'C') tipoComprobante = 11;
+      
       const docTipo = newSale.clientCuit ? 80 : 99;
       const docNro = newSale.clientCuit ? Number(newSale.clientCuit.replace(/-/g, '')) : 0;
 

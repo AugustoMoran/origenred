@@ -25,6 +25,7 @@ export interface ISale extends Document {
   clientName?: string;
   clientCuit?: string;
   clientAddress?: string;
+  clientFiscalCondition?: string;
   cae?: string; // Código de Autorización Electrónico
   caeExpiration?: Date;
   voucherNumber?: number;
@@ -72,6 +73,7 @@ const SaleSchema: Schema = new Schema({
   clientName: { type: String },
   clientCuit: { type: String },
   clientAddress: { type: String },
+  clientFiscalCondition: { type: String },
   cae: { type: String },
   caeExpiration: { type: Date },
   voucherNumber: { type: Number },

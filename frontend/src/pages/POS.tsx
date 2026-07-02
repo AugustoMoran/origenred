@@ -5,6 +5,7 @@ import { useCreateSaleMutation, useLazyGetSaleInvoiceQuery, useLazyGetSaleRemito
 import { useGetBranchesQuery } from '../services/branchApi';
 import { useGetCategoriesQuery } from '../services/categoryApi';
 import { useGetSuppliersQuery } from '../services/supplierApi';
+import { useLazyGetTaxpayerQuery } from '../services/afipApi';
 
 interface CartItem {
   product: string;
@@ -84,7 +85,75 @@ export const POS = () => {
   const [paymentMethod, setPaymentMethod] = useState<'efectivo' | 'tarjeta' | 'transferencia'>('efectivo');
   const [billingMode, setBillingMode] = useState<'fiscal' | 'nofiscal'>('fiscal');
   const [clientData, setClientData] = useState({ name: '', cuit: '', address: '' });
+  const [fiscalCondition, setFiscalCondition] = useState('Consumidor Final');
+  const [invoiceType, setInvoiceType] = useState<'A' | 'B' | 'C' | 'NONE'>('B');
+  const [lookupSource, setLookupSource] = useState<'arca' | 'manual' | null>(null);
+
+  const [triggerLookup, { isFetching: isSearchingTaxpayer }] = useLazyGetTaxpayerQuery();
+
   const [selectedBranchId, setSelectedBranchId] = useState(user?.branch || '');
+
+  const handleTaxpayerLookup = async (cuitValue?: string) => {
+    const targetCuit = (cuitValue || clientData.cuit).replace(/\D/g, '');
+    if (targetCuit.length !== 11) return;
+
+    try {
+      const data = await triggerLookup(targetCuit).unwrap();
+      if (data) {
+        let condition = 'Consumidor Final';
+        let suggestedType: 'A' | 'B' | 'C' = 'B';
+
+        // Mapeo básico basado en lo que suele devolver la API de Padron
+        const isRI = data.impuestos?.includes(30) || (data.caracterizacion || []).some((c: any) => c.idRegimen === 30 || String(c.descripcion || '').toLowerCase().includes('inscripto'));
+        const isMono = data.impuestos?.includes(20) || (data.caracterizacion || []).some((c: any) => c.idRegimen === 20 || String(c.descripcion || '').toLowerCase().includes('monotributo'));
+
+        if (isRI) {
+          condition = 'Responsable Inscripto';
+          suggestedType = 'A';
+        } else if (isMono) {
+          condition = 'Monotributo';
+          suggestedType = 'B';
+        }
+
+        setClientData(prev => ({
+          ...prev,
+          name: data.nombre || data.razonSocial || prev.name,
+          address: data.domicilioFiscal?.direccion || prev.address
+        }));
+        setFiscalCondition(condition);
+        setInvoiceType(suggestedType);
+        setLookupSource('arca');
+      } else {
+        setFiscalCondition('Consumidor Final');
+        setInvoiceType('B');
+        setLookupSource('manual');
+      }
+    } catch (err) {
+      setFiscalCondition('Consumidor Final');
+      setInvoiceType('B');
+      setLookupSource('manual');
+    }
+  };
+
+  // Autolookup al escribir 11 dígitos
+  useEffect(() => {
+    const cleanCuit = clientData.cuit.replace(/\D/g, '');
+    if (cleanCuit.length === 11 && lookupSource !== 'arca') {
+      handleTaxpayerLookup(cleanCuit);
+    } else if (cleanCuit.length < 11) {
+      setLookupSource(null);
+    }
+  }, [clientData.cuit]);
+
+  // Ajustar invoiceType cuando cambia el billingMode
+  useEffect(() => {
+    if (billingMode === 'nofiscal') {
+      setInvoiceType('NONE');
+    } else {
+      setInvoiceType(clientData.cuit.length === 11 && fiscalCondition === 'Responsable Inscripto' ? 'A' : 'B');
+    }
+  }, [billingMode]);
+
   const [discountType, setDiscountType] = useState<'none' | 'percentage' | 'fixed'>('none');
   const [discountValue, setDiscountValue] = useState<string>('');
 
@@ -225,8 +294,6 @@ export const POS = () => {
     }
 
     try {
-      const invoiceType = billingMode === 'nofiscal' ? 'NONE' : (clientData.cuit ? 'A' : 'B');
-
       const salePayload: any = {
         items: cart,
         paymentMethod,
@@ -234,6 +301,7 @@ export const POS = () => {
         clientName: clientData.name,
         clientCuit: clientData.cuit,
         clientAddress: clientData.address,
+        clientFiscalCondition: fiscalCondition,
       };
 
       if (discountAmount > 0) {
@@ -261,6 +329,9 @@ export const POS = () => {
 
       setCart([]);
       setClientData({ name: '', cuit: '', address: '' });
+      setFiscalCondition('Consumidor Final');
+      setInvoiceType('B');
+      setLookupSource(null);
       setDiscountType('none');
       setDiscountValue('');
     } catch (err: any) {
@@ -533,25 +604,84 @@ export const POS = () => {
         </div>
         
         {/* Footer client selector (Compact) */}
-        <div className="p-4 bg-slate-900 border-t border-white/5 grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
-           <input 
-             className="input py-2 text-sm text-slate-100 placeholder:text-slate-300 bg-[#0B1731] border-white/15" 
-             placeholder="Nombre del Cliente"
-             value={clientData.name}
-             onChange={e => setClientData({...clientData, name: e.target.value})}
-           />
-           <input 
-             className="input py-2 text-sm text-slate-100 placeholder:text-slate-300 bg-[#0B1731] border-white/15" 
-             placeholder="CUIT/CUIL (Opcional p/ Factura A)"
-             value={clientData.cuit}
-             onChange={e => setClientData({...clientData, cuit: e.target.value})}
-           />
-           <input 
-             className="input py-2 text-sm text-slate-100 placeholder:text-slate-300 bg-[#0B1731] border-white/15" 
-             placeholder="Dirección"
-             value={clientData.address}
-             onChange={e => setClientData({...clientData, address: e.target.value})}
-           />
+        <div className="p-4 bg-slate-900 border-t border-white/5 space-y-3">
+           <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+              <div className="relative md:col-span-1">
+                <input 
+                  className={`input py-2 pr-10 text-sm text-slate-100 placeholder:text-slate-300 bg-[#0B1731] border-white/15 w-full ${lookupSource === 'arca' ? 'border-emerald-500/50 ring-1 ring-emerald-500/20' : ''}`} 
+                  placeholder="CUIT/CUIL"
+                  value={clientData.cuit}
+                  onChange={e => setClientData({...clientData, cuit: e.target.value})}
+                />
+                <button 
+                  onClick={() => handleTaxpayerLookup()}
+                  disabled={isSearchingTaxpayer || clientData.cuit.replace(/\D/g, '').length !== 11}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 hover:text-brand-400 disabled:opacity-30 p-1"
+                  title="Buscar en ARCA"
+                >
+                  {isSearchingTaxpayer ? (
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/></svg>
+                  ) : (
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                  )}
+                </button>
+                {lookupSource === 'arca' && (
+                  <span className="absolute -top-2 left-2 px-1.5 bg-slate-900 text-[9px] text-emerald-400 border border-emerald-500/30 rounded-md uppercase font-bold tracking-wider">ARCA</span>
+                )}
+              </div>
+
+              <input 
+                className="input py-2 text-sm text-slate-100 placeholder:text-slate-300 bg-[#0B1731] border-white/15 md:col-span-2" 
+                placeholder="Razón Social / Nombre"
+                value={clientData.name}
+                onChange={e => setClientData({...clientData, name: e.target.value})}
+              />
+
+              <input 
+                className="input py-2 text-sm text-slate-100 placeholder:text-slate-300 bg-[#0B1731] border-white/15" 
+                placeholder="Dirección"
+                value={clientData.address}
+                onChange={e => setClientData({...clientData, address: e.target.value})}
+              />
+           </div>
+
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] text-slate-500 uppercase font-bold px-1">Condición Fiscal</label>
+                <select 
+                  className="input py-1.5 text-xs bg-[#0B1731] border-white/10"
+                  value={fiscalCondition}
+                  onChange={e => setFiscalCondition(e.target.value)}
+                >
+                  <option value="Consumidor Final">Consumidor Final</option>
+                  <option value="Responsable Inscripto">Responsable Inscripto</option>
+                  <option value="Monotributo">Monotributo</option>
+                  <option value="Exento">Exento</option>
+                </select>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <label className="text-[10px] text-slate-500 uppercase font-bold px-1">Comprobante</label>
+                <select 
+                  className="input py-1.5 text-xs bg-[#0B1731] border-white/10"
+                  value={invoiceType}
+                  onChange={e => setInvoiceType(e.target.value as any)}
+                  disabled={billingMode === 'nofiscal'}
+                >
+                  {billingMode === 'nofiscal' ? (
+                    <option value="NONE">Sin Comprobante Fiscal</option>
+                  ) : (
+                    <>
+                      <option value="B">Factura B (Sugerida)</option>
+                      {(fiscalCondition === 'Responsable Inscripto' || invoiceType === 'A') && (
+                        <option value="A">Factura A {fiscalCondition === 'Responsable Inscripto' ? '(Habilitada)' : '(Manual)'}</option>
+                      )}
+                      <option value="C">Factura C</option>
+                    </>
+                  )}
+                </select>
+              </div>
+           </div>
         </div>
       </div>
     </div>

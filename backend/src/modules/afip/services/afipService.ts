@@ -111,6 +111,32 @@ class AfipService {
     if (!this.afip) throw new Error('AFIP no configurado');
     return await this.afip.ElectronicBilling.getVoucherTypes();
   }
+
+  /**
+   * Obtiene datos del contribuyente por CUIT
+   */
+  async getTaxpayerDetails(cuit: string) {
+    if (!this.afip) throw new Error('AFIP no configurado');
+    
+    // El CUIT debe ser numérico y de 11 dígitos
+    const cleanCuit = cuit.replace(/\D/g, '');
+    if (cleanCuit.length !== 11) {
+      throw new Error('CUIT inválido: debe tener 11 dígitos');
+    }
+
+    try {
+      // Intentar primero con Padron A5 (más común para monotributo/inscriptos)
+      return await this.afip.RegisterScopeFive.getTaxpayerDetails(cleanCuit);
+    } catch (error: any) {
+      try {
+        // Reintentar con Padron A4 (empresas/sociedades)
+        return await this.afip.RegisterScopeFour.getTaxpayerDetails(cleanCuit);
+      } catch (err: any) {
+        console.error(`[AFIP] Error buscando CUIT ${cleanCuit}:`, err.message);
+        return null;
+      }
+    }
+  }
 }
 
 export default new AfipService();

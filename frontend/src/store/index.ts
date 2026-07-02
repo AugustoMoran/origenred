@@ -8,6 +8,7 @@ import { categoryApi } from '../services/categoryApi';
 import { supplierApi } from '../services/supplierApi';
 import { expenseApi } from '../services/expenseApi';
 import { supplierLedgerApi } from '../services/supplierLedgerApi';
+import { afipApi } from '../services/afipApi';
 
 export const store = configureStore({
   reducer: {
@@ -20,6 +21,7 @@ export const store = configureStore({
     [supplierApi.reducerPath]: supplierApi.reducer,
     [expenseApi.reducerPath]: expenseApi.reducer,
     [supplierLedgerApi.reducerPath]: supplierLedgerApi.reducer,
+    [afipApi.reducerPath]: afipApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -30,7 +32,8 @@ export const store = configureStore({
       categoryApi.middleware,
       supplierApi.middleware,
       expenseApi.middleware,
-      supplierLedgerApi.middleware
+      supplierLedgerApi.middleware,
+      afipApi.middleware
     ),
 });
 

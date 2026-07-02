@@ -110,6 +110,7 @@ import categoryRoutes from './modules/categories/routes/categoryRoutes';
 import supplierRoutes from './modules/suppliers/routes/supplierRoutes';
 import expenseRoutes from './modules/expenses/routes/expenseRoutes';
 import supplierLedgerRoutes from './modules/supplierLedger/routes/supplierLedgerRoutes';
+import afipRoutes from './modules/afip/routes/afipRoutes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/inventory', inventoryRoutes);
@@ -120,6 +121,7 @@ app.use('/api/categories', categoryRoutes);
 app.use('/api/suppliers', supplierRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/supplier-ledger', supplierLedgerRoutes);
+app.use('/api/afip', afipRoutes);
 
 // Error handler
 app.use((err: any, req: any, res: any, next: any) => {
