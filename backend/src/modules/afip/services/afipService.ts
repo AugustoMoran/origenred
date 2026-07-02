@@ -173,7 +173,16 @@ class AfipService {
         }
       }
 
-      // Tactic 4: Padron A13
+      // Tactic 6: SIEMPRE devolver algo si AFIP no responde pero el formato es válido
+      if (!details) {
+        console.log(`[AFIP] No se encontró información pública para ${cleanCuit}. Devolviendo objeto vacío para permitir edición manual.`);
+        return {
+          nombre: '',
+          razonSocial: '',
+          cuit: cleanCuit,
+          _notFound: true
+        };
+      }
       if (!details) {
         try {
           details = await this.afip.RegisterScopeThirteen.getTaxpayerDetails(cleanCuit);
