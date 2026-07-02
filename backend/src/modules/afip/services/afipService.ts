@@ -139,6 +139,11 @@ class AfipService {
         }
       } catch (e: any) {
         console.log(`[AFIP] A5 Error: ${e.message}`);
+        if (e.message.includes('token') || e.message.includes('401')) {
+          console.log('[AFIP] Token inválido en A5, reintentando re-inicialización...');
+          this.initAfip();
+          try { details = await this.afip.RegisterScopeFive.getTaxpayerDetails(cleanCuit); if (details) source = 'A5'; } catch (err) {}
+        }
       }
 
       // Tactic 2: RegisterScopeFour (Empresas)
@@ -152,6 +157,10 @@ class AfipService {
           }
         } catch (e: any) {
           console.log(`[AFIP] A4 Error: ${e.message}`);
+          if (e.message.includes('token') || e.message.includes('401')) {
+            this.initAfip();
+            try { details = await this.afip.RegisterScopeFour.getTaxpayerDetails(cleanCuit); if (details) source = 'A4'; } catch (err) {}
+          }
         }
       }
 
@@ -185,8 +194,6 @@ class AfipService {
         }
       }
 
-      // Si después de todos los intentos no hay nada y el error fue "Invalid token", 
-      // probablemente el objeto Afip necesite reiniciarse o el certificado sea inválido
       if (!details) {
         return {
           nombre: '',
@@ -195,29 +202,14 @@ class AfipService {
           _notFound: true
         };
       }
-          razonSocial: '',
-          cuit: cleanCuit,
-          _notFound: true
-        };
-      }
-      if (!details) {
-        try {
-          details = await this.afip.RegisterScopeThirteen.getTaxpayerDetails(cleanCuit);
-          if (details) source = 'A13';
-        } catch (e) {}
-      }
-
-      if (!details) return null;
 
       // NORMALIZACIÓN DE NOMBRE PARA PERSONAS FÍSICAS (CUIL)
-      // AFIP suele devolver apellido y nombre por separado para personas
       let fullName = details.nombre || details.razonSocial || '';
       
       if (!fullName && details.apellido) {
         fullName = `${details.apellido}${details.nombre ? ' ' + details.nombre : ''}`;
       }
       
-      // Si aún no hay nombre (algunos padrones lo traen en 'personaReturn.datosGenerales')
       if (!fullName && details.datosGenerales) {
         fullName = details.datosGenerales.razonSocial || 
                    `${details.datosGenerales.apellido || ''} ${details.datosGenerales.nombre || ''}`.trim();
@@ -225,13 +217,13 @@ class AfipService {
 
       return {
         ...details,
-        nombre: fullName, // Aseguramos que el campo 'nombre' tenga algo
-        razonSocial: fullName, // Aseguramos que 'razonSocial' también esté
+        nombre: fullName,
+        razonSocial: fullName,
         _source: source
       };
     } catch (error: any) {
       console.error(`[AFIP] Error crítico buscando CUIT ${cleanCuit}:`, error.message);
-      return null;
+      return { nombre: '', razonSocial: '', cuit: cleanCuit, _notFound: true };
     }
   }
 }

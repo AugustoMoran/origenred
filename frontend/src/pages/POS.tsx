@@ -107,6 +107,12 @@ export const POS = () => {
         let condition = 'Consumidor Final';
         let suggestedType: 'A' | 'B' | 'C' = 'B';
 
+        if (data._notFound) {
+          // Si AFIP no lo tiene, dejamos que el usuario lo escriba sin mostrar error de alerta
+          setLookupSource('manual');
+          return;
+        }
+
         // Mapeo básico basado en lo que suele devolver la API de Padron
         const isRI = data.impuestos?.includes(30) || (data.caracterizacion || []).some((c: any) => c.idRegimen === 30 || String(c.descripcion || '').toLowerCase().includes('inscripto'));
         const isMono = data.impuestos?.includes(20) || (data.caracterizacion || []).some((c: any) => c.idRegimen === 20 || String(c.descripcion || '').toLowerCase().includes('monotributo'));
