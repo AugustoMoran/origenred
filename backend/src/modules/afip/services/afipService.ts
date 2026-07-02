@@ -147,14 +147,29 @@ class AfipService {
       if (!details) {
         try {
           console.log(`[AFIP] Probando A10 para ${cleanCuit}...`);
-          // @ts-ignore - Algunas versiones del SDK no tienen los tipos actualizados
+          // @ts-ignore
           details = await this.afip.RegisterScopeTen.getTaxpayerDetails(cleanCuit);
           if (details) {
             source = 'A10';
-            console.log(`[AFIP] Encontrado en A10:`, details.apellido || details.razonSocial || 'Sin nombre');
+            console.log(`[AFIP] Encontrado en A10`);
           }
         } catch (e: any) {
-          console.log(`[AFIP] Error en A10 para ${cleanCuit}: ${e.message}`);
+          console.log(`[AFIP] Error A10: ${e.message}`);
+        }
+      }
+
+      // Tactic 5: RegisterInscriptionProof (Último recurso para obtener el nombre)
+      if (!details) {
+        try {
+          console.log(`[AFIP] Probando Constancia de Inscripción para ${cleanCuit}...`);
+          // @ts-ignore
+          details = await this.afip.RegisterInscriptionProof.getTaxpayerDetails(cleanCuit);
+          if (details) {
+            source = 'Proof';
+            console.log(`[AFIP] Encontrado en Constancia de Inscripción`);
+          }
+        } catch (e: any) {
+          console.log(`[AFIP] Error Constancia: ${e.message}`);
         }
       }
 
