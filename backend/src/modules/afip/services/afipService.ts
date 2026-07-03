@@ -201,20 +201,19 @@ class AfipService {
 
       this.afip = new Afip(options);
 
-      // FIX PARA CLOCK SKEW (Diferencia de hora entre el servidor y AFIP)
-      // Forzamos al SDK a pedir tickets con una validez mayor
-      if (this.afip.WSAA) {
-        this.afip.WSAA.service_url = production 
-          ? 'https://wsaa.afip.gov.ar/ws/services/LoginCms' 
-          : 'https://wsaahomo.afip.gov.ar/ws/services/LoginCms';
+      // FORZAR URL DE PRODUCCIÓN Y LIMPIEZA DE ENTORNO
+      if (production) {
+        if (this.afip.WSAA) {
+          this.afip.WSAA.service_url = 'https://wsaa.afip.gov.ar/ws/services/LoginCms';
+        }
       }
 
       this.currentProduction = production;
-      console.log(`[AFIP] SDK inicializado -> Modo: ${production ? 'PRODUCCIÓN (ARCA)' : 'HOMOLOGACIÓN (TESTING)'} | CUIT: ${companyCuit}`);
+      console.log(`[AFIP] SDK inicializado -> Modo: ${production ? 'PRODUCCIÓN (ARCA)' : 'HOMOLOGACIÓN (TESTING)'} | CUIT: ${companyCuit} | Alias: OsoNueva`);
       
-      if (!production) {
-        console.warn('[AFIP] ⚠️ ESTÁS EN MODO HOMOLOGACIÓN. Si vinculaste el servicio en el portal real de AFIP, DEBÉS cambiar AFIP_PRODUCTION a true.');
-      }
+      // Limpiar tokens al iniciar para forzar login fresco con el nuevo alias
+      this.clearTokensSync();
+
     } catch (e: any) {
       console.error('[AFIP] Error al inicializar SDK:', e.message);
     }
