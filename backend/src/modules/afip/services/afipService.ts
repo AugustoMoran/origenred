@@ -223,6 +223,20 @@ class AfipService {
     }
   }
 
+  private clearTokensSync() {
+    try {
+      if (fs.existsSync(path.join(TOKENS_DIR))) {
+        const files = fs.readdirSync(TOKENS_DIR);
+        for (const file of files) {
+          fs.unlinkSync(path.join(TOKENS_DIR, file));
+        }
+        console.log('[AFIP] Tokens locales eliminados satisfactoriamente.');
+      }
+    } catch (err) {
+      console.error('[AFIP] No se pudieron limpiar los tokens:', err);
+    }
+  }
+
   /**
    * Obtiene un Ticket de Acceso (TA) forzando una limpieza de caché si es necesario
    */
