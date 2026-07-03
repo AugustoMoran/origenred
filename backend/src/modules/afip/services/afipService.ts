@@ -201,17 +201,21 @@ class AfipService {
 
       this.afip = new Afip(options);
 
-      // FORZAR URL DE PRODUCCIÓN Y LIMPIEZA DE ENTORNO
+      // GARANTIZAR URLS DE PRODUCCIÓN (ARCA)
       if (production) {
+        // Forzamos el servidor de login de producción
         if (this.afip.WSAA) {
           this.afip.WSAA.service_url = 'https://wsaa.afip.gov.ar/ws/services/LoginCms';
         }
+        
+        // La librería maneja las otras URLs internamente si 'production: true'
+        // pero ante cualquier duda, aquí las forzaríamos.
       }
 
       this.currentProduction = production;
-      console.log(`[AFIP] SDK inicializado -> Modo: ${production ? 'PRODUCCIÓN (ARCA)' : 'HOMOLOGACIÓN (TESTING)'} | CUIT: ${companyCuit} | Alias: OsoNueva`);
+      console.log(`[AFIP] OK -> ENTORNO: ${production ? 'PRODUCCIÓN (ARCA)' : 'HOMOLOGACIÓN (TESTING)'}`);
+      console.log(`[AFIP] CUIT Emisor: ${companyCuit} | Alias: OsoNueva`);
       
-      // Limpiar tokens al iniciar para forzar login fresco con el nuevo alias
       this.clearTokensSync();
 
     } catch (e: any) {
@@ -329,28 +333,16 @@ class AfipService {
 
     let { details, usedMethod, hadAuthError } = await this.executePadronLookups(cleanCuit);
 
-    // Fallback automático: si hay 401 en un entorno, probamos el otro una sola vez
-    if (!details && hadAuthError) {
-      const switchedProduction = !this.currentProduction;
-      console.warn(`[AFIP] 401 detectado. Probando fallback automático en modo ${switchedProduction ? 'PRODUCCIÓN' : 'HOMOLOGACIÓN'}...`);
-      this.initAfip(switchedProduction);
-
-      const secondTry = await this.executePadronLookups(cleanCuit);
-      details = secondTry.details;
-      usedMethod = secondTry.usedMethod;
-      hadAuthError = secondTry.hadAuthError;
-    }
-
     if (!details) {
       if (hadAuthError) {
-        console.warn(`[AFIP] Sin datos para ${cleanCuit}: autenticación rechazada por ARCA (401). Revisar certificado/clave y AFIP_PRODUCTION.`);
+        console.warn(`[AFIP] Sin datos para ${cleanCuit}: autenticación rechazada por ARCA (401). Esto suele ser por falta de relación en el portal AFIP o demora en propagación.`);
         return {
           nombre: '',
           razonSocial: '',
           cuit: cleanCuit,
           _notFound: true,
           _afipAuthError: true,
-          _message: 'ARCA rechazó la autenticación (401). Revisar credenciales y modo de entorno.'
+          _message: 'ARCA rechazó la autenticación (401). Verificá que el Alias esté vinculado al servicio en el portal AFIP.'
         };
       }
 
