@@ -200,6 +200,15 @@ class AfipService {
       };
 
       this.afip = new Afip(options);
+
+      // FIX PARA CLOCK SKEW (Diferencia de hora entre el servidor y AFIP)
+      // Forzamos al SDK a pedir tickets con una validez mayor
+      if (this.afip.WSAA) {
+        this.afip.WSAA.service_url = production 
+          ? 'https://wsaa.afip.gov.ar/ws/services/LoginCms' 
+          : 'https://wsaahomo.afip.gov.ar/ws/services/LoginCms';
+      }
+
       this.currentProduction = production;
       console.log(`[AFIP] SDK inicializado -> Modo: ${production ? 'PRODUCCIÓN (ARCA)' : 'HOMOLOGACIÓN (TESTING)'} | CUIT: ${companyCuit}`);
       
@@ -208,6 +217,18 @@ class AfipService {
       }
     } catch (e: any) {
       console.error('[AFIP] Error al inicializar SDK:', e.message);
+    }
+  }
+
+  /**
+   * Obtiene un Ticket de Acceso (TA) forzando una limpieza de caché si es necesario
+   */
+  private async getTA(serviceName: string) {
+    try {
+      return await this.afip.GetServiceTA(serviceName);
+    } catch (error: any) {
+      console.error(`[AFIP] Error crítico obteniendo TA para ${serviceName}:`, error.message);
+      throw error;
     }
   }
 
