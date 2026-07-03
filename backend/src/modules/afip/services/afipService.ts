@@ -1,9 +1,18 @@
 import Afip from '@afipsdk/afip.js';
 import dotenv from 'dotenv';
 import fs from 'fs';
+import path from 'path';
 import { X509Certificate, createPrivateKey, createPublicKey } from 'crypto';
 
 dotenv.config();
+
+/**
+ * PATH DE TOKENS: Forzamos una carpeta específica para evitar conflictos de permisos
+ */
+const TOKENS_DIR = path.join(process.cwd(), 'uploads', '.afip_tokens');
+if (!fs.existsSync(TOKENS_DIR)) {
+  fs.mkdirSync(TOKENS_DIR, { recursive: true });
+}
 
 const decodePem = (value: string | undefined) => {
   if (!value) return undefined;
@@ -178,12 +187,14 @@ class AfipService {
         production,
         cert: normalizedCert,
         key: normalizedKey,
+        res_folder: TOKENS_DIR, // Forzamos el uso de esta carpeta
+        ta_folder: TOKENS_DIR   // Para versiones más nuevas del SDK
       };
 
       // Importante: NO enviar access_token vacío, deja que el SDK gestione WSAA.
       this.afip = new Afip(options);
       this.currentProduction = production;
-      console.log(`[AFIP] SDK inicializado en modo ${production ? 'PRODUCCIÓN' : 'HOMOLOGACIÓN'} (AFIP_PRODUCTION=${String(process.env.AFIP_PRODUCTION)})`);
+      console.log(`[AFIP] SDK inicializado -> Modo: ${production ? 'PRODUCCIÓN' : 'HOMOLOGACIÓN'} | CUIT: ${companyCuit}`);
     } catch (e: any) {
       console.error('[AFIP] Error al inicializar SDK:', e.message);
     }
@@ -229,7 +240,19 @@ class AfipService {
         // Si el error es de TOKEN o 401, reiniciamos y REINTENTAMOS este mismo método una vez
         if (errMsg.includes('token') || errMsg.includes('401') || errMsg.includes('unauthorized')) {
           hadAuthError = true;
-          console.warn('[AFIP] Error de autenticación detectado. Re-inicializando...');
+          console.warn(`[AFIP] Error 401 en ${method}. Limpiando tokens y re-inicializando...`);
+          
+          // BORRAMOS TOKENS CACHEADOS para forzar un nuevo pedido a ARCA
+          try {
+            const files = fs.readdirSync(TOKENS_DIR);
+            for (const file of files) {
+              fs.unlinkSync(path.join(TOKENS_DIR, file));
+            }
+            console.log('[AFIP] Tokens eliminados exitosamente.');
+          } catch (err) {
+            console.error('[AFIP] Error al limpiar tokens:', err);
+          }
+
           this.initAfip(this.currentProduction);
           try {
             const retryFn = this.afip?.[method]?.getTaxpayerDetails;
