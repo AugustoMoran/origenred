@@ -147,6 +147,14 @@ class AfipService {
     const certCuit = extractCuitFromCert(normalizedCert);
     const validity = getCertValidity(normalizedCert);
 
+    try {
+      const certObj = new X509Certificate(normalizedCert);
+      console.log(`[AFIP] Cert Serial: ${certObj.serialNumber}`);
+      console.log(`[AFIP] Cert Subject: ${certObj.subject}`);
+    } catch (e) {
+      console.error('[AFIP] Error al leer metadata del certificado:', e);
+    }
+
     if (validity) {
       console.log(`[AFIP] Cert validez -> desde=${validity.validFrom} hasta=${validity.validTo}`);
       if (validity.isExpired) {
@@ -187,14 +195,17 @@ class AfipService {
         production,
         cert: normalizedCert,
         key: normalizedKey,
-        res_folder: TOKENS_DIR, // Forzamos el uso de esta carpeta
-        ta_folder: TOKENS_DIR   // Para versiones más nuevas del SDK
+        res_folder: TOKENS_DIR,
+        ta_folder: TOKENS_DIR
       };
 
-      // Importante: NO enviar access_token vacío, deja que el SDK gestione WSAA.
       this.afip = new Afip(options);
       this.currentProduction = production;
-      console.log(`[AFIP] SDK inicializado -> Modo: ${production ? 'PRODUCCIÓN' : 'HOMOLOGACIÓN'} | CUIT: ${companyCuit}`);
+      console.log(`[AFIP] SDK inicializado -> Modo: ${production ? 'PRODUCCIÓN (ARCA)' : 'HOMOLOGACIÓN (TESTING)'} | CUIT: ${companyCuit}`);
+      
+      if (!production) {
+        console.warn('[AFIP] ⚠️ ESTÁS EN MODO HOMOLOGACIÓN. Si vinculaste el servicio en el portal real de AFIP, DEBÉS cambiar AFIP_PRODUCTION a true.');
+      }
     } catch (e: any) {
       console.error('[AFIP] Error al inicializar SDK:', e.message);
     }
