@@ -106,20 +106,15 @@ export const POS = () => {
 
     try {
       const data = await triggerLookup(targetCuit).unwrap();
-      console.log('[DEBUG] Datos recibidos de AFIP:', data);
       
       if (data) {
-        let condition = 'Consumidor Final';
-        let suggestedType: 'A' | 'B' | 'C' = 'B';
-
         if (data._notFound) {
-          if (data._afipAuthError) {
-            alert(data._message || 'ARCA rechazó la autenticación (401). Revisá AFIP_PRODUCTION y las credenciales del backend.');
-          }
-          // Si AFIP no lo tiene, dejamos que el usuario lo escriba sin mostrar error de alerta
           setLookupSource('manual');
           return;
         }
+
+        let condition = 'Consumidor Final';
+        let suggestedType: 'A' | 'B' | 'C' = 'B';
 
         // Mapeo básico basado en lo que suele devolver la API de Padron
         const isRI = data.impuestos?.includes(30) || (data.caracterizacion || []).some((c: any) => c.idRegimen === 30 || String(c.descripcion || '').toLowerCase().includes('inscripto'));
@@ -159,11 +154,8 @@ export const POS = () => {
         setLookupSource('manual');
       }
     } catch (err: any) {
-      console.error('Lookup Error:', err);
-      const errorMsg = err.data?.message || err.message || 'Error desconocido';
-      alert(`ARCA/AFIP: ${errorMsg}`);
-      setFiscalCondition('Consumidor Final');
-      setInvoiceType('B');
+      console.error('Lookup Error (Silent):', err);
+      // Fallback silencioso a manual
       setLookupSource('manual');
     }
   };
@@ -718,10 +710,8 @@ export const POS = () => {
                     <option value="NONE">Sin Comprobante Fiscal</option>
                   ) : (
                     <>
-                      <option value="B">Factura B (Sugerida)</option>
-                      {(fiscalCondition === 'Responsable Inscripto' || invoiceType === 'A') && (
-                        <option value="A">Factura A {fiscalCondition === 'Responsable Inscripto' ? '(Habilitada)' : '(Manual)'}</option>
-                      )}
+                      <option value="B">Factura B</option>
+                      <option value="A">Factura A</option>
                       <option value="C">Factura C</option>
                     </>
                   )}
