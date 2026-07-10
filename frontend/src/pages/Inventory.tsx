@@ -830,14 +830,14 @@ export const Inventory = () => {
                   />
                 </th>
               )}
-              <th className="w-12 px-2">Foto</th>
-              <th>Producto</th>
-              <th className="text-right px-2">Precio</th>
-              <th className="text-center px-2">Stock</th>
+              <th className="w-10 px-1">Foto</th>
+              <th className="px-2">Producto</th>
+              <th className="text-right px-1">Precio</th>
+              <th className="text-center px-1">Stock</th>
               <th className="hidden lg:table-cell px-2">Categoría</th>
               <th className="hidden xl:table-cell px-2">Proveedor</th>
               <th className="hidden 2xl:table-cell px-2">SKU</th>
-              <th className="text-center px-2">Acciones</th>
+              <th className="text-center px-1">Acciones</th>
             </tr>
           </thead>
           <tbody>
@@ -853,8 +853,8 @@ export const Inventory = () => {
                     />
                   </td>
                 )}
-                <td className="px-2 text-center">
-                  <div className="w-8 h-8 rounded-lg overflow-hidden bg-slate-800 ring-1 ring-white/10 inline-flex items-center justify-center">
+                <td className="px-1 text-center">
+                  <div className="w-7 h-7 rounded-lg overflow-hidden bg-slate-800 ring-1 ring-white/10 inline-flex items-center justify-center">
                     {p.imageUrl ? (
                       <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover" />
                     ) : (
@@ -864,27 +864,27 @@ export const Inventory = () => {
                     )}
                   </div>
                 </td>
-                <td className="px-3 py-3">
-                  <div className="font-medium text-white text-sm leading-tight">{p.name}</div>
-                  {p.description && <div className="text-[10px] text-slate-500 mt-0.5 truncate max-w-[150px]">{p.description}</div>}
+                <td className="px-2 py-2">
+                  <div className="font-medium text-white text-[13px] leading-tight whitespace-normal break-words max-w-[120px] sm:max-w-[200px]">{p.name}</div>
+                  {p.description && <div className="text-[10px] text-slate-500 mt-0.5 whitespace-normal break-words line-clamp-1 max-w-[120px] sm:max-w-[200px]">{p.description}</div>}
                 </td>
-                <td className="text-right px-2 font-bold text-brand-400 text-sm whitespace-nowrap">
+                <td className="text-right px-1 font-bold text-brand-400 text-[13px] whitespace-nowrap">
                   ${p.price.toLocaleString()}
                 </td>
-                <td className="text-center px-2 border-x border-white/[0.02]">
+                <td className="text-center px-1 border-x border-white/[0.02]">
                   <StockCell product={p} />
                 </td>
                 <td className="hidden lg:table-cell px-2">
-                  <span className="badge-gray text-[10px] px-1.5 whitespace-nowrap">{p.category || 'Sin categoría'}</span>
+                  <span className="badge-gray text-[9px] px-1.5 whitespace-nowrap">{p.category || 'Sin categoría'}</span>
                 </td>
                 <td className="hidden xl:table-cell px-2">
-                  <span className="text-[10px] text-slate-400 truncate max-w-[100px] block">
+                  <span className="text-[9px] text-slate-400 truncate max-w-[80px] block">
                     {p.supplier?.name || 'Sin proveedor'}
                   </span>
                 </td>
-                <td className="font-mono text-[10px] text-slate-500 hidden 2xl:table-cell px-2 uppercase tracking-tighter">{p.sku}</td>
-                <td className="px-2">
-                  <div className="flex items-center justify-center gap-1.5">
+                <td className="font-mono text-[9px] text-slate-500 hidden 2xl:table-cell px-2 uppercase tracking-tighter">{p.sku}</td>
+                <td className="px-1">
+                  <div className="flex items-center justify-center gap-1">
                     {isAdmin && (
                       <button
                         onClick={() => handleStockAdjust(p._id)}
