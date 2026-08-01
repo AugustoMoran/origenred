@@ -94,6 +94,8 @@ export interface StoreProductsQuery {
   page?: number;
   limit?: number;
 }
+
+export interface CreateOrderPayload {
   items: StoreOrderItem[];
   customerName: string;
   customerEmail: string;

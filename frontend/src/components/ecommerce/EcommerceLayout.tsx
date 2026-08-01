@@ -3,6 +3,7 @@ import { Outlet } from 'react-router-dom';
 import { StoreHeader } from './StoreHeader';
 import { CartDrawer } from './CartDrawer';
 import { PromoBar } from './PromoBar';
+import { FloatingSocialButtons } from './FloatingSocialButtons';
 import { useGetPublicSettingsQuery } from '../../services/settingsApi';
 
 export const EcommerceLayout: React.FC = () => {
@@ -23,6 +24,7 @@ export const EcommerceLayout: React.FC = () => {
         </div>
       </footer>
       <CartDrawer />
+      <FloatingSocialButtons />
     </div>
   );
 };
