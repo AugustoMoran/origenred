@@ -7,7 +7,7 @@ import Branch from '../../branches/models/Branch';
 import BranchStock from '../../stock/models/BranchStock';
 
 describe('Sales Integration Tests', () => {
-  let token: string;
+  let agent: ReturnType<typeof request.agent>;
   let productId: string;
   let branchId: string;
 
@@ -33,12 +33,10 @@ describe('Sales Integration Tests', () => {
       permissions: { 'sales:edit': true, 'sales:view': true, 'inventory:edit': true }
     });
 
-    // 2. Login to get token
-    const res = await request(app)
+    agent = request.agent(app);
+    await agent
       .post('/api/auth/login')
       .send({ email: 'admin_test@test.com', password: 'Password123!' });
-    
-    token = res.body.token;
 
     // 3. Create a product via DB
     const product = await Product.create({
@@ -75,9 +73,8 @@ describe('Sales Integration Tests', () => {
       invoiceType: 'B'
     };
 
-    const res = await request(app)
+    const res = await agent
       .post('/api/sales')
-      .set('Authorization', `Bearer ${token}`)
       .send(saleData);
 
     expect(res.status).toBe(201);
@@ -103,9 +100,8 @@ describe('Sales Integration Tests', () => {
       ]
     };
 
-    const res = await request(app)
+    const res = await agent
       .post('/api/sales')
-      .set('Authorization', `Bearer ${token}`)
       .send(saleData);
 
     expect(res.status).toBe(400);
@@ -122,9 +118,8 @@ describe('Sales Integration Tests', () => {
       clientAddress: 'Calle Falsa 123'
     };
 
-    const res = await request(app)
+    const res = await agent
       .post('/api/sales')
-      .set('Authorization', `Bearer ${token}`)
       .send(saleData);
 
     expect(res.status).toBe(201);
@@ -140,17 +135,16 @@ describe('Sales Integration Tests', () => {
       items: [{ product: productId, name: 'Test Product', quantity: 1, price: 1000, ivaRate: 21 }],
       paymentMethod: 'transferencia'
     };
-    const saleRes = await request(app)
+    const saleRes = await agent
       .post('/api/sales')
-      .set('Authorization', `Bearer ${token}`)
       .send(saleData);
     
     const saleId = saleRes.body._id;
 
     // 2. Request PDF
-    const res = await request(app)
+    const res = await agent
       .get(`/api/sales/${saleId}/download`)
-      .set('Authorization', `Bearer ${token}`);
+;
 
     expect(res.status).toBe(200);
     expect(res.header['content-type']).toMatch(/application\/pdf/);
@@ -176,9 +170,8 @@ describe('Sales Integration Tests', () => {
       },
     };
 
-    const res = await request(app)
+    const res = await agent
       .post('/api/sales')
-      .set('Authorization', `Bearer ${token}`)
       .send(saleData);
 
     expect(res.status).toBe(201);
@@ -193,14 +186,13 @@ describe('Sales Integration Tests', () => {
       items: [{ product: productId, name: 'Test Product', quantity: 1, price: 1000, ivaRate: 21 }],
       paymentMethod: 'efectivo'
     };
-    await request(app)
+    await agent
       .post('/api/sales')
-      .set('Authorization', `Bearer ${token}`)
       .send(saleData);
 
-    const res = await request(app)
+    const res = await agent
       .get('/api/sales')
-      .set('Authorization', `Bearer ${token}`);
+;
 
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);

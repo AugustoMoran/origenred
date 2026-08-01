@@ -34,11 +34,12 @@ const loginAsAdmin = async (email = 'integral@test.com') => {
     },
   });
 
-  const login = await request(app)
+  const agent = request.agent(app);
+  await agent
     .post('/api/auth/login')
     .send({ email, password: 'Password123!' });
 
-  return { token: login.body.token as string, branchId: String(branch._id) };
+  return { agent, branchId: String(branch._id) };
 };
 
 describe('Full Platform Integration Tests', () => {
@@ -77,7 +78,7 @@ describe('Full Platform Integration Tests', () => {
     });
 
     it('should update ecommerce fields from inventory API', async () => {
-      const { token } = await loginAsAdmin('inventory-ecom@test.com');
+      const { agent } = await loginAsAdmin('inventory-ecom@test.com');
 
       const product = await Product.create({
         name: 'Producto Base',
@@ -90,9 +91,8 @@ describe('Full Platform Integration Tests', () => {
         isActive: true,
       });
 
-      const res = await request(app)
+      const res = await agent
         .put(`/api/inventory/${product._id}`)
-        .set('Authorization', `Bearer ${token}`)
         .field('commercialDescription', 'Texto comercial actualizado')
         .field('longDescription', 'Descripción larga actualizada')
         .field('seoTitle', 'SEO Title Test')
@@ -249,7 +249,7 @@ describe('Full Platform Integration Tests', () => {
 
   describe('POS billing flow (NOT_INVOICED + manual invoice)', () => {
     it('should create fiscal POS sale as NOT_INVOICED and allow invoice endpoint', async () => {
-      const { token, branchId } = await loginAsAdmin('pos-billing@test.com');
+      const { agent, branchId } = await loginAsAdmin('pos-billing@test.com');
 
       const product = await Product.create({
         name: 'POS Product',
@@ -262,9 +262,8 @@ describe('Full Platform Integration Tests', () => {
 
       await BranchStock.create({ product: product._id, branch: branchId, stock: 10, minStock: 1 });
 
-      const saleRes = await request(app)
+      const saleRes = await agent
         .post('/api/sales')
-        .set('Authorization', `Bearer ${token}`)
         .send({
           items: [{ product: String(product._id), name: 'POS Product', quantity: 1, price: 5000, ivaRate: 21 }],
           paymentMethod: 'efectivo',
@@ -278,9 +277,8 @@ describe('Full Platform Integration Tests', () => {
       expect(saleRes.body.billingStatus).toBe('NOT_INVOICED');
       expect(saleRes.body.invoiceType).toBe('B');
 
-      const invoiceRes = await request(app)
+      const invoiceRes = await agent
         .post(`/api/sales/${saleRes.body._id}/invoice`)
-        .set('Authorization', `Bearer ${token}`);
 
       // Without AFIP queue enabled in test env, invoice should fail gracefully or return error
       expect([200, 400, 500]).toContain(invoiceRes.status);
@@ -308,13 +306,12 @@ describe('Full Platform Integration Tests', () => {
     });
 
     it('should allow admin to clear custom banners back to defaults', async () => {
-      const { token } = await loginAsAdmin('banners-admin@test.com');
+      const { agent } = await loginAsAdmin('banners-admin@test.com');
       await StoreSettings.deleteMany({});
       await StoreSettings.create({ bannerImages: ['https://example.com/custom.jpg'] });
 
-      const clearRes = await request(app)
+      const clearRes = await agent
         .delete('/api/settings/banners')
-        .set('Authorization', `Bearer ${token}`);
 
       expect(clearRes.status).toBe(200);
       expect(clearRes.body.usingDefaultBanners).toBe(true);
@@ -324,7 +321,7 @@ describe('Full Platform Integration Tests', () => {
 
   describe('Dashboard product analytics', () => {
     it('should return top products by quantity and profit for date range', async () => {
-      const { token } = await loginAsAdmin('analytics-dashboard@test.com');
+      const { agent } = await loginAsAdmin('analytics-dashboard@test.com');
 
       const productA = await Product.create({
         name: 'Producto A',
@@ -378,9 +375,8 @@ describe('Full Platform Integration Tests', () => {
         billingStatus: 'NONE',
       });
 
-      const res = await request(app)
-        .get('/api/analytics/overview')
-        .set('Authorization', `Bearer ${token}`);
+      const res = await agent
+        .get('/api/analytics/overview');
 
       expect(res.status).toBe(200);
       expect(Array.isArray(res.body.topByQuantity)).toBe(true);

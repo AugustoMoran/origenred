@@ -2,7 +2,7 @@ import { useSelector } from 'react-redux';
 import { RootState } from '../store';
 
 export const useAuth = () => {
-  const { user, isAuthenticated, token } = useSelector((state: RootState) => state.auth);
+  const { user, isAuthenticated } = useSelector((state: RootState) => state.auth);
 
   const hasPermission = (permission: string) => {
     if (!user) return false;
@@ -20,7 +20,6 @@ export const useAuth = () => {
   return {
     user,
     isAuthenticated,
-    token,
     hasPermission,
     hasRole,
     isAdmin,

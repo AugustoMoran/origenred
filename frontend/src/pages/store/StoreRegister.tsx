@@ -28,8 +28,8 @@ export const StoreRegister: React.FC = () => {
         roles: ['user'],
       }).unwrap();
 
-      if (result?.user && result?.token) {
-        dispatch(setCredentials({ user: result.user, token: result.token }));
+      if (result?.user) {
+        dispatch(setCredentials({ user: result.user }));
         navigate('/');
         return;
       }

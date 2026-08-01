@@ -186,7 +186,7 @@ export const Inventory = () => {
   const [manualAdjust] = useManualAdjustMutation();
   const [previewBulkCostUpdate, { isLoading: isPreviewingBulk }] = usePreviewBulkCostUpdateMutation();
   const [applyBulkCostUpdate, { isLoading: isApplyingBulk }] = useApplyBulkCostUpdateMutation();
-  const { user, token } = useSelector((state: any) => state.auth);
+  const { user } = useSelector((state: any) => state.auth);
   
   const isAdmin = Array.isArray(user?.roles) ? user.roles.includes('admin') : user?.role === 'admin';
   const productsList = products ?? [];
@@ -670,9 +670,7 @@ export const Inventory = () => {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/stock/product/${productId}`,
         {
-          headers: {
-            authorization: token ? `Bearer ${token}` : '',
-          },
+          credentials: 'include',
         }
       );
 

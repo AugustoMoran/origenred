@@ -3,16 +3,11 @@ import { register, validateUser, tokenService } from '../services/authService';
 import { User } from '../models/User';
 import Branch from '../../branches/models/Branch';
 import { io } from '../../../app';
-
-const buildRefreshCookieOptions = () => {
-  const isProd = process.env.NODE_ENV === 'production';
-  return {
-    httpOnly: true,
-    sameSite: (isProd ? 'none' : 'strict') as 'none' | 'strict',
-    secure: isProd,
-    path: '/api/auth',
-  };
-};
+import {
+  clearAuthCookies,
+  serializeAuthUser,
+  setAuthCookies,
+} from '../utils/authCookies';
 
 export async function registerController(req: Request, res: Response) {
   const { email, password, roles, permissions, name, branch, commissionRate } = req.body;
@@ -147,24 +142,18 @@ export async function loginController(req: Request, res: Response) {
   const access = tokenService.signAccessToken(user as any);
   const refresh = tokenService.signRefreshToken(user as any);
 
-  // store refresh for rotation
   user.refreshTokens.push({ token: refresh, createdAt: new Date() });
   user.markModified('refreshTokens');
   await user.save({ validateBeforeSave: false });
 
-  const refreshCookieOptions = buildRefreshCookieOptions();
-  res.cookie('refreshToken', refresh, refreshCookieOptions);
-  res.json({ 
-    token: access, 
-    user: {
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      roles: user.roles,
-      permissions: user.permissions,
-      branch: user.branch
-    }
-  });
+  setAuthCookies(res, access, refresh);
+  res.json({ user: serializeAuthUser(user) });
+}
+
+export async function getMeController(req: Request, res: Response) {
+  const user = (req as any).user;
+  if (!user) return res.status(401).json({ message: 'Not authenticated' });
+  res.json(serializeAuthUser(user));
 }
 
 export async function refreshController(req: Request, res: Response) {
@@ -178,20 +167,18 @@ export async function refreshController(req: Request, res: Response) {
     const user = await User.findById(userId);
     if (!user) return res.status(401).json({ message: 'Invalid token' });
 
-    // rotate
     let newRefresh;
     try {
       newRefresh = await tokenService.rotateRefreshToken(userId, rt);
     } catch (err) {
-      // reuse detected
       await tokenService.revokeRefreshToken(userId);
-      res.clearCookie('refreshToken', buildRefreshCookieOptions());
+      clearAuthCookies(res);
       return res.status(401).json({ message: 'Refresh token reuse detected' });
     }
 
     const access = tokenService.signAccessToken(user as any);
-    res.cookie('refreshToken', newRefresh, buildRefreshCookieOptions());
-    res.json({ access });
+    setAuthCookies(res, access, newRefresh);
+    res.json({ user: serializeAuthUser(user) });
   } catch (err) {
     return res.status(401).json({ message: 'Invalid refresh token' });
   }
@@ -207,6 +194,6 @@ export async function logoutController(req: Request, res: Response) {
       // ignore
     }
   }
-  res.clearCookie('refreshToken', buildRefreshCookieOptions());
+  clearAuthCookies(res);
   res.json({ ok: true });
 }

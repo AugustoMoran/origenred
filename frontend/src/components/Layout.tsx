@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { logout } from "../store/authSlice";
+import { useLogoutMutation } from "../services/authApi";
 
 const brandLogo = "/brand-logo.png";
 
@@ -101,7 +102,14 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 	const location = useLocation();
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-	const handleLogout = () => {
+	const [logoutRequest] = useLogoutMutation();
+
+	const handleLogout = async () => {
+		try {
+			await logoutRequest().unwrap();
+		} catch {
+			// ignore
+		}
 		dispatch(logout());
 		navigate("/login");
 	};

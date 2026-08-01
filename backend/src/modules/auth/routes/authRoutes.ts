@@ -4,7 +4,8 @@ import {
   publicRegisterController,
   loginController,
   logoutController, 
-  refreshController, 
+  refreshController,
+  getMeController, 
   getUsersController, 
   deleteUserController,
   updatePermissionsController,
@@ -34,6 +35,7 @@ router.patch('/users/permissions', authenticate, authorize('admin'), updatePermi
 router.patch('/users/commission', authenticate, authorize('admin'), updateCommissionController);
 router.patch('/users/branch', authenticate, authorize('admin'), updateBranchController);
 router.post('/login', loginController);
+router.get('/me', authenticate, getMeController);
 router.post('/refresh', refreshController);
 router.post('/logout', logoutController);
 

@@ -25,7 +25,7 @@ export const Login = () => {
         email: normalizedEmail,
         password: normalizedPassword,
       }).unwrap();
-      dispatch(setCredentials(result));
+      dispatch(setCredentials({ user: result.user }));
       const roles: string[] = result?.user?.roles || [];
       const isStaff = roles.some((r) => ['admin', 'vendedor'].includes(String(r).toLowerCase()));
       navigate(isStaff ? '/dashboard' : '/');

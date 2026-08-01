@@ -1,20 +1,15 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { AuthUser } from '../store/authSlice';
 
 export const authApi = createApi({
   reducerPath: 'authApi',
   baseQuery: fetchBaseQuery({
     baseUrl: `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/auth`,
     credentials: 'include',
-    prepareHeaders: (headers, { getState }: any) => {
-      const token = getState().auth.token;
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
   }),
+  tagTypes: ['Users'],
   endpoints: (builder) => ({
-    login: builder.mutation({
+    login: builder.mutation<{ user: AuthUser }, { email: string; password: string }>({
       query: (credentials) => ({
         url: 'login',
         method: 'POST',
@@ -28,13 +23,16 @@ export const authApi = createApi({
         body: userData,
       }),
     }),
-    logout: builder.mutation({
+    logout: builder.mutation<{ ok: boolean }, void>({
       query: () => ({
         url: 'logout',
         method: 'POST',
       }),
     }),
-    refresh: builder.mutation<{ access: string }, void>({
+    getMe: builder.query<AuthUser, void>({
+      query: () => '/me',
+    }),
+    refresh: builder.mutation<{ user: AuthUser }, void>({
       query: () => ({
         url: 'refresh',
         method: 'POST',
@@ -42,14 +40,14 @@ export const authApi = createApi({
     }),
     getUsers: builder.query<any[], void>({
       query: () => 'users',
-      providesTags: ['Users' as any],
+      providesTags: ['Users'],
     }),
     deleteUser: builder.mutation<{ message: string }, string>({
       query: (userId) => ({
         url: `users/${userId}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['Users' as any],
+      invalidatesTags: ['Users'],
     }),
     updatePermissions: builder.mutation({
       query: (data) => ({
@@ -57,7 +55,7 @@ export const authApi = createApi({
         method: 'PATCH',
         body: data,
       }),
-      invalidatesTags: ['Users' as any],
+      invalidatesTags: ['Users'],
     }),
     updateCommission: builder.mutation({
       query: (data) => ({
@@ -65,7 +63,7 @@ export const authApi = createApi({
         method: 'PATCH',
         body: data,
       }),
-      invalidatesTags: ['Users' as any],
+      invalidatesTags: ['Users'],
     }),
     updateBranch: builder.mutation({
       query: (data) => ({
@@ -73,15 +71,16 @@ export const authApi = createApi({
         method: 'PATCH',
         body: data,
       }),
-      invalidatesTags: ['Users' as any],
+      invalidatesTags: ['Users'],
     }),
   }),
 });
 
-export const { 
-  useLoginMutation, 
-  useRegisterMutation, 
+export const {
+  useLoginMutation,
+  useRegisterMutation,
   useLogoutMutation,
+  useGetMeQuery,
   useRefreshMutation,
   useGetUsersQuery,
   useDeleteUserMutation,

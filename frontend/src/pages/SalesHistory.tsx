@@ -7,7 +7,7 @@ import { inventoryApi } from '../services/inventoryApi';
 
 export const SalesHistory = () => {
   const dispatch = useDispatch();
-  const { user, token } = useSelector((state: any) => state.auth);
+  const { user } = useSelector((state: any) => state.auth);
   const isAdmin = Array.isArray(user?.roles) ? user.roles.includes('admin') : user?.role === 'admin';
   const { data: sales = [], isLoading } = useGetSalesQuery();
   const [downloadInvoice] = useLazyGetSaleInvoiceQuery();
@@ -18,16 +18,10 @@ export const SalesHistory = () => {
   const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
   const fallbackBlobDownload = async (path: string) => {
-    const headers: Record<string, string> = {};
-    if (token) {
-      headers.authorization = `Bearer ${token}`;
-    }
-
     const separator = path.includes('?') ? '&' : '?';
     const response = await fetch(`${apiBaseUrl}${path}${separator}cb=${Date.now()}`, {
       method: 'GET',
       credentials: 'include',
-      headers,
       cache: 'no-store',
     });
 

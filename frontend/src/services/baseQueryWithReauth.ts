@@ -1,6 +1,6 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { BaseQueryApi, BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
-import { logout, setCredentials } from '../store/authSlice';
+import { logout, setUser, AuthUser } from '../store/authSlice';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
@@ -9,19 +9,24 @@ const refreshBaseQuery = fetchBaseQuery({
   credentials: 'include',
 });
 
+const meBaseQuery = fetchBaseQuery({
+  baseUrl: `${API_BASE_URL}/auth`,
+  credentials: 'include',
+});
+
 let refreshPromise: Promise<boolean> | null = null;
 
 type RefreshApi = Pick<BaseQueryApi, 'getState' | 'dispatch'>;
 
-export function isAccessTokenExpired(token: string | null, bufferSeconds = 90): boolean {
-  if (!token) return true;
-  try {
-    const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
-    if (!payload?.exp) return true;
-    return payload.exp * 1000 <= Date.now() + bufferSeconds * 1000;
-  } catch {
-    return true;
-  }
+const applyUser = (api: RefreshApi, user: AuthUser | undefined) => {
+  if (!user) return false;
+  api.dispatch(setUser(user));
+  return true;
+};
+
+export async function fetchCurrentUser(api: RefreshApi): Promise<boolean> {
+  const result = await meBaseQuery({ url: '/me', method: 'GET' }, api as BaseQueryApi, {});
+  return applyUser(api, result.data as AuthUser | undefined);
 }
 
 export async function tryRefreshSession(
@@ -39,11 +44,8 @@ export async function tryRefreshSession(
       {}
     );
 
-    const newAccess = (refreshResult.data as any)?.access;
-    const currentUser = (api.getState() as any)?.auth?.user;
-
-    if (newAccess && currentUser) {
-      api.dispatch(setCredentials({ user: currentUser, token: newAccess }));
+    const user = (refreshResult.data as any)?.user as AuthUser | undefined;
+    if (applyUser(api, user)) {
       return true;
     }
 
@@ -64,13 +66,6 @@ export function createReauthBaseQuery(
   const baseQuery = fetchBaseQuery({
     baseUrl,
     credentials: 'include',
-    prepareHeaders: (headers, { getState }) => {
-      const token = (getState() as any).auth?.token;
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
   });
 
   return async (args, api, extraOptions) => {
@@ -91,12 +86,28 @@ export async function bootstrapAuthSession(store: {
   getState: () => unknown;
   dispatch: RefreshApi['dispatch'];
 }): Promise<void> {
-  const { user, token } = (store.getState() as any)?.auth || {};
-  if (!user || !token) return;
-  if (!isAccessTokenExpired(token, 120)) return;
+  try {
+    localStorage.removeItem('facturaapp_auth');
+  } catch {
+    // no-op
+  }
 
-  await tryRefreshSession(
-    { getState: store.getState as RefreshApi['getState'], dispatch: store.dispatch },
-    { logoutOnFail: isAccessTokenExpired(token, 0) }
-  );
+  const api: RefreshApi = {
+    getState: store.getState as RefreshApi['getState'],
+    dispatch: store.dispatch,
+  };
+
+  const hasSession = await fetchCurrentUser(api);
+  if (hasSession) return;
+
+  const refreshed = await tryRefreshSession(api, { logoutOnFail: false });
+  if (refreshed) {
+    await fetchCurrentUser(api);
+    return;
+  }
+
+  const { isAuthenticated } = (store.getState() as any)?.auth || {};
+  if (isAuthenticated) {
+    store.dispatch(logout());
+  }
 }

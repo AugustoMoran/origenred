@@ -107,13 +107,13 @@ describe('AFIP Taxpayer Lookup Integration Tests', () => {
       permissions: { 'sales:edit': true, 'sales:view': true },
     });
 
-    const login = await request(app)
+    const agent = request.agent(app);
+    await agent
       .post('/api/auth/login')
       .send({ email: 'afip_test@test.com', password: 'Password123!' });
 
-    const res = await request(app)
-      .get('/api/afip/taxpayer/20123456789')
-      .set('Authorization', `Bearer ${login.body.token}`);
+    const res = await agent
+      .get('/api/afip/taxpayer/20123456789');
 
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('ok');
