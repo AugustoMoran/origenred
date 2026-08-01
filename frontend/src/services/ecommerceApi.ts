@@ -77,7 +77,23 @@ export interface StoreOrderItem {
   quantity: number;
 }
 
-export interface CreateOrderPayload {
+export interface StoreProductsPage {
+  items: StoreProduct[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+  };
+}
+
+export interface StoreProductsQuery {
+  search?: string;
+  category?: string;
+  featured?: boolean;
+  page?: number;
+  limit?: number;
+}
   items: StoreOrderItem[];
   customerName: string;
   customerEmail: string;
@@ -107,12 +123,25 @@ export const ecommerceApi = createApi({
         if (params?.search) search.set('search', params.search);
         if (params?.category) search.set('category', params.category);
         if (params?.featured) search.set('featured', 'true');
+        search.set('limit', '100');
         const suffix = search.toString() ? `?${search.toString()}` : '';
         return `/catalog${suffix}`;
       },
       transformResponse: (response: any) => {
         if (Array.isArray(response)) return response;
         return response?.items || [];
+      },
+      providesTags: ['StoreProduct'],
+    }),
+    getStoreProductsPage: builder.query<StoreProductsPage, StoreProductsQuery>({
+      query: (params) => {
+        const search = new URLSearchParams();
+        if (params.search) search.set('search', params.search);
+        if (params.category) search.set('category', params.category);
+        if (params.featured) search.set('featured', 'true');
+        search.set('page', String(params.page || 1));
+        search.set('limit', String(params.limit || 12));
+        return `/catalog?${search.toString()}`;
       },
       providesTags: ['StoreProduct'],
     }),
@@ -153,6 +182,7 @@ export const ecommerceApi = createApi({
 
 export const {
   useGetStoreProductsQuery,
+  useGetStoreProductsPageQuery,
   useGetStoreProductQuery,
   useGetStoreCategoriesQuery,
   useCreateStoreOrderMutation,

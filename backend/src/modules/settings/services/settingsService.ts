@@ -1,6 +1,12 @@
 import StoreSettings, { IStoreSettings } from '../models/StoreSettings';
+import { DEFAULT_BANNER_IMAGES, MAX_BANNER_IMAGES } from '../constants/defaultBannerImages';
 
 const SETTINGS_ID = 'store-settings';
+
+export const resolveBannerImages = (bannerImages: string[] = []) => {
+  const custom = (bannerImages || []).filter(Boolean);
+  return custom.length > 0 ? custom : DEFAULT_BANNER_IMAGES;
+};
 
 const getSettingsDoc = async () => {
   let settings = await StoreSettings.findOne();
@@ -25,7 +31,7 @@ export const getPublicSettings = async () => {
     mercadopagoEnabled: settings.mercadopagoEnabled,
     envioPackEnabled: settings.envioPackEnabled,
     socialLinks: settings.socialLinks,
-    bannerImages: settings.bannerImages,
+    bannerImages: resolveBannerImages(settings.bannerImages),
   };
 };
 
@@ -48,6 +54,27 @@ export const updateSettings = async (payload: Partial<IStoreSettings>) => {
     }
   }
 
+  await settings.save();
+  return settings;
+};
+
+export const replaceBannerImages = async (urls: string[]) => {
+  if (!urls.length) {
+    throw new Error('Debe subir al menos una imagen');
+  }
+  if (urls.length > MAX_BANNER_IMAGES) {
+    throw new Error(`Máximo ${MAX_BANNER_IMAGES} imágenes en el carrusel`);
+  }
+
+  const settings = await getSettingsDoc();
+  settings.bannerImages = urls;
+  await settings.save();
+  return settings;
+};
+
+export const clearBannerImages = async () => {
+  const settings = await getSettingsDoc();
+  settings.bannerImages = [];
   await settings.save();
   return settings;
 };

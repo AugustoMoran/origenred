@@ -114,6 +114,33 @@ describe('Full Platform Integration Tests', () => {
       expect(catalog.status).toBe(200);
       expect(catalog.body.commercialDescription).toBe('Texto comercial actualizado');
     });
+
+    it('should paginate public catalog products', async () => {
+      await Product.deleteMany({});
+      for (let i = 1; i <= 15; i += 1) {
+        await Product.create({
+          name: `Producto Paginado ${i}`,
+          sku: `PAG-${String(i).padStart(3, '0')}`,
+          slug: `producto-paginado-${i}`,
+          price: 1000 + i,
+          costPrice: 400,
+          stock: 5,
+          category: 'General',
+          isActive: true,
+          paused: false,
+        });
+      }
+
+      const page1 = await request(app).get('/api/ecommerce/catalog?page=1&limit=10');
+      expect(page1.status).toBe(200);
+      expect(page1.body.items).toHaveLength(10);
+      expect(page1.body.pagination.total).toBe(15);
+      expect(page1.body.pagination.pages).toBe(2);
+
+      const page2 = await request(app).get('/api/ecommerce/catalog?page=2&limit=10');
+      expect(page2.status).toBe(200);
+      expect(page2.body.items).toHaveLength(5);
+    });
   });
 
   describe('Ecommerce checkout flow', () => {
@@ -270,6 +297,28 @@ describe('Full Platform Integration Tests', () => {
       const res = await request(app).get('/api/settings/public');
       expect(res.status).toBe(200);
       expect(res.body.enableEcommerce).toBe(true);
+    });
+
+    it('should return default banner images when none configured', async () => {
+      await StoreSettings.deleteMany({});
+      const res = await request(app).get('/api/settings/public');
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body.bannerImages)).toBe(true);
+      expect(res.body.bannerImages.length).toBeGreaterThan(0);
+    });
+
+    it('should allow admin to clear custom banners back to defaults', async () => {
+      const { token } = await loginAsAdmin('banners-admin@test.com');
+      await StoreSettings.deleteMany({});
+      await StoreSettings.create({ bannerImages: ['https://example.com/custom.jpg'] });
+
+      const clearRes = await request(app)
+        .delete('/api/settings/banners')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(clearRes.status).toBe(200);
+      expect(clearRes.body.usingDefaultBanners).toBe(true);
+      expect(clearRes.body.bannerImages.length).toBeGreaterThan(0);
     });
   });
 

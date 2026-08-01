@@ -44,6 +44,28 @@ const storage = hasCloudinaryConfig
 
 export const upload = multer({ storage });
 
+const bannerStorage = hasCloudinaryConfig
+  ? new CloudinaryStorage({
+      cloudinary: cloudinary,
+      params: {
+        folder: 'store-banners',
+        allowed_formats: ['jpg', 'png', 'jpeg', 'webp'],
+        transformation: [{ width: 1600, height: 700, crop: 'limit' }],
+      } as any,
+    })
+  : multer.diskStorage({
+      destination: (_req, _file, cb) => cb(null, localUploadsDir),
+      filename: (_req, file, cb) => {
+        const safeName = file.originalname.replace(/\s+/g, '-').toLowerCase();
+        cb(null, `banner-${Date.now()}-${safeName}`);
+      },
+    });
+
+export const bannerUpload = multer({
+  storage: bannerStorage,
+  limits: { files: 10, fileSize: 5 * 1024 * 1024 },
+});
+
 export const deleteImage = async (publicId: string) => {
   if (!hasCloudinaryConfig) return;
 
