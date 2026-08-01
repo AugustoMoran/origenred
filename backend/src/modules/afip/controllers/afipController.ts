@@ -5,18 +5,47 @@ export const getTaxpayerController = async (req: Request, res: Response) => {
   try {
     const { cuit } = req.params;
     if (!cuit) {
-      return res.status(400).json({ message: 'CUIT es requerido' });
+      return res.status(200).json({
+        ok: false,
+        found: false,
+        message: 'CUIT es requerido',
+        data: null,
+      });
     }
 
     const data = await afipService.getTaxpayerDetails(cuit);
-    
-    if (!data) {
-      return res.status(404).json({ message: 'Contribuyente no encontrado en los padrones de AFIP' });
+
+    if (!data || (data as any)._notFound) {
+      return res.status(200).json({
+        ok: true,
+        found: false,
+        message: (data as any)?._message || 'Contribuyente no encontrado en los padrones de AFIP',
+        data: {
+          cuit: String(cuit).replace(/\D/g, ''),
+          nombre: '',
+          razonSocial: '',
+          fiscalCondition: '',
+          suggestedInvoiceType: 'B',
+          domicilioFiscal: null,
+          _notFound: true,
+          _afipAuthError: Boolean((data as any)?._afipAuthError),
+        },
+      });
     }
 
-    res.json(data);
+    res.status(200).json({
+      ok: true,
+      found: true,
+      message: 'Contribuyente encontrado',
+      data,
+    });
   } catch (error: any) {
-    res.status(500).json({ message: error.message });
+    res.status(200).json({
+      ok: false,
+      found: false,
+      message: error.message,
+      data: null,
+    });
   }
 };
 

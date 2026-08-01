@@ -124,6 +124,13 @@ export const salesApi = createApi({
       },
       providesTags: ['Sale'],
     }),
+    invoiceSale: builder.mutation<any, string>({
+      query: (id) => ({
+        url: `/${id}/invoice`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Sale'],
+    }),
   }),
 });
 
@@ -138,4 +145,5 @@ export const {
   useLazyGetSaleInvoiceQuery,
   useLazyGetSaleRemitoQuery,
   useGetProfitReportQuery,
+  useInvoiceSaleMutation,
 } = salesApi;

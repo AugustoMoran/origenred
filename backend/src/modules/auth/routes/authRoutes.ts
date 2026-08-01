@@ -1,7 +1,8 @@
 import { Router } from 'express';
 import { 
-  registerController, 
-  loginController, 
+  registerController,
+  publicRegisterController,
+  loginController,
   logoutController, 
   refreshController, 
   getUsersController, 
@@ -25,6 +26,7 @@ const canRegister = async (req: any, res: any, next: any) => {
   });
 };
 
+router.post('/register/public', publicRegisterController);
 router.post('/register', canRegister, registerController);
 router.get('/users', authenticate, authorize('admin'), getUsersController);
 router.delete('/users/:id', authenticate, authorize('admin'), deleteUserController);

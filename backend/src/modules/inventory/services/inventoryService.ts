@@ -49,6 +49,32 @@ const generateSku = async () => {
   return sku;
 };
 
+const slugify = (text: string) =>
+  String(text || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .trim()
+    .replace(/[^\w\s-]/g, '')
+    .replace(/[\s_-]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+export const generateUniqueSlug = async (name: string, excludeId?: string) => {
+  const base = slugify(name) || 'producto';
+  let slug = base;
+  let counter = 1;
+
+  while (true) {
+    const query: any = { slug };
+    if (excludeId) query._id = { $ne: excludeId };
+    const exists = await Product.exists(query);
+    if (!exists) break;
+    slug = `${base}-${counter++}`;
+  }
+
+  return slug;
+};
+
 export const getProducts = async (query: any = {}) => {
   const filters = buildProductFilters(query);
 
@@ -227,6 +253,9 @@ export const getProductById = async (id: string) => {
 export const createProduct = async (productData: Partial<IProduct> & { branchStocks?: BranchStockInput[] }, user: any) => {
   const normalizedSku = (productData.sku || '').toString().trim().toUpperCase();
   productData.sku = normalizedSku || (await generateSku());
+  productData.slug = productData.slug
+    ? slugify(String(productData.slug))
+    : await generateUniqueSlug(String(productData.name || productData.sku));
 
   const branchStocks = Array.isArray((productData as any).branchStocks)
     ? (productData as any).branchStocks
@@ -330,6 +359,16 @@ export const updateProduct = async (id: string, updateData: Partial<IProduct>) =
     } else {
       (updateData as any).supplier = undefined;
     }
+  }
+
+  if ('name' in updateData && updateData.name) {
+    if ('slug' in updateData && updateData.slug) {
+      (updateData as any).slug = slugify(String(updateData.slug));
+    } else {
+      (updateData as any).slug = await generateUniqueSlug(String(updateData.name), id);
+    }
+  } else if ('slug' in updateData && updateData.slug) {
+    (updateData as any).slug = slugify(String(updateData.slug));
   }
 
   return await Product.findByIdAndUpdate(id, updateData, { new: true }).populate('supplier', 'name');

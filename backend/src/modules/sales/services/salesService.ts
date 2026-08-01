@@ -6,6 +6,7 @@ import { adjustStock } from '../../stock/services/stockService';
 import { MovementType } from '../../stock/models/StockMovement';
 import Product from '../../inventory/models/Product';
 import Expense from '../../expenses/models/Expense';
+import { buildSaleInvoiceData } from '../../afip/utils/afipInvoiceBuilder';
 
 const generateInternalInvoiceNumber = () => {
   const now = new Date();
@@ -857,6 +858,7 @@ export const createSale = async (saleData: any, sellerId: string, requesterRoles
       discountValue: parsedDiscount.value,
       discountAmount: parsedDiscount.amount,
       paymentMethod: saleData.paymentMethod || 'efectivo',
+      source: saleData.source || 'POS',
       invoiceType,
       invoiceNumber: saleData.invoiceNumber || generateInternalInvoiceNumber(),
       remitoNumber: saleData.remitoNumber || generateRemitoNumber(),
@@ -868,7 +870,12 @@ export const createSale = async (saleData: any, sellerId: string, requesterRoles
       sellerCommissionRate: seller.commissionRate || 0,
       branch: branchId,
       status: 'COMPLETED',
-      billingStatus: requiresAfip ? 'PENDING' : 'NONE'
+      billingStatus: requiresAfip ? 'NOT_INVOICED' : 'NONE',
+      shippingAddress: saleData.shippingAddress,
+      shippingMethod: saleData.shippingMethod,
+      shippingCost: saleData.shippingCost,
+      paymentId: saleData.paymentId,
+      paymentStatus: saleData.paymentStatus,
     });
 
     if (session) {
@@ -876,47 +883,6 @@ export const createSale = async (saleData: any, sellerId: string, requesterRoles
       await session.commitTransaction();
     } else {
       await newSale.save();
-    }
-
-    // 4. Si requiere factura AFIP, enviar a la cola (solo si está habilitada)
-    if (process.env.ENABLE_AFIP_QUEUE === 'true' && requiresAfip) {
-      const ptoVta = getAfipPointOfSale();
-      let tipoComprobante = 6; // Default B
-      if (newSale.invoiceType === 'A') tipoComprobante = 1;
-      else if (newSale.invoiceType === 'C') tipoComprobante = 11;
-      
-      const docTipo = newSale.clientCuit ? 80 : 99;
-      const docNro = newSale.clientCuit ? Number(newSale.clientCuit.replace(/-/g, '')) : 0;
-
-      try {
-        const { afipQueue } = await import('../../../config/queues');
-
-        await enqueueAfipJobWithTimeout(afipQueue, {
-          saleId: newSale._id,
-          invoiceData: {
-            PtoVta: ptoVta,
-            CbteTipo: tipoComprobante,
-            DocTipo: docTipo,
-            DocNro: docNro,
-            ImpTotal: newSale.total,
-            ImpNeto: newSale.totalNeto,
-            ImpIVA: newSale.totalIva,
-            IvaDetails: [
-              { Id: 5, BaseImp: newSale.totalNeto, Importe: newSale.totalIva }
-            ]
-          }
-        });
-      } catch (error: any) {
-        await Sale.findByIdAndUpdate(newSale._id, {
-          billingStatus: 'FAILED',
-          errorMessage: `No se pudo encolar AFIP: ${error?.message || error}`,
-        });
-      }
-    } else if (requiresAfip) {
-      await Sale.findByIdAndUpdate(newSale._id, {
-        billingStatus: 'FAILED',
-        errorMessage: 'Cola AFIP deshabilitada. Habilitar ENABLE_AFIP_QUEUE=true para autorizar la factura.',
-      });
     }
 
     return newSale;
@@ -951,4 +917,56 @@ export const getSaleById = async (id: string) => {
     .populate('seller', 'email')
     .populate('branch', 'name address')
     .populate('items.product', 'name');
+};
+
+export const invoiceSale = async (saleId: string) => {
+  const sale = await Sale.findById(saleId);
+  if (!sale) throw new Error('Venta no encontrada');
+
+  const invoiceType = String(sale.invoiceType || 'NONE').toUpperCase();
+  if (!['A', 'B', 'C'].includes(invoiceType)) {
+    throw new Error('La venta no requiere factura fiscal AFIP');
+  }
+
+  if (sale.billingStatus === 'COMPLETED') {
+    throw new Error('La venta ya fue facturada');
+  }
+
+  if (sale.billingStatus === 'PENDING') {
+    throw new Error('La venta ya tiene una facturación en proceso');
+  }
+
+  const ptoVta = getAfipPointOfSale();
+  const invoiceData = buildSaleInvoiceData(sale, ptoVta);
+
+  await Sale.findByIdAndUpdate(saleId, {
+    billingStatus: 'PENDING',
+    errorMessage: null,
+  });
+
+  if (process.env.ENABLE_AFIP_QUEUE === 'true') {
+    try {
+      const { afipQueue } = await import('../../../config/queues');
+      await enqueueAfipJobWithTimeout(afipQueue, {
+        saleId,
+        invoiceData,
+      });
+    } catch (error: any) {
+      await Sale.findByIdAndUpdate(saleId, {
+        billingStatus: 'FAILED',
+        errorMessage: `No se pudo encolar AFIP: ${error?.message || error}`,
+      });
+      throw error;
+    }
+  } else {
+    await Sale.findByIdAndUpdate(saleId, {
+      billingStatus: 'FAILED',
+      errorMessage: 'Cola AFIP deshabilitada. Habilitar ENABLE_AFIP_QUEUE=true para autorizar la factura.',
+    });
+    throw new Error('Cola AFIP deshabilitada. Habilitar ENABLE_AFIP_QUEUE=true para autorizar la factura.');
+  }
+
+  return await Sale.findById(saleId)
+    .populate('seller', 'email name')
+    .populate('branch', 'name address');
 };

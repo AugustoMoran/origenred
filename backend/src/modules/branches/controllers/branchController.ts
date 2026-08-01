@@ -28,7 +28,15 @@ export const createBranch = async (req: Request, res: Response) => {
       return res.status(409).json({ message: 'Ya existe una sucursal con ese nombre' });
     }
 
-    const branch = new Branch({ name, address, phone });
+    const branch = new Branch({
+      name,
+      address,
+      phone,
+      city: (req.body?.city || '').trim() || undefined,
+      province: (req.body?.province || '').trim() || undefined,
+      postalCode: (req.body?.postalCode || '').trim() || undefined,
+      country: (req.body?.country || 'Argentina').trim(),
+    });
     await branch.save();
     res.status(201).json(branch);
   } catch (error: any) {
@@ -56,7 +64,19 @@ export const updateBranch = async (req: Request, res: Response) => {
       return res.status(409).json({ message: 'Ya existe una sucursal con ese nombre' });
     }
 
-    const branch = await Branch.findByIdAndUpdate(id, { name, address, phone }, { new: true });
+    const branch = await Branch.findByIdAndUpdate(
+      id,
+      {
+        name,
+        address,
+        phone,
+        city: (req.body?.city || '').trim() || undefined,
+        province: (req.body?.province || '').trim() || undefined,
+        postalCode: (req.body?.postalCode || '').trim() || undefined,
+        country: (req.body?.country || 'Argentina').trim(),
+      },
+      { new: true }
+    );
     if (!branch) return res.status(404).json({ message: 'Sucursal no encontrada' });
     res.json(branch);
   } catch (error: any) {

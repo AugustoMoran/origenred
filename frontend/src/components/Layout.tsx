@@ -8,7 +8,7 @@ const brandLogo = "/brand-logo.png";
 
 const NAV_MAIN = [
 	{
-		to: "/",
+		to: "/dashboard",
 		label: "Dashboard",
 		icon: (
 			<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
@@ -17,7 +17,7 @@ const NAV_MAIN = [
 		),
 	},
 	{
-		to: "/pos",
+		to: "/dashboard/pos",
 		label: "Punto de Venta",
 		icon: (
 			<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
@@ -27,7 +27,7 @@ const NAV_MAIN = [
 		highlight: true,
 	},
 	{
-		to: "/inventory",
+		to: "/dashboard/inventory",
 		label: "Inventario",
 		icon: (
 			<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
@@ -36,7 +36,7 @@ const NAV_MAIN = [
 		),
 	},
 	{
-		to: "/sales",
+		to: "/dashboard/sales",
 		label: "Ventas",
 		icon: (
 			<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
@@ -48,7 +48,7 @@ const NAV_MAIN = [
 
 const NAV_ADMIN = [
 	{
-		to: "/admin/users",
+		to: "/dashboard/admin/users",
 		label: "Usuarios",
 		icon: (
 			<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
@@ -57,7 +57,7 @@ const NAV_ADMIN = [
 		),
 	},
 	{
-		to: "/admin/catalog",
+		to: "/dashboard/admin/catalog",
 		label: "Cat. y Sucursales",
 		icon: (
 			<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
@@ -66,7 +66,7 @@ const NAV_ADMIN = [
 		),
 	},
 	{
-		to: "/admin/profit-report",
+		to: "/dashboard/admin/profit-report",
 		label: "Informe Ganancias",
 		icon: (
 			<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
@@ -75,7 +75,7 @@ const NAV_ADMIN = [
 		),
 	},
 	{
-		to: "/admin/supplier-ledger",
+		to: "/dashboard/admin/supplier-ledger",
 		label: "Compras y Deuda",
 		icon: (
 			<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
@@ -97,8 +97,12 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 		navigate("/login");
 	};
 
-	const isActive = (to: string) =>
-		to === "/" ? location.pathname === "/" : location.pathname.startsWith(to);
+	const isActive = (to: string) => {
+		if (to === "/dashboard") {
+			return location.pathname === "/dashboard";
+		}
+		return location.pathname.startsWith(to);
+	};
 
 	const goTo = (to: string) => {
 		navigate(to);
@@ -212,6 +216,18 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 							))}
 						</>
 					)}
+
+					<p className="section-heading px-2 mt-5 mb-2">Tienda</p>
+					<Link
+						to="/"
+						className="nav-item"
+						onClick={() => setMobileMenuOpen(false)}
+					>
+						<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+							<path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+						</svg>
+						<span>Ver tienda online</span>
+					</Link>
 				</nav>
 
 				{/* User footer */}

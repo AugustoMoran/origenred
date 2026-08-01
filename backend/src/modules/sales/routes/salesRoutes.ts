@@ -10,6 +10,7 @@ import {
 	deleteSaleController,
 	getCreditNotesController,
 	createCreditNoteController,
+	invoiceSaleController,
 } from '../controllers/salesController';
 import { authenticate, authorize } from '../../../middleware/authMiddleware';
 import { PERMISSIONS } from '../../auth/constants/permissions';
@@ -24,6 +25,7 @@ router.get('/:id/remito', authenticate, authorize(PERMISSIONS.SALES_VIEW), downl
 router.get('/:id', authenticate, authorize(PERMISSIONS.SALES_VIEW), getSaleByIdController);
 router.post('/', authenticate, authorize(PERMISSIONS.SALES_EDIT), createSaleController);
 router.post('/credit-notes', authenticate, authorize(PERMISSIONS.SALES_EDIT), createCreditNoteController);
+router.post('/:id/invoice', authenticate, authorize(PERMISSIONS.SALES_EDIT), invoiceSaleController);
 router.put('/:id', authenticate, authorize(PERMISSIONS.SALES_EDIT), updateSaleController);
 router.delete('/:id', authenticate, authorize(PERMISSIONS.SALES_EDIT), deleteSaleController);
 

@@ -490,6 +490,19 @@ export const Inventory = () => {
     }
   };
 
+  const handleToggleStoreField = async (product: any, field: 'paused' | 'featured', value: boolean) => {
+    if (field === 'paused' && !isAdmin) return;
+
+    const data = new FormData();
+    data.append(field, String(value));
+
+    try {
+      await updateProduct({ id: product._id, body: data }).unwrap();
+    } catch {
+      alert(`Error al actualizar ${field === 'paused' ? 'pausa en tienda' : 'destacado'}`);
+    }
+  };
+
   const handleEdit = (p: any) => {
     setFormData({
       name: p.name,
@@ -837,6 +850,7 @@ export const Inventory = () => {
               <th className="hidden lg:table-cell px-2">Categoría</th>
               <th className="hidden xl:table-cell px-2">Proveedor</th>
               <th className="hidden 2xl:table-cell px-2">SKU</th>
+              <th className="text-center px-1 hidden lg:table-cell">Tienda</th>
               <th className="text-center px-1">Acciones</th>
             </tr>
           </thead>
@@ -883,6 +897,30 @@ export const Inventory = () => {
                   </span>
                 </td>
                 <td className="font-mono text-[9px] text-slate-500 hidden 2xl:table-cell px-2 uppercase tracking-tighter">{p.sku}</td>
+                <td className="hidden lg:table-cell px-1 text-center">
+                  <div className="flex flex-col items-center gap-1.5">
+                    <label className="inline-flex items-center gap-1.5 text-[10px] text-slate-400 cursor-pointer" title="Destacado en tienda">
+                      <input
+                        type="checkbox"
+                        checked={Boolean(p.featured)}
+                        onChange={(e) => handleToggleStoreField(p, 'featured', e.target.checked)}
+                        className="rounded border-white/20 bg-slate-800 text-brand-500 focus:ring-brand-500/30"
+                      />
+                      <span>Destacado</span>
+                    </label>
+                    {isAdmin && (
+                      <label className="inline-flex items-center gap-1.5 text-[10px] text-slate-400 cursor-pointer" title="Pausar en tienda online">
+                        <input
+                          type="checkbox"
+                          checked={Boolean(p.paused)}
+                          onChange={(e) => handleToggleStoreField(p, 'paused', e.target.checked)}
+                          className="rounded border-white/20 bg-slate-800 text-amber-500 focus:ring-amber-500/30"
+                        />
+                        <span>Pausado</span>
+                      </label>
+                    )}
+                  </div>
+                </td>
                 <td className="px-1">
                   <div className="flex items-center justify-center gap-1">
                     {isAdmin && (
@@ -926,7 +964,7 @@ export const Inventory = () => {
             ))}
             {productsList.length === 0 && (
               <tr>
-                <td colSpan={10} className="text-center text-slate-600 py-12 text-sm">
+                <td colSpan={11} className="text-center text-slate-600 py-12 text-sm">
                   No hay productos registrados
                 </td>
               </tr>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import { useGetSalesQuery, useLazyGetSaleInvoiceQuery, useLazyGetSaleRemitoQuery, useDeleteSaleMutation, useCreateCreditNoteMutation } from '../services/salesApi';
+import { useGetSalesQuery, useLazyGetSaleInvoiceQuery, useLazyGetSaleRemitoQuery, useDeleteSaleMutation, useCreateCreditNoteMutation, useInvoiceSaleMutation } from '../services/salesApi';
 import { HasPermission } from '../components/auth/HasPermission';
 import { PERMISSIONS } from '../constants/permissions';
 import { inventoryApi } from '../services/inventoryApi';
@@ -14,6 +14,7 @@ export const SalesHistory = () => {
   const [downloadRemito] = useLazyGetSaleRemitoQuery();
   const [deleteSale, { isLoading: deletingSale }] = useDeleteSaleMutation();
   const [createCreditNote, { isLoading: creatingCreditNote }] = useCreateCreditNoteMutation();
+  const [invoiceSale, { isLoading: invoicingSale }] = useInvoiceSaleMutation();
   const apiBaseUrl = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
   const fallbackBlobDownload = async (path: string) => {
@@ -36,6 +37,47 @@ export const SalesHistory = () => {
     }
 
     return response.blob();
+  };
+
+  const getBillingBadge = (sale: any) => {
+    const status = String(sale?.billingStatus || 'NONE').toUpperCase();
+    const invoiceType = String(sale?.invoiceType || 'NONE').toUpperCase();
+    const isFiscal = ['A', 'B', 'C'].includes(invoiceType);
+
+    if (!isFiscal || status === 'NONE') {
+      return { label: 'Sin factura', className: 'badge-gray' };
+    }
+    if (status === 'COMPLETED' && sale?.cae) {
+      return { label: 'Autorizado', className: 'badge-green', cae: sale.cae };
+    }
+    if (status === 'PENDING') {
+      return { label: 'Pendiente', className: 'badge-yellow' };
+    }
+    if (status === 'FAILED') {
+      return { label: 'Fallido', className: 'badge-red' };
+    }
+    if (sale?.cae) {
+      return { label: 'Autorizado', className: 'badge-green', cae: sale.cae };
+    }
+    return { label: 'Simulación', className: 'badge-yellow' };
+  };
+
+  const canInvoiceSale = (sale: any) => {
+    const invoiceType = String(sale?.invoiceType || 'NONE').toUpperCase();
+    const status = String(sale?.billingStatus || 'NONE').toUpperCase();
+    return ['A', 'B', 'C'].includes(invoiceType) && ['PENDING', 'FAILED'].includes(status);
+  };
+
+  const handleInvoiceSale = async (sale: any) => {
+    const confirmed = window.confirm(`¿Facturar venta ${sale.invoiceNumber || sale._id} en AFIP?`);
+    if (!confirmed) return;
+
+    try {
+      const result = await invoiceSale(sale._id).unwrap();
+      alert(`Facturación iniciada (${result?.billingStatus || 'PENDING'}).`);
+    } catch (err: any) {
+      alert(`Error al facturar: ${err?.data?.message || err?.message || 'Error desconocido'}`);
+    }
   };
 
   const getCreditNoteState = (sale: any) => {
@@ -249,17 +291,32 @@ export const SalesHistory = () => {
                 <td className="hidden xl:table-cell"><span className="badge-gray capitalize">{s.paymentMethod}</span></td>
                 <td className="text-right font-semibold text-white">${s.total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}</td>
                 <td className="text-center">
-                  {s.cae ? (
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="badge-green">Autorizado</span>
-                      <span className="text-[10px] text-slate-600 font-mono">{s.cae?.slice(-8)}</span>
-                    </div>
-                  ) : (
-                    <span className="badge-yellow">Simulación</span>
-                  )}
+                  {(() => {
+                    const badge = getBillingBadge(s);
+                    return (
+                      <div className="flex flex-col items-center gap-1">
+                        <span className={badge.className}>{badge.label}</span>
+                        {badge.cae && (
+                          <span className="text-[10px] text-slate-600 font-mono">{badge.cae?.slice(-8)}</span>
+                        )}
+                      </div>
+                    );
+                  })()}
                 </td>
                 <td className="text-center">
                   <div className="flex items-center justify-center gap-2">
+                    {canInvoiceSale(s) && (
+                      <button
+                        onClick={() => handleInvoiceSale(s)}
+                        disabled={invoicingSale}
+                        className="btn-icon !text-brand-300 hover:!bg-brand-400/10 hover:!border-brand-400/20 disabled:opacity-50"
+                        title="Facturar en AFIP"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                        </svg>
+                      </button>
+                    )}
                     <button
                       onClick={() => handleDownload(s._id, s.invoiceNumber)}
                       className="btn-icon"

@@ -183,3 +183,12 @@ export const deleteSaleController = async (req: Request, res: Response) => {
     res.status(400).json({ message: error.message });
   }
 };
+
+export const invoiceSaleController = async (req: Request, res: Response) => {
+  try {
+    const sale = await salesService.invoiceSale(req.params.id);
+    res.json(sale);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+};

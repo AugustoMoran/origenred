@@ -88,6 +88,7 @@ export const POS = () => {
   const [fiscalCondition, setFiscalCondition] = useState('Consumidor Final');
   const [invoiceType, setInvoiceType] = useState<'A' | 'B' | 'C' | 'NONE'>('B');
   const [lookupSource, setLookupSource] = useState<'arca' | 'manual' | null>(null);
+  const [lookupMessage, setLookupMessage] = useState<string | null>(null);
 
   const [triggerLookup, { isFetching: isSearchingTaxpayer }] = useLazyGetTaxpayerQuery();
 
@@ -101,37 +102,42 @@ export const POS = () => {
 
     if (!force && lastLookupCuitRef.current === targetCuit) return;
     lastLookupCuitRef.current = targetCuit;
-
-    console.log('[DEBUG] Iniciando búsqueda para CUIT:', targetCuit);
+    setLookupMessage(null);
 
     try {
       const data = await triggerLookup(targetCuit).unwrap();
-      
+
       if (data) {
-        if (data._notFound) {
+        if (data._afipAuthError) {
           setLookupSource('manual');
+          setLookupMessage(
+            data._message ||
+              'ARCA rechazó la autenticación. Verificá la configuración AFIP o completá los datos manualmente.'
+          );
           return;
         }
 
-        let condition = 'Consumidor Final';
-        let suggestedType: 'A' | 'B' | 'C' = 'B';
-
-        // Mapeo básico basado en lo que suele devolver la API de Padron
-        const isRI = data.impuestos?.includes(30) || (data.caracterizacion || []).some((c: any) => c.idRegimen === 30 || String(c.descripcion || '').toLowerCase().includes('inscripto'));
-        const isMono = data.impuestos?.includes(20) || (data.caracterizacion || []).some((c: any) => c.idRegimen === 20 || String(c.descripcion || '').toLowerCase().includes('monotributo'));
-
-        if (isRI) {
-          condition = 'Responsable Inscripto';
-          suggestedType = 'A';
-        } else if (isMono) {
-          condition = 'Monotributo';
-          suggestedType = 'B';
+        if (data._notFound) {
+          setLookupSource('manual');
+          setLookupMessage('No se encontraron datos para este CUIT en ARCA. Podés completar los datos manualmente.');
+          return;
         }
 
+        const condition = data.fiscalCondition || (() => {
+          const isRI = data.impuestos?.includes(30) || (data.caracterizacion || []).some((c: any) => c.idRegimen === 30 || String(c.descripcion || '').toLowerCase().includes('inscripto'));
+          const isMono = data.impuestos?.includes(20) || (data.caracterizacion || []).some((c: any) => c.idRegimen === 20 || String(c.descripcion || '').toLowerCase().includes('monotributo'));
+          if (isRI) return 'Responsable Inscripto';
+          if (isMono) return 'Monotributo';
+          return 'Consumidor Final';
+        })();
+
+        const suggestedType: 'A' | 'B' | 'C' = data.suggestedInvoiceType || (
+          condition === 'Responsable Inscripto' ? 'A' : 'B'
+        );
+
         setClientData(prev => {
-          // Intentar obtener el nombre de cualquier campo posible que devuelva AFIP
-          const name = data.nombre || 
-                       data.razonSocial || 
+          const name = data.nombre ||
+                       data.razonSocial ||
                        (data.apellido ? `${data.apellido}${data.nombre ? ' ' + data.nombre : ''}` : '') ||
                        data.datosGenerales?.razonSocial ||
                        (data.datosGenerales?.apellido ? `${data.datosGenerales.apellido} ${data.datosGenerales.nombre || ''}` : '') ||
@@ -140,23 +146,25 @@ export const POS = () => {
           return {
             ...prev,
             name: name.trim(),
-            address: data.domicilioFiscal?.direccion || 
-                     data.datosGenerales?.domicilioFiscal?.direccion || 
+            address: data.domicilioFiscal?.direccion ||
+                     data.datosGenerales?.domicilioFiscal?.direccion ||
                      prev.address
           };
         });
         setFiscalCondition(condition);
         setInvoiceType(suggestedType);
         setLookupSource('arca');
+        setLookupMessage(null);
       } else {
         setFiscalCondition('Consumidor Final');
         setInvoiceType('B');
         setLookupSource('manual');
+        setLookupMessage('Sin respuesta de ARCA. Completá los datos manualmente.');
       }
     } catch (err: any) {
-      console.error('Lookup Error (Silent):', err);
-      // Fallback silencioso a manual
+      console.error('Lookup Error:', err);
       setLookupSource('manual');
+      setLookupMessage(err?.data?.message || 'Error al consultar ARCA. Completá los datos manualmente.');
     }
   };
 

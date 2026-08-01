@@ -1,5 +1,6 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './authSlice';
+import cartReducer from './cartSlice';
 import { authApi } from '../services/authApi';
 import { inventoryApi } from '../services/inventoryApi';
 import { salesApi } from '../services/salesApi';
@@ -9,10 +10,14 @@ import { supplierApi } from '../services/supplierApi';
 import { expenseApi } from '../services/expenseApi';
 import { supplierLedgerApi } from '../services/supplierLedgerApi';
 import { afipApi } from '../services/afipApi';
+import { ecommerceApi } from '../services/ecommerceApi';
+import { settingsApi } from '../services/settingsApi';
+import { analyticsApi } from '../services/analyticsApi';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
+    cart: cartReducer,
     [authApi.reducerPath]: authApi.reducer,
     [inventoryApi.reducerPath]: inventoryApi.reducer,
     [salesApi.reducerPath]: salesApi.reducer,
@@ -22,6 +27,9 @@ export const store = configureStore({
     [expenseApi.reducerPath]: expenseApi.reducer,
     [supplierLedgerApi.reducerPath]: supplierLedgerApi.reducer,
     [afipApi.reducerPath]: afipApi.reducer,
+    [ecommerceApi.reducerPath]: ecommerceApi.reducer,
+    [settingsApi.reducerPath]: settingsApi.reducer,
+    [analyticsApi.reducerPath]: analyticsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -33,7 +41,10 @@ export const store = configureStore({
       supplierApi.middleware,
       expenseApi.middleware,
       supplierLedgerApi.middleware,
-      afipApi.middleware
+      afipApi.middleware,
+      ecommerceApi.middleware,
+      settingsApi.middleware,
+      analyticsApi.middleware
     ),
 });
 

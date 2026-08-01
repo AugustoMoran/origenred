@@ -36,15 +36,30 @@ export const AdminCatalog: React.FC = () => {
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [editingCategoryName, setEditingCategoryName] = useState('');
 
-  const [branchForm, setBranchForm] = useState({ name: '', address: '', phone: '' });
+  const [branchForm, setBranchForm] = useState({ name: '', address: '', phone: '', city: '', province: '', postalCode: '', country: 'Argentina' });
   const [editingBranchId, setEditingBranchId] = useState<string | null>(null);
-  const [editingBranchForm, setEditingBranchForm] = useState({ name: '', address: '', phone: '' });
+  const [editingBranchForm, setEditingBranchForm] = useState({ name: '', address: '', phone: '', city: '', province: '', postalCode: '', country: 'Argentina' });
 
   const [supplierForm, setSupplierForm] = useState({ name: '', contactName: '', email: '', phone: '' });
   const [editingSupplierId, setEditingSupplierId] = useState<string | null>(null);
   const [editingSupplierForm, setEditingSupplierForm] = useState({ name: '', contactName: '', email: '', phone: '' });
 
   const normalize = (v: string) => v.trim().toLowerCase();
+
+  const branchMissingLocation = (branch: any) =>
+    !branch?.city?.trim() || !branch?.province?.trim() || !branch?.postalCode?.trim();
+
+  const BranchLocationWarning = ({ branch }: { branch: any }) => {
+    if (!branchMissingLocation(branch)) return null;
+    return (
+      <span
+        className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-amber-500/20 text-amber-400 ring-1 ring-amber-500/30 text-xs font-bold flex-shrink-0"
+        title="Faltan datos de ubicación (ciudad, provincia o código postal) requeridos para envíos de tienda"
+      >
+        !
+      </span>
+    );
+  };
 
   const handleCreateCategory = async () => {
     const name = categoryName.trim();
@@ -101,8 +116,12 @@ export const AdminCatalog: React.FC = () => {
         name: branchForm.name.trim(),
         address: branchForm.address.trim(),
         phone: branchForm.phone.trim(),
+        city: branchForm.city.trim(),
+        province: branchForm.province.trim(),
+        postalCode: branchForm.postalCode.trim(),
+        country: branchForm.country.trim(),
       }).unwrap();
-      setBranchForm({ name: '', address: '', phone: '' });
+      setBranchForm({ name: '', address: '', phone: '', city: '', province: '', postalCode: '', country: 'Argentina' });
     } catch (err: any) {
       alert(err?.data?.message || 'Error al crear sucursal');
     }
@@ -128,10 +147,14 @@ export const AdminCatalog: React.FC = () => {
           name: editingBranchForm.name.trim(),
           address: editingBranchForm.address.trim(),
           phone: editingBranchForm.phone.trim(),
+          city: editingBranchForm.city.trim(),
+          province: editingBranchForm.province.trim(),
+          postalCode: editingBranchForm.postalCode.trim(),
+          country: editingBranchForm.country.trim(),
         },
       }).unwrap();
       setEditingBranchId(null);
-      setEditingBranchForm({ name: '', address: '', phone: '' });
+      setEditingBranchForm({ name: '', address: '', phone: '', city: '', province: '', postalCode: '', country: 'Argentina' });
     } catch (err: any) {
       alert(err?.data?.message || 'Error al actualizar sucursal');
     }
@@ -308,6 +331,32 @@ export const AdminCatalog: React.FC = () => {
               value={branchForm.phone}
               onChange={(e) => setBranchForm((prev) => ({ ...prev, phone: e.target.value }))}
             />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <input
+                className="input"
+                placeholder="Ciudad"
+                value={branchForm.city}
+                onChange={(e) => setBranchForm((prev) => ({ ...prev, city: e.target.value }))}
+              />
+              <input
+                className="input"
+                placeholder="Provincia"
+                value={branchForm.province}
+                onChange={(e) => setBranchForm((prev) => ({ ...prev, province: e.target.value }))}
+              />
+              <input
+                className="input"
+                placeholder="Código postal"
+                value={branchForm.postalCode}
+                onChange={(e) => setBranchForm((prev) => ({ ...prev, postalCode: e.target.value }))}
+              />
+              <input
+                className="input"
+                placeholder="País"
+                value={branchForm.country}
+                onChange={(e) => setBranchForm((prev) => ({ ...prev, country: e.target.value }))}
+              />
+            </div>
             <button
               className="btn-primary w-full"
               onClick={handleCreateBranch}
@@ -346,13 +395,39 @@ export const AdminCatalog: React.FC = () => {
                           onChange={(e) => setEditingBranchForm((prev) => ({ ...prev, phone: e.target.value }))}
                           placeholder="Teléfono"
                         />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          <input
+                            className="input"
+                            value={editingBranchForm.city}
+                            onChange={(e) => setEditingBranchForm((prev) => ({ ...prev, city: e.target.value }))}
+                            placeholder="Ciudad"
+                          />
+                          <input
+                            className="input"
+                            value={editingBranchForm.province}
+                            onChange={(e) => setEditingBranchForm((prev) => ({ ...prev, province: e.target.value }))}
+                            placeholder="Provincia"
+                          />
+                          <input
+                            className="input"
+                            value={editingBranchForm.postalCode}
+                            onChange={(e) => setEditingBranchForm((prev) => ({ ...prev, postalCode: e.target.value }))}
+                            placeholder="Código postal"
+                          />
+                          <input
+                            className="input"
+                            value={editingBranchForm.country}
+                            onChange={(e) => setEditingBranchForm((prev) => ({ ...prev, country: e.target.value }))}
+                            placeholder="País"
+                          />
+                        </div>
                         <div className="flex flex-col sm:flex-row gap-2 justify-end">
                           <button className="btn-primary !py-1.5 !px-3 w-full sm:w-auto justify-center" onClick={handleUpdateBranch} disabled={updatingBranch}>Guardar</button>
                           <button
                             className="btn-secondary !py-1.5 !px-3 w-full sm:w-auto"
                             onClick={() => {
                               setEditingBranchId(null);
-                              setEditingBranchForm({ name: '', address: '', phone: '' });
+                              setEditingBranchForm({ name: '', address: '', phone: '', city: '', province: '', postalCode: '', country: 'Argentina' });
                             }}
                           >
                             Cancelar
@@ -361,16 +436,33 @@ export const AdminCatalog: React.FC = () => {
                       </div>
                     ) : (
                       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                        <div>
-                          <p className="text-sm text-white font-medium">{b.name}</p>
-                          <p className="text-xs text-slate-500">{b.address}</p>
-                          {b.phone && <p className="text-xs text-slate-500">{b.phone}</p>}
+                        <div className="flex items-start gap-2 min-w-0">
+                          <BranchLocationWarning branch={b} />
+                          <div>
+                            <p className="text-sm text-white font-medium">{b.name}</p>
+                            <p className="text-xs text-slate-500">{b.address}</p>
+                            {(b.city || b.province || b.postalCode) && (
+                              <p className="text-xs text-slate-500">
+                                {[b.city, b.province, b.postalCode].filter(Boolean).join(', ')}
+                                {b.country ? ` · ${b.country}` : ''}
+                              </p>
+                            )}
+                            {b.phone && <p className="text-xs text-slate-500">{b.phone}</p>}
+                          </div>
                         </div>
                         <div className="flex items-center gap-2 self-end sm:self-auto">
                           <button
                             onClick={() => {
                               setEditingBranchId(b._id);
-                              setEditingBranchForm({ name: b.name || '', address: b.address || '', phone: b.phone || '' });
+                              setEditingBranchForm({
+                                name: b.name || '',
+                                address: b.address || '',
+                                phone: b.phone || '',
+                                city: b.city || '',
+                                province: b.province || '',
+                                postalCode: b.postalCode || '',
+                                country: b.country || 'Argentina',
+                              });
                             }}
                             className="btn-icon !text-sky-400 hover:!bg-sky-400/10 hover:!border-sky-400/20"
                             title="Editar sucursal"

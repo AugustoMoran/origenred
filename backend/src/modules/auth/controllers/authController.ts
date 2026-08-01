@@ -22,6 +22,35 @@ export async function registerController(req: Request, res: Response) {
   res.json({ id: user.id, name: user.name, email: user.email, roles: user.roles, permissions: user.permissions, branch: user.branch, commissionRate: user.commissionRate });
 }
 
+export async function publicRegisterController(req: Request, res: Response) {
+  try {
+    const { email, password, name } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email y contraseña son requeridos' });
+    }
+
+    if (String(password).length < 6) {
+      return res.status(400).json({ message: 'La contraseña debe tener al menos 6 caracteres' });
+    }
+
+    const existing = await User.findOne({ email: String(email).trim().toLowerCase() });
+    if (existing) {
+      return res.status(409).json({ message: 'El email ya está registrado' });
+    }
+
+    const user = await register(String(email), String(password), ['user'], {}, name);
+    res.status(201).json({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      roles: user.roles,
+    });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
 export async function updateCommissionController(req: Request, res: Response) {
   const { userId, commissionRate } = req.body;
 

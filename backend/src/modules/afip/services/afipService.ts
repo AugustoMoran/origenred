@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
 import { X509Certificate, createPrivateKey, createPublicKey } from 'crypto';
+import { buildAfipWsfePayload } from '../utils/afipInvoiceBuilder';
 
 dotenv.config();
 
@@ -107,6 +108,62 @@ const isMatchingCertAndKey = (certPem: string, keyPem: string) => {
 const parseBooleanEnv = (value: string | undefined, defaultValue = false) => {
   if (value === undefined) return defaultValue;
   return ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase());
+};
+
+const resolveFiscalCondition = (details: any): string => {
+  const candidates = [
+    details?.datosRegimenGeneral?.impuesto?.descripcionImpuesto,
+    details?.datosMonotributo?.categoriaMonotributo?.descripcionCategoria,
+    details?.datosGenerales?.estadoClave,
+    details?.estadoClave,
+    details?.tipoPersona,
+    details?.tipoClave,
+  ];
+
+  for (const value of candidates) {
+    const normalized = String(value || '').trim();
+    if (normalized) return normalized;
+  }
+
+  if (details?.datosMonotributo) return 'Monotributo';
+  if (details?.datosRegimenGeneral) return 'Responsable Inscripto';
+  return 'Consumidor Final';
+};
+
+const resolveSuggestedInvoiceType = (fiscalCondition: string): 'A' | 'B' | 'C' => {
+  const normalized = String(fiscalCondition || '').toLowerCase();
+  if (normalized.includes('monotribut')) return 'C';
+  if (normalized.includes('responsable inscripto') || normalized.includes('inscripto')) return 'A';
+  return 'B';
+};
+
+const resolveDomicilioFiscal = (details: any) => {
+  const domicilio =
+    details?.domicilioFiscal ||
+    details?.datosGenerales?.domicilioFiscal ||
+    details?.domicilio ||
+    details?.datosGenerales?.domicilio ||
+    {};
+
+  const addressParts = [
+    domicilio.direccion || domicilio.calle || domicilio.address,
+    domicilio.numero,
+    domicilio.localidad || domicilio.ciudad || domicilio.city,
+    domicilio.descripcionProvincia || domicilio.provincia || domicilio.state,
+    domicilio.codPostal || domicilio.postalCode,
+  ]
+    .map((part) => String(part || '').trim())
+    .filter(Boolean);
+
+  return {
+    street: domicilio.direccion || domicilio.calle || domicilio.address || '',
+    number: domicilio.numero || '',
+    city: domicilio.localidad || domicilio.ciudad || domicilio.city || '',
+    province: domicilio.descripcionProvincia || domicilio.provincia || domicilio.state || '',
+    postalCode: domicilio.codPostal || domicilio.postalCode || '',
+    country: domicilio.descripcionPais || domicilio.pais || 'Argentina',
+    formatted: addressParts.join(', '),
+  };
 };
 
 class AfipService {
@@ -386,12 +443,19 @@ class AfipService {
       finalName = details.descripcion || '';
     }
 
+    const fiscalCondition = resolveFiscalCondition(details);
+    const suggestedInvoiceType = resolveSuggestedInvoiceType(fiscalCondition);
+    const domicilioFiscal = resolveDomicilioFiscal(details);
+
     const result = {
       ...details,
       nombre: finalName.trim(),
       razonSocial: finalName.trim(),
+      fiscalCondition,
+      suggestedInvoiceType,
+      domicilioFiscal,
       _source: usedMethod,
-      _notFound: false
+      _notFound: false,
     };
 
     console.log('[AFIP] Resultado normalizado:', result.nombre);
@@ -403,11 +467,14 @@ class AfipService {
     try {
       const lastVoucher = await this.afip.ElectronicBilling.getLastVoucher(data.PtoVta, data.CbteTipo);
       const nextNumber = lastVoucher + 1;
-      const voucherData = {
-        CantReg: 1, PtoVta: data.PtoVta, CbteTipo: data.CbteTipo, DocTipo: data.DocTipo, DocNro: data.DocNro,
-        CbteDesde: nextNumber, CbteHasta: nextNumber, CbteFch: new Date().toISOString().split('T')[0].replace(/-/g, ''),
-        ImpTotal: data.ImpTotal, ImpNeto: data.ImpNeto, ImpIVA: data.ImpIVA, MonId: 'PES', MonCotiz: 1, Iva: data.IvaDetails
-      };
+      const voucherData = buildAfipWsfePayload(
+        {
+          ...data,
+          invoiceType: data.invoiceType,
+          Concepto: data.Concepto || 1,
+        },
+        nextNumber
+      );
       const result = await this.afip.ElectronicBilling.createVoucher(voucherData);
       return { cae: result.CAE, caeFchVto: result.CAEFchVto || result.CAEAfterVTo, voucherNumber: nextNumber, fullResult: result };
     } catch (error: any) { throw new Error('AFIP: ' + error.message); }

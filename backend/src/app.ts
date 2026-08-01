@@ -111,6 +111,11 @@ import supplierRoutes from './modules/suppliers/routes/supplierRoutes';
 import expenseRoutes from './modules/expenses/routes/expenseRoutes';
 import supplierLedgerRoutes from './modules/supplierLedger/routes/supplierLedgerRoutes';
 import afipRoutes from './modules/afip/routes/afipRoutes';
+import settingsRoutes from './modules/settings/routes/settingsRoutes';
+import ecommerceRoutes from './modules/ecommerce/routes/ecommerceRoutes';
+import analyticsRoutes from './modules/analytics/routes/analyticsRoutes';
+import paymentsRoutes from './modules/payments/routes/paymentsRoutes';
+import shippingRoutes from './modules/shipping/routes/shippingRoutes';
 
 app.use('/api/auth', authRoutes);
 app.use('/api/inventory', inventoryRoutes);
@@ -122,6 +127,11 @@ app.use('/api/suppliers', supplierRoutes);
 app.use('/api/expenses', expenseRoutes);
 app.use('/api/supplier-ledger', supplierLedgerRoutes);
 app.use('/api/afip', afipRoutes);
+app.use('/api/settings', settingsRoutes);
+app.use('/api/ecommerce', ecommerceRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/payments', paymentsRoutes);
+app.use('/api/shipping', shippingRoutes);
 
 // Error handler
 app.use((err: any, req: any, res: any, next: any) => {

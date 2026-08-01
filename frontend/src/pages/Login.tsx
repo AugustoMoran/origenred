@@ -26,7 +26,9 @@ export const Login = () => {
         password: normalizedPassword,
       }).unwrap();
       dispatch(setCredentials(result));
-      navigate('/');
+      const roles: string[] = result?.user?.roles || [];
+      const isStaff = roles.some((r) => ['admin', 'vendedor'].includes(String(r).toLowerCase()));
+      navigate(isStaff ? '/dashboard' : '/');
     } catch (err: any) {
       setError(err.data?.message || 'Error al iniciar sesión. Verifica tus credenciales.');
     }

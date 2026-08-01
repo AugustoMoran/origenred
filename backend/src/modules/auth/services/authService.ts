@@ -13,7 +13,7 @@ function escapeRegex(value: string) {
 export async function register(
   email: string,
   password: string,
-  roles: string[] = ['vendedor'],
+  roles: string[] = ['user'],
   permissions: Record<string, boolean> = {},
   name?: string,
   branch?: string,
