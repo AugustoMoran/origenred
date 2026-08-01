@@ -10,7 +10,7 @@ const buildRefreshCookieOptions = () => {
     httpOnly: true,
     sameSite: (isProd ? 'none' : 'strict') as 'none' | 'strict',
     secure: isProd,
-    path: '/api/auth/refresh',
+    path: '/api/auth',
   };
 };
 

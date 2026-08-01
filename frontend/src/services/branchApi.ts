@@ -1,17 +1,11 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createReauthBaseQuery } from './baseQueryWithReauth';
+
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 export const branchApi = createApi({
   reducerPath: 'branchApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/branches`,
-    prepareHeaders: (headers, { getState }: any) => {
-      const token = getState().auth.token;
-      if (token) {
-        headers.set('authorization', `Bearer ${token}`);
-      }
-      return headers;
-    },
-  }),
+  baseQuery: createReauthBaseQuery(`${API_BASE_URL}/branches`),
   tagTypes: ['Branch'],
   endpoints: (builder) => ({
     getBranches: builder.query<any[], any>({

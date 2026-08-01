@@ -3,7 +3,7 @@ import crypto from 'crypto';
 import { JWT_ACCESS_TOKEN_SECRET, JWT_REFRESH_TOKEN_SECRET } from '../../../config';
 import { IUser, User } from '../models/User';
 
-const ACCESS_EXPIRES = '15m';
+const ACCESS_EXPIRES = '1h';
 const REFRESH_EXPIRES = '30d';
 
 export function signAccessToken(user: IUser) {

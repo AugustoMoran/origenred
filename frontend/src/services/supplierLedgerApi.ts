@@ -1,18 +1,11 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
+import { createReauthBaseQuery } from './baseQueryWithReauth';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
 export const supplierLedgerApi = createApi({
   reducerPath: 'supplierLedgerApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${API_BASE_URL}/supplier-ledger`,
-    credentials: 'include',
-    prepareHeaders: (headers, { getState }: any) => {
-      const token = getState().auth.token;
-      if (token) headers.set('authorization', `Bearer ${token}`);
-      return headers;
-    },
-  }),
+  baseQuery: createReauthBaseQuery(`${API_BASE_URL}/supplier-ledger`),
   tagTypes: ['SupplierLedger'],
   endpoints: (builder) => ({
     getLedgerEntries: builder.query<any, { from?: string; to?: string; supplierId?: string; q?: string; entryType?: string } | void>({
