@@ -57,3 +57,13 @@ export const getAfipStatusController = async (_req: Request, res: Response) => {
     res.status(500).json({ ok: false, message: error.message });
   }
 };
+
+export const getAfipDiagnosticsController = async (req: Request, res: Response) => {
+  try {
+    const sampleCuit = String(req.query.sampleCuit || '20394100359');
+    const diagnostics = await afipService.runDiagnostics(sampleCuit);
+    res.status(200).json(diagnostics);
+  } catch (error: any) {
+    res.status(500).json({ ok: false, message: error.message });
+  }
+};

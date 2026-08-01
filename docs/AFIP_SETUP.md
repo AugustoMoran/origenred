@@ -1,64 +1,111 @@
-# Configuración de Facturación Electrónica AFIP 🇦🇷
+# Configuración AFIP / ARCA (OsoSound)
 
-Este sistema utiliza el Web Service de AFIP (WSFEv1) para autorizar facturas y obtener el CAE.
+Esta plataforma se conecta **directamente** a los web services de ARCA (WSAA + SOAP local). **No** necesitás `AFIP_ACCESS_TOKEN` de AfipSDK cloud.
 
-## 1. Requisitos Previos
-Para que la integración funcione, necesitas:
-*   **CUIT** de la empresa/monotributista.
-*   **Certificado Digital (.crt)** y **Clave Privada (.key)**.
-*   Estar dado de alta en el servicio "Facturación Electrónica" en AFIP.
+## Datos de tu certificado actual
 
-## 2. Generación de Certificados (Entorno Testing/Homologación)
-Si aún no tienes certificados de producción, puedes usar el entorno de pruebas:
-1.  Genera una clave privada: `openssl genrsa -out privada.key 2048`
-2.  Genera un pedido de certificado (CSR): `openssl req -new -key privada.key -subj "/C=AR/O=Empresa/CN=Nombre/serialNumber=CUIT20XXXXXXXXX" -out pedido.csr`
-3.  Sube el `pedido.csr` a la web de AFIP (WSASS - Gestión de certificados) para obtener tu `.crt`.
+| Campo | Valor |
+|---|---|
+| Alias en ARCA | `OsoNueva` |
+| CUIT emisor | `20202042644` |
+| Archivo certificado | `OsoNueva_38146f35a69357ab.crt` |
+| Vencimiento | 02/07/2028 |
 
-## 3. Configuración en la App
-Edita el archivo `.env` del backend (o las variables de entorno de tu servidor) con los siguientes campos:
+## 1. Portal AFIP / ARCA (manual)
+
+Con Clave Fiscal del CUIT **20202042644**:
+
+1. Entrá a **Administrador de Relaciones de Clave Fiscal**.
+2. Buscá el certificado con alias **OsoNueva**.
+3. Delegá estos servicios al alias (producción):
+   - `ws_sr_constancia_inscripcion` — búsqueda de CUIT en el POS
+   - `wsfe` — facturación electrónica
+   - (opcional) `ws_sr_padron_a5` — fallback de padrón
+
+4. Verificá que el **punto de venta 7** exista y esté habilitado para **Web Services** en Facturación Electrónica.
+
+Los cambios en ARCA pueden tardar unos minutos en propagarse.
+
+## 2. Variables en Render (Backend)
+
+Copiá **exactamente** estas variables. El certificado y la clave van en **variables separadas**.
 
 ```env
-# Datos de la Empresa
-COMPANY_NAME="Mi Negocio S.A."
-COMPANY_CUIT="30123456789" # Solo números
-COMPANY_ADDRESS="Calle Falsa 123, CABA"
-COMPANY_EMAIL="facturacion@minegocio.com"
+NODE_ENV=production
+COMPANY_CUIT=20202042644
+COMPANY_NAME=Oso Sound
+COMPANY_ADDRESS=<tu domicilio fiscal>
+COMPANY_EMAIL=<email facturación>
 
-# Configuración AFIP (local)
-AFIP_CERT_PATH="../secure/afip/tu-certificado.crt"
-AFIP_KEY_PATH="../secure/afip/private.key"
-AFIP_PTO_VTA="1"
+AFIP_PRODUCTION=true
+AFIP_PTO_VTA=7
 
-# Cola AFIP
-ENABLE_AFIP_QUEUE="true"
-REDIS_URL="redis://localhost:6379"
+# Certificado SOLO (sin la clave privada)
+AFIP_CERT_PEM=-----BEGIN CERTIFICATE-----\nMIIDQzCCAiugAwIBAgII...\n-----END CERTIFICATE-----
 
-NODE_ENV="development" # Usa "production" para entorno real
+# Clave privada SOLO (la que usaste al generar el CSR de OsoNueva)
+AFIP_KEY_PEM=-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBg...\n-----END PRIVATE KEY-----
+
+ENABLE_AFIP_QUEUE=true
+REDIS_URL=redis://...
+AFIP_ENQUEUE_TIMEOUT_MS=4000
 ```
 
-## 4. Deploy en Render (recomendado)
+### Formato al pegar en Render
 
-En Render no conviene depender de rutas de archivos locales. Lo recomendado es cargar certificado y clave como variables de entorno en formato PEM.
+- `AFIP_CERT_PEM` → **solo** el bloque `-----BEGIN CERTIFICATE-----` … `-----END CERTIFICATE-----`
+- `AFIP_KEY_PEM` → **solo** el bloque `-----BEGIN PRIVATE KEY-----` … `-----END PRIVATE KEY-----`
+- Podés pegar en una sola línea usando `\n` entre líneas (el backend los convierte automáticamente).
+- **No** concatenes certificado + clave en la misma variable.
+- La clave privada debe ser la pareja del CSR con el que pediste `OsoNueva_38146f35a69357ab.crt`.
 
-Variables mínimas en Render (Backend):
+### Errores comunes
 
-- `NODE_ENV=production`
-- `MONGO_URI=<mongodb-uri-produccion>`
-- `JWT_ACCESS_TOKEN_SECRET=<secreto-largo>`
-- `JWT_REFRESH_TOKEN_SECRET=<secreto-largo>`
-- `CORS_ALLOWED_ORIGINS=https://tu-frontend.vercel.app,https://*.vercel.app`
-- `COMPANY_CUIT=<cuit-sin-guiones>`
-- `AFIP_PTO_VTA=1`
+| Síntoma | Causa probable |
+|---|---|
+| "AFIP no configurado" | Falta `AFIP_CERT_PEM` / `AFIP_KEY_PEM` o `COMPANY_CUIT` |
+| Certificado y clave no coinciden | Clave de otro CSR (ej. certificado viejo OsoSound1) |
+| `COMPANY_CUIT` distinto al cert | Debe ser `20202042644` |
+| Búsqueda CUIT falla tras deploy | Servicio `ws_sr_constancia_inscripcion` no delegado al alias |
+| Factura queda en FAILED | Falta `REDIS_URL` o `ENABLE_AFIP_QUEUE=true` |
+
+## 3. Verificación después del deploy
+
+Como admin autenticado:
+
+```http
+GET /api/afip/diagnostics?sampleCuit=20394100359
+```
+
+Respuesta esperada:
+
+- `config.configured: true`
+- `config.companyCuit: "20202042644"`
+- `config.certCuit: "20202042644"`
+- `services[].ok: true` para `ws_sr_constancia_inscripcion` y `wsfe`
+- `sampleLookup.found: true` con nombre del contribuyente
+
+## 4. Cola de facturación
+
+La emisión de CAE es asíncrona (BullMQ + Redis):
+
 - `ENABLE_AFIP_QUEUE=true`
-- `REDIS_URL=<redis-de-render-o-upstash>`
-- `AFIP_CERT_PEM="-----BEGIN CERTIFICATE-----...-----END CERTIFICATE-----"`
-- `AFIP_KEY_PEM="-----BEGIN PRIVATE KEY-----...-----END PRIVATE KEY-----"`
-- `BRAND_LOGO_PATH=<ruta-opcional-al-logo-para-PDFs>`
+- `REDIS_URL` apuntando a Redis de Render o Upstash
 
-> El backend ya prioriza `AFIP_CERT_PEM`/`AFIP_KEY_PEM` y usa `AFIP_CERT_PATH`/`AFIP_KEY_PATH` solo como fallback para local.
-> Para facturas/remitos, el backend busca logo en `BRAND_LOGO_PATH` y, si no está, usa fallback automático (`frontend/public/brand-logo.png`).
+Sin Redis la venta se guarda pero la factura no se autoriza.
 
-## 5. Notas Técnicas
-*   **Punto de Venta:** Por defecto la app usa el Punto de Venta `1`. Asegúrate de tenerlo creado en AFIP como "Web Services".
-*   **Sin certificado/clave:** si no configuras certificado y clave (`AFIP_CERT_PEM`/`AFIP_KEY_PEM` o `AFIP_CERT_PATH`/`AFIP_KEY_PATH`), AFIP queda deshabilitado y la API devolverá error de configuración al facturar.
-*   **Librería:** Utilizamos `@afipsdk/afip.js`.
+## 5. Generar un CSR nuevo (si renovás certificado)
+
+```bash
+openssl req -new -key private.key \
+  -subj "/C=AR/O=OsoSound/CN=OsoNueva/serialNumber=CUIT 20202042644" \
+  -out OsoNueva.csr
+```
+
+Subí el CSR en el portal ARCA → Certificados digitales → alias **OsoNueva**.
+
+## 6. Notas técnicas
+
+- Librería: `@afipsdk/afip.js@0.8.1` con WSAA local (sin proxy cloud).
+- `AFIP_ACCESS_TOKEN` **no** se usa; la versión 1.x de AfipSDK lo exige y generaba el error 401 anterior.
+- Tokens WSAA se cachean en `uploads/.afip_tokens/` del servidor.
