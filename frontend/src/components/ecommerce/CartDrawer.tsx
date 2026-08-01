@@ -114,7 +114,7 @@ export const CartDrawer: React.FC = () => {
               </span>
             </div>
             <button onClick={handleCheckout} className="btn-primary w-full py-3">
-              Ir al checkout
+              Finalizar compra
             </button>
           </div>
         )}

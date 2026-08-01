@@ -1,7 +1,7 @@
 import { CartItem } from '../store/cartSlice';
 import { buildWhatsAppUrl } from '../config/storeContact';
 
-interface OrderCustomerInfo {
+interface MercadoPagoCustomerInfo {
   customerName: string;
   customerEmail: string;
   customerPhone?: string;
@@ -13,20 +13,32 @@ interface OrderCustomerInfo {
   notes?: string;
 }
 
+export interface WhatsAppQuickCustomerInfo {
+  customerName: string;
+  customerPhone: string;
+  notes?: string;
+}
+
+const formatMoney = (value: number) =>
+  value.toLocaleString('es-AR', { minimumFractionDigits: 2 });
+
+const buildProductLines = (items: CartItem[]) =>
+  items.map(
+    (item) =>
+      `• ${item.name} x${item.quantity} - $${formatMoney(item.price * item.quantity)}`
+  );
+
 export const buildWhatsAppOrderMessage = (
   items: CartItem[],
   total: number,
-  customer: OrderCustomerInfo
+  customer: MercadoPagoCustomerInfo
 ) => {
   const lines = [
     'Hola! Quiero confirmar un pedido desde la tienda online:',
     '',
-    ...items.map(
-      (item) =>
-        `• ${item.name} x${item.quantity} - $${(item.price * item.quantity).toLocaleString('es-AR', { minimumFractionDigits: 2 })}`
-    ),
+    ...buildProductLines(items),
     '',
-    `*Total: $${total.toLocaleString('es-AR', { minimumFractionDigits: 2 })}*`,
+    `*Total: $${formatMoney(total)}*`,
     '',
     `Nombre: ${customer.customerName}`,
     `Email: ${customer.customerEmail}`,
@@ -48,8 +60,39 @@ export const buildWhatsAppOrderMessage = (
   return lines.join('\n');
 };
 
+export const buildWhatsAppQuickOrderMessage = (
+  items: CartItem[],
+  total: number,
+  customer: WhatsAppQuickCustomerInfo
+) => {
+  const lines = [
+    'Hola! Quiero consultar un pedido desde la tienda online:',
+    '',
+    ...buildProductLines(items),
+    '',
+    `*Total estimado: $${formatMoney(total)}*`,
+    '',
+    `Nombre: ${customer.customerName}`,
+    `Teléfono: ${customer.customerPhone}`,
+  ];
+
+  if (customer.notes?.trim()) {
+    lines.push('', `Consulta: ${customer.notes.trim()}`);
+  }
+
+  lines.push('', 'Quedo atento/a para coordinar pago y envío. Gracias!');
+
+  return lines.join('\n');
+};
+
+export const buildWhatsAppQuickOrderUrl = (
+  items: CartItem[],
+  total: number,
+  customer: WhatsAppQuickCustomerInfo
+) => buildWhatsAppUrl(buildWhatsAppQuickOrderMessage(items, total, customer));
+
 export const buildWhatsAppOrderUrl = (
   items: CartItem[],
   total: number,
-  customer: OrderCustomerInfo
+  customer: MercadoPagoCustomerInfo
 ) => buildWhatsAppUrl(buildWhatsAppOrderMessage(items, total, customer));

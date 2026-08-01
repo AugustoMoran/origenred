@@ -19,6 +19,7 @@ import { StoreProducts } from './pages/store/StoreProducts';
 import { StoreProductDetail } from './pages/store/StoreProductDetail';
 import { StoreCheckout } from './pages/store/StoreCheckout';
 import { StoreCheckoutConfirmation } from './pages/store/StoreCheckoutConfirmation';
+import { StoreWhatsAppSent } from './pages/store/StoreWhatsAppSent';
 import { StoreRegister } from './pages/store/StoreRegister';
 import { Maintenance } from './pages/store/Maintenance';
 
@@ -40,6 +41,7 @@ const router = createBrowserRouter([
       { path: '/products', element: <StoreProducts /> },
       { path: '/products/:id', element: <StoreProductDetail /> },
       { path: '/checkout', element: <StoreCheckout /> },
+      { path: '/checkout/consulta-enviada', element: <StoreWhatsAppSent /> },
       { path: '/checkout/confirmation/:orderId', element: <StoreCheckoutConfirmation /> },
       { path: '/store/register', element: <StoreRegister /> },
     ],
