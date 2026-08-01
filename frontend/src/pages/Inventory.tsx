@@ -21,6 +21,11 @@ interface ProductFormData {
   name: string;
   sku: string;
   description: string;
+  commercialDescription: string;
+  longDescription: string;
+  seoTitle: string;
+  seoDescription: string;
+  slug: string;
   price: number | '';
   costPrice: number | '';
   iva: number;
@@ -31,7 +36,27 @@ interface ProductFormData {
   supplier: string;
   barcode: string;
   internalCode: string;
+  weight: number | '';
+  dimLength: number | '';
+  dimWidth: number | '';
+  dimHeight: number | '';
+  displayOrder: number | '';
 }
+
+interface GalleryItem {
+  url: string;
+  publicId?: string;
+  alt?: string;
+}
+
+const slugifyPreview = (text: string) =>
+  text
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
 
 interface BranchAssignmentForm {
   branchId: string;
@@ -321,8 +346,12 @@ export const Inventory = () => {
   };
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [galleryItems, setGalleryItems] = useState<GalleryItem[]>([]);
+  const [galleryFiles, setGalleryFiles] = useState<File[]>([]);
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState<string | null>(null);
@@ -330,7 +359,10 @@ export const Inventory = () => {
   const [priceDriver, setPriceDriver] = useState<'margin' | 'price'>('margin');
 
   const [formData, setFormData] = useState<ProductFormData>({
-    name: '', sku: '', description: '', price: '', costPrice: '', iva: 21, margin: '', stock: '', minStock: '', category: '', supplier: '', barcode: '', internalCode: ''
+    name: '', sku: '', description: '', commercialDescription: '', longDescription: '',
+    seoTitle: '', seoDescription: '', slug: '',
+    price: '', costPrice: '', iva: 21, margin: '', stock: '', minStock: '', category: '', supplier: '', barcode: '', internalCode: '',
+    weight: '', dimLength: '', dimWidth: '', dimHeight: '', displayOrder: '',
   });
 
   const toNum = (value: any) => {
@@ -407,14 +439,45 @@ export const Inventory = () => {
     }
   };
 
+  const handleGalleryChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length) return;
+
+    setGalleryFiles((prev) => [...prev, ...files]);
+    files.forEach((file) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setGalleryPreviews((prev) => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
+
+    if (galleryInputRef.current) {
+      galleryInputRef.current.value = '';
+    }
+  };
+
+  const removeGalleryItem = (index: number) => {
+    setGalleryItems((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const removeGalleryFile = (index: number) => {
+    setGalleryFiles((prev) => prev.filter((_, i) => i !== index));
+    setGalleryPreviews((prev) => prev.filter((_, i) => i !== index));
+  };
+
   const resetForm = () => {
-    setFormData({ 
-      name: '', sku: '', description: '', price: '', costPrice: '', 
-      iva: 21, margin: '', stock: '', minStock: '', category: '', supplier: '',
-      barcode: '', internalCode: ''
+    setFormData({
+      name: '', sku: '', description: '', commercialDescription: '', longDescription: '',
+      seoTitle: '', seoDescription: '', slug: '',
+      price: '', costPrice: '', iva: 21, margin: '', stock: '', minStock: '', category: '', supplier: '',
+      barcode: '', internalCode: '', weight: '', dimLength: '', dimWidth: '', dimHeight: '', displayOrder: '',
     });
     setSelectedFile(null);
     setImagePreview(null);
+    setGalleryItems([]);
+    setGalleryFiles([]);
+    setGalleryPreviews([]);
     setIsEditing(false);
     setCurrentId(null);
     setBranchAssignments(getDefaultAssignments());
@@ -450,7 +513,12 @@ export const Inventory = () => {
 
     const data = new FormData();
     const numericFields = new Set(['price', 'costPrice', 'iva', 'margin', 'stock', 'minStock']);
+    const ecommerceOnlyFields = new Set([
+      'commercialDescription', 'longDescription', 'seoTitle', 'seoDescription', 'slug',
+      'weight', 'dimLength', 'dimWidth', 'dimHeight', 'displayOrder',
+    ]);
     Object.entries(formData).forEach(([key, value]) => {
+      if (ecommerceOnlyFields.has(key)) return;
       if (key === 'supplier' && !value) return;
       if (value !== undefined && value !== null) {
         if (numericFields.has(key)) {
@@ -476,6 +544,33 @@ export const Inventory = () => {
     }
 
     if (selectedFile) data.append('image', selectedFile);
+    galleryFiles.forEach((file) => data.append('galleryImages', file));
+    data.append('gallery', JSON.stringify(galleryItems));
+
+    const ecommerceFields = [
+      'commercialDescription', 'longDescription', 'seoTitle', 'seoDescription', 'slug', 'weight', 'displayOrder',
+    ] as const;
+
+    ecommerceFields.forEach((field) => {
+      const value = formData[field];
+      if (value !== undefined && value !== null && value !== '') {
+        if (field === 'weight' || field === 'displayOrder') {
+          data.append(field, toNum(value).toString());
+        } else {
+          data.append(field, String(value));
+        }
+      }
+    });
+
+    const hasDimensions = formData.dimLength !== '' || formData.dimWidth !== '' || formData.dimHeight !== '';
+    if (hasDimensions) {
+      data.append('dimensions', JSON.stringify({
+        length: toNum(formData.dimLength) || undefined,
+        width: toNum(formData.dimWidth) || undefined,
+        height: toNum(formData.dimHeight) || undefined,
+        unit: 'cm',
+      }));
+    }
 
     try {
       if (isEditing && currentId) {
@@ -508,6 +603,11 @@ export const Inventory = () => {
       name: p.name,
       sku: p.sku,
       description: p.description || '',
+      commercialDescription: p.commercialDescription || '',
+      longDescription: p.longDescription || '',
+      seoTitle: p.seoTitle || '',
+      seoDescription: p.seoDescription || '',
+      slug: p.slug || '',
       price: p.price,
       costPrice: p.costPrice,
       iva: p.iva ?? 21,
@@ -517,9 +617,17 @@ export const Inventory = () => {
       category: p.category || '',
       supplier: typeof p.supplier === 'object' ? (p.supplier?._id || '') : (p.supplier || ''),
       barcode: p.barcode || '',
-      internalCode: p.internalCode || ''
+      internalCode: p.internalCode || '',
+      weight: p.weight ?? '',
+      dimLength: p.dimensions?.length ?? '',
+      dimWidth: p.dimensions?.width ?? '',
+      dimHeight: p.dimensions?.height ?? '',
+      displayOrder: p.displayOrder ?? '',
     });
     setImagePreview(p.imageUrl);
+    setGalleryItems(Array.isArray(p.gallery) ? p.gallery : []);
+    setGalleryFiles([]);
+    setGalleryPreviews([]);
     setIsEditing(true);
     setCurrentId(p._id);
     setBranchAssignments([]);
@@ -978,7 +1086,7 @@ export const Inventory = () => {
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 overflow-y-auto">
           <div className="absolute inset-0 bg-[#030712]/80 backdrop-blur-sm" onClick={() => { setShowModal(false); resetForm(); }} />
-          <div className="relative w-full max-w-2xl animate-scale-up my-3 sm:my-0">
+          <div className="relative w-full max-w-4xl animate-scale-up my-3 sm:my-0">
             <div className="card p-4 sm:p-6 shadow-2xl max-h-[92dvh] overflow-y-auto">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-lg font-bold text-white">{isEditing ? 'Editar' : 'Nuevo'} Producto</h2>
@@ -1014,7 +1122,13 @@ export const Inventory = () => {
                   <div>
                     <label className="section-heading">Nombre del producto</label>
                     <input type="text" className="input" placeholder="Ej: Coca Cola 500ml" required
-                      value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+                      value={formData.name}
+                      onChange={e => setFormData({ ...formData, name: e.target.value })}
+                      onBlur={() => {
+                        if (!formData.slug.trim() && formData.name.trim()) {
+                          setFormData((prev) => ({ ...prev, slug: slugifyPreview(prev.name) }));
+                        }
+                      }} />
                   </div>
                   <div>
                     <label className="section-heading">Categoría</label>
@@ -1227,6 +1341,180 @@ export const Inventory = () => {
                       El stock inicial por sucursal lo define un administrador para mantener control centralizado.
                     </div>
                   )}
+                </div>
+
+                <div className="border-t border-white/[0.06] pt-5 space-y-4">
+                  <div>
+                    <h3 className="text-sm font-semibold text-white">Datos para la tienda</h3>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Información visible en el catálogo online: textos de marketing, SEO, galería y datos de envío.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="section-heading">URL amigable (slug)</label>
+                      <input
+                        type="text"
+                        className="input font-mono text-xs"
+                        placeholder="remera-negra-unisex"
+                        value={formData.slug}
+                        onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
+                      />
+                      <p className="text-[10px] text-slate-600 mt-1">Se usa en /products/{formData.slug || 'nombre-producto'}</p>
+                    </div>
+                    <div>
+                      <label className="section-heading">Orden en catálogo</label>
+                      <input
+                        type="number"
+                        className="input"
+                        placeholder="0"
+                        value={formData.displayOrder as any}
+                        onWheel={handleNumberWheel}
+                        onChange={(e) => setFormData({ ...formData, displayOrder: e.target.value === '' ? '' : Number(e.target.value) } as ProductFormData)}
+                      />
+                      <p className="text-[10px] text-slate-600 mt-1">Menor número = aparece primero</p>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="section-heading">Descripción comercial (corta)</label>
+                      <textarea
+                        className="input min-h-[70px] py-3"
+                        placeholder="Texto breve para tarjetas y listados de la tienda..."
+                        value={formData.commercialDescription}
+                        onChange={(e) => setFormData({ ...formData, commercialDescription: e.target.value })}
+                      />
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="section-heading">Descripción larga</label>
+                      <textarea
+                        className="input min-h-[120px] py-3"
+                        placeholder="Detalle completo: materiales, talles, cuidados, especificaciones..."
+                        value={formData.longDescription}
+                        onChange={(e) => setFormData({ ...formData, longDescription: e.target.value })}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="section-heading">Título SEO</label>
+                      <input
+                        type="text"
+                        className="input"
+                        placeholder="Remera negra unisex | Tu Marca"
+                        value={formData.seoTitle}
+                        onChange={(e) => setFormData({ ...formData, seoTitle: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <label className="section-heading">Meta descripción SEO</label>
+                      <input
+                        type="text"
+                        className="input"
+                        placeholder="Comprá online con envío a todo el país..."
+                        value={formData.seoDescription}
+                        onChange={(e) => setFormData({ ...formData, seoDescription: e.target.value })}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="section-heading">Peso (kg)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        className="input"
+                        placeholder="0.30"
+                        value={formData.weight as any}
+                        onWheel={handleNumberWheel}
+                        onChange={(e) => setFormData({ ...formData, weight: e.target.value === '' ? '' : Number(e.target.value) } as ProductFormData)}
+                      />
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div>
+                        <label className="section-heading">Largo (cm)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          className="input"
+                          value={formData.dimLength as any}
+                          onWheel={handleNumberWheel}
+                          onChange={(e) => setFormData({ ...formData, dimLength: e.target.value === '' ? '' : Number(e.target.value) } as ProductFormData)}
+                        />
+                      </div>
+                      <div>
+                        <label className="section-heading">Ancho (cm)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          className="input"
+                          value={formData.dimWidth as any}
+                          onWheel={handleNumberWheel}
+                          onChange={(e) => setFormData({ ...formData, dimWidth: e.target.value === '' ? '' : Number(e.target.value) } as ProductFormData)}
+                        />
+                      </div>
+                      <div>
+                        <label className="section-heading">Alto (cm)</label>
+                        <input
+                          type="number"
+                          step="0.1"
+                          className="input"
+                          value={formData.dimHeight as any}
+                          onWheel={handleNumberWheel}
+                          onChange={(e) => setFormData({ ...formData, dimHeight: e.target.value === '' ? '' : Number(e.target.value) } as ProductFormData)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="md:col-span-2">
+                      <label className="section-heading">Galería de imágenes</label>
+                      <div className="flex flex-wrap gap-2 mb-3">
+                        {galleryItems.map((item, idx) => (
+                          <div key={`gallery-saved-${idx}`} className="relative w-20 h-20 rounded-lg overflow-hidden border border-white/10">
+                            <img src={item.url} alt={item.alt || formData.name} className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => removeGalleryItem(idx)}
+                              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 text-white text-xs"
+                              title="Quitar imagen"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                        {galleryPreviews.map((preview, idx) => (
+                          <div key={`gallery-new-${idx}`} className="relative w-20 h-20 rounded-lg overflow-hidden border border-brand-500/30">
+                            <img src={preview} alt="Nueva" className="w-full h-full object-cover" />
+                            <button
+                              type="button"
+                              onClick={() => removeGalleryFile(idx)}
+                              className="absolute top-1 right-1 w-5 h-5 rounded-full bg-black/70 text-white text-xs"
+                              title="Quitar imagen"
+                            >
+                              ×
+                            </button>
+                          </div>
+                        ))}
+                        <button
+                          type="button"
+                          onClick={() => galleryInputRef.current?.click()}
+                          className="w-20 h-20 rounded-lg border border-dashed border-white/15 text-slate-500 hover:text-brand-400 hover:border-brand-500/30 transition-colors text-xs"
+                        >
+                          + Foto
+                        </button>
+                      </div>
+                      <input
+                        type="file"
+                        ref={galleryInputRef}
+                        onChange={handleGalleryChange}
+                        accept="image/*"
+                        multiple
+                        className="hidden"
+                      />
+                      <p className="text-[10px] text-slate-600">
+                        La foto principal de arriba se usa como imagen destacada. Acá podés agregar fotos extra para la ficha del producto.
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="flex flex-col sm:flex-row gap-3 pt-4">

@@ -69,6 +69,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showFeatured 
         <h3 className="text-sm font-semibold text-white line-clamp-2 min-h-[2.5rem] leading-snug group-hover:text-brand-300 transition-colors">
           {product.name}
         </h3>
+        {(product.commercialDescription || product.description) && (
+          <p className="text-xs text-slate-500 mt-1 line-clamp-2">
+            {product.commercialDescription || product.description}
+          </p>
+        )}
         <div className="mt-auto pt-3 flex items-end justify-between gap-2">
           <span className="text-lg font-bold text-brand-400 tabular-nums">
             ${product.price.toLocaleString('es-AR', { minimumFractionDigits: 2 })}

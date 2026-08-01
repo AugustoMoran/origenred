@@ -14,10 +14,13 @@ import { Request, Response, NextFunction } from 'express';
 
 const router = Router();
 
-const optionalImageUpload = (req: Request, res: Response, next: NextFunction) => {
-  upload.single('image')(req, res, (err: any) => {
+const optionalProductUpload = (req: Request, res: Response, next: NextFunction) => {
+  upload.fields([
+    { name: 'image', maxCount: 1 },
+    { name: 'galleryImages', maxCount: 10 },
+  ])(req, res, (err: any) => {
     if (err) {
-      console.warn('No se pudo subir la imagen, se guardará el producto sin foto:', err?.message || err);
+      console.warn('No se pudieron subir imágenes, se guardará el producto sin fotos nuevas:', err?.message || err);
       return next();
     }
     return next();
@@ -28,8 +31,8 @@ const optionalImageUpload = (req: Request, res: Response, next: NextFunction) =>
 router.get('/', authenticate, authorize(PERMISSIONS.INVENTORY_VIEW), getProductsController);
 
 // Solo usuarios con permiso de edición pueden crear/modificar
-router.post('/', authenticate, authorize(PERMISSIONS.INVENTORY_EDIT), optionalImageUpload, createProductController);
-router.put('/:id', authenticate, authorize(PERMISSIONS.INVENTORY_EDIT), optionalImageUpload, updateProductController);
+router.post('/', authenticate, authorize(PERMISSIONS.INVENTORY_EDIT), optionalProductUpload, createProductController);
+router.put('/:id', authenticate, authorize(PERMISSIONS.INVENTORY_EDIT), optionalProductUpload, updateProductController);
 router.delete('/:id', authenticate, authorize(PERMISSIONS.INVENTORY_EDIT), deleteProductController);
 
 // Ajuste rápido de stock (entradas/salidas)

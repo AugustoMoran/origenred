@@ -3,11 +3,13 @@ import * as inventoryService from '../services/inventoryService';
 import { deleteImage } from '../../../middleware/uploadMiddleware';
 import fs from 'fs';
 import path from 'path';
+import {
+  applyEcommerceFieldsToProductData,
+  applyMainImageToProductData,
+  getMainUploadedImage,
+} from '../utils/productFormParser';
 
 const isHttpUrl = (value?: string) => !!value && /^https?:\/\//i.test(value);
-
-const getLocalImageUrl = (req: Request, filename: string) =>
-  `${req.protocol}://${req.get('host')}/uploads/${filename}`;
 
 const deleteLocalImageFromUrl = (imageUrl?: string) => {
   if (!imageUrl || !imageUrl.includes('/uploads/')) return;
@@ -25,6 +27,16 @@ const deleteLocalImageFromUrl = (imageUrl?: string) => {
   }
 };
 
+const parseSupplierField = (productData: Record<string, any>) => {
+  if ('supplier' in productData) {
+    if (!productData.supplier || String(productData.supplier).trim() === '') {
+      delete productData.supplier;
+    } else {
+      productData.supplier = String(productData.supplier).trim();
+    }
+  }
+};
+
 export const getProductsController = async (req: Request, res: Response) => {
   try {
     const products = await inventoryService.getProducts(req.query || {});
@@ -36,7 +48,7 @@ export const getProductsController = async (req: Request, res: Response) => {
 
 export const createProductController = async (req: Request, res: Response) => {
   try {
-    const productData = { ...req.body };
+    const productData = applyEcommerceFieldsToProductData(req, { ...req.body });
 
     if (typeof productData.branchStocks === 'string') {
       try {
@@ -46,21 +58,8 @@ export const createProductController = async (req: Request, res: Response) => {
       }
     }
 
-    if ('supplier' in productData) {
-      if (!productData.supplier || String(productData.supplier).trim() === '') {
-        delete productData.supplier;
-      } else {
-        productData.supplier = String(productData.supplier).trim();
-      }
-    }
-    
-    if (req.file) {
-      const uploadedFile = req.file as any;
-      productData.imageUrl = isHttpUrl(uploadedFile.path)
-        ? uploadedFile.path
-        : getLocalImageUrl(req, uploadedFile.filename);
-      productData.imagePublicId = uploadedFile.filename;
-    }
+    parseSupplierField(productData);
+    applyMainImageToProductData(req, productData);
 
     const product = await inventoryService.createProduct(productData, (req as any).user);
     res.status(201).json(product);
@@ -72,18 +71,10 @@ export const createProductController = async (req: Request, res: Response) => {
 export const updateProductController = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const productData = { ...req.body };
+    const productData = applyEcommerceFieldsToProductData(req, { ...req.body });
+    parseSupplierField(productData);
 
-    if ('supplier' in productData) {
-      if (!productData.supplier || String(productData.supplier).trim() === '') {
-        productData.supplier = undefined;
-      } else {
-        productData.supplier = String(productData.supplier).trim();
-      }
-    }
-    
-    // Si viene una imagen nueva, borrar la anterior
-    if (req.file) {
+    if (getMainUploadedImage(req)) {
       const oldProduct = await inventoryService.getProductById(id);
 
       if (oldProduct?.imagePublicId && isHttpUrl(oldProduct.imageUrl || '')) {
@@ -91,12 +82,7 @@ export const updateProductController = async (req: Request, res: Response) => {
       }
 
       deleteLocalImageFromUrl(oldProduct?.imageUrl);
-
-      const uploadedFile = req.file as any;
-      productData.imageUrl = isHttpUrl(uploadedFile.path)
-        ? uploadedFile.path
-        : getLocalImageUrl(req, uploadedFile.filename);
-      productData.imagePublicId = uploadedFile.filename;
+      applyMainImageToProductData(req, productData);
     }
 
     const product = await inventoryService.updateProduct(id, productData);
@@ -120,7 +106,7 @@ export const deleteProductController = async (req: Request, res: Response) => {
 export const adjustStockController = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
-    const { quantity, type } = req.body; // type: 'add' | 'remove'
+    const { quantity, type } = req.body;
     const product = await inventoryService.updateStock(id, quantity, type);
     res.json(product);
   } catch (error: any) {

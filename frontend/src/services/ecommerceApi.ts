@@ -54,14 +54,22 @@ export interface StoreProduct {
   name: string;
   slug?: string;
   description?: string;
+  commercialDescription?: string;
+  longDescription?: string;
   price: number;
   imageUrl?: string;
+  gallery?: Array<{ url: string; alt?: string; publicId?: string }>;
   category: string;
   sku: string;
   stock: number;
   featured?: boolean;
   paused?: boolean;
   iva?: number;
+  weight?: number;
+  dimensions?: { length?: number; width?: number; height?: number; unit?: string };
+  seoTitle?: string;
+  seoDescription?: string;
+  displayOrder?: number;
 }
 
 export interface StoreOrderItem {
