@@ -10,7 +10,7 @@ import { authenticate } from '../../../middleware/authMiddleware';
 const router = Router();
 
 router.get('/mercadopago/config', getMercadoPagoConfigController);
-router.post('/mercadopago/preference', authenticate, createPreferenceController);
+router.post('/mercadopago/preference', createPreferenceController);
 router.post('/mercadopago/webhook', mercadoPagoWebhookController);
 router.get('/mercadopago/payment/:paymentId', authenticate, getPaymentStatusController);
 

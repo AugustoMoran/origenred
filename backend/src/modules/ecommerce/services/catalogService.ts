@@ -64,6 +64,18 @@ export const getCatalogProductBySlug = async (slug: string) => {
     .select(CATALOG_SELECT);
 };
 
+export const getCatalogProductByIdOrSlug = async (idOrSlug: string) => {
+  const value = String(idOrSlug || '').trim();
+  if (!value) return null;
+
+  if (/^[a-f\d]{24}$/i.test(value)) {
+    const byId = await Product.findOne({ ...CATALOG_PUBLIC_FILTER, _id: value }).select(CATALOG_SELECT);
+    if (byId) return byId;
+  }
+
+  return getCatalogProductBySlug(value);
+};
+
 export const getCatalogCategories = async () => {
   return await Product.distinct('category', CATALOG_PUBLIC_FILTER);
 };

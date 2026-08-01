@@ -20,6 +20,25 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
   }
 }
 
+/** Sets req.user when a valid token is present; continues without auth otherwise. */
+export async function optionalAuthenticate(req: Request, _res: Response, next: NextFunction) {
+  const auth = req.headers.authorization;
+  if (!auth) return next();
+
+  const parts = auth.split(' ');
+  if (parts.length !== 2) return next();
+
+  try {
+    const payload: any = jwt.verify(parts[1], JWT_ACCESS_TOKEN_SECRET);
+    const user = await User.findById(payload.sub);
+    if (user) (req as any).user = user;
+  } catch {
+    // ignore invalid tokens for optional auth
+  }
+
+  next();
+}
+
 export function authorize(permission: string) {
   return (req: Request, res: Response, next: NextFunction) => {
     const user = (req as any).user;

@@ -100,23 +100,39 @@ export const ecommerceApi = createApi({
         if (params?.category) search.set('category', params.category);
         if (params?.featured) search.set('featured', 'true');
         const suffix = search.toString() ? `?${search.toString()}` : '';
-        return `/products${suffix}`;
+        return `/catalog${suffix}`;
+      },
+      transformResponse: (response: any) => {
+        if (Array.isArray(response)) return response;
+        return response?.items || [];
       },
       providesTags: ['StoreProduct'],
     }),
     getStoreProduct: builder.query<StoreProduct, string>({
-      query: (idOrSlug) => `/products/${idOrSlug}`,
+      query: (idOrSlug) => `/catalog/${idOrSlug}`,
       providesTags: (_result, _error, id) => [{ type: 'StoreProduct', id }],
     }),
     getStoreCategories: builder.query<{ _id: string; name: string }[], void>({
-      query: () => '/categories',
+      query: () => '/catalog/categories',
+      transformResponse: (response: any) => {
+        if (!Array.isArray(response)) return [];
+        return response.map((name: string) => ({ _id: name, name }));
+      },
       providesTags: ['StoreCategory'],
     }),
     createStoreOrder: builder.mutation<any, CreateOrderPayload>({
       query: (body) => ({
-        url: '/orders',
+        url: '/checkout',
         method: 'POST',
-        body,
+        body: {
+          items: body.items,
+          customerName: body.customerName,
+          customerEmail: body.customerEmail,
+          customerPhone: body.customerPhone,
+          shippingAddress: body.shippingAddress,
+          notes: body.notes,
+          paymentMethod: body.paymentMethod,
+        },
       }),
       invalidatesTags: ['StoreOrder', 'StoreProduct'],
     }),

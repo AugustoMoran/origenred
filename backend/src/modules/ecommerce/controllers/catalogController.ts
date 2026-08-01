@@ -12,7 +12,7 @@ export const getCatalogController = async (req: Request, res: Response) => {
 
 export const getCatalogProductController = async (req: Request, res: Response) => {
   try {
-    const product = await catalogService.getCatalogProductBySlug(req.params.slug);
+    const product = await catalogService.getCatalogProductByIdOrSlug(req.params.slug);
     if (!product) return res.status(404).json({ message: 'Producto no encontrado' });
     res.json(product);
   } catch (error: any) {

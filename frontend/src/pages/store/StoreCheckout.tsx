@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from 'react-redux';
 import { SEO } from '../../components/ecommerce/SEO';
 import { selectCartItems, selectCartTotal, clearCart } from '../../store/cartSlice';
 import { useCreateStoreOrderMutation } from '../../services/ecommerceApi';
+import { useGetMercadoPagoConfigQuery, useCreatePreferenceMutation } from '../../services/paymentsApi';
 import { useTrackEventMutation } from '../../services/analyticsApi';
 
 export const StoreCheckout: React.FC = () => {
@@ -11,7 +12,9 @@ export const StoreCheckout: React.FC = () => {
   const dispatch = useDispatch();
   const items = useSelector(selectCartItems);
   const total = useSelector(selectCartTotal);
-  const [createOrder, { isLoading }] = useCreateStoreOrderMutation();
+  const [createOrder, { isLoading: creatingOrder }] = useCreateStoreOrderMutation();
+  const [createPreference, { isLoading: creatingPreference }] = useCreatePreferenceMutation();
+  const { data: mpConfig } = useGetMercadoPagoConfigQuery();
   const [trackEvent] = useTrackEventMutation();
 
   const [form, setForm] = useState({
@@ -27,6 +30,9 @@ export const StoreCheckout: React.FC = () => {
     paymentMethod: 'transferencia',
   });
   const [error, setError] = useState('');
+
+  const isLoading = creatingOrder || creatingPreference;
+  const mpEnabled = Boolean(mpConfig?.enabled);
 
   useEffect(() => {
     trackEvent({ event: 'page_view', path: '/checkout' }).catch(() => {});
@@ -60,6 +66,21 @@ export const StoreCheckout: React.FC = () => {
       }).unwrap();
 
       trackEvent({ event: 'purchase', metadata: { orderId: order._id, total } }).catch(() => {});
+
+      if (form.paymentMethod === 'mercadopago' && mpEnabled) {
+        const preference = await createPreference({
+          saleId: order._id,
+          payerEmail: form.customerEmail.trim(),
+        }).unwrap();
+
+        dispatch(clearCart());
+        const redirectUrl = preference.initPoint || preference.sandboxInitPoint;
+        if (redirectUrl) {
+          window.location.href = redirectUrl;
+          return;
+        }
+      }
+
       dispatch(clearCart());
       navigate(`/checkout/confirmation/${order._id}`);
     } catch (err: any) {
@@ -138,8 +159,14 @@ export const StoreCheckout: React.FC = () => {
               onChange={(e) => setForm({ ...form, paymentMethod: e.target.value })}>
               <option value="transferencia">Transferencia bancaria</option>
               <option value="efectivo">Efectivo contra entrega</option>
+              {mpEnabled && <option value="mercadopago">Mercado Pago</option>}
               <option value="tarjeta">Tarjeta (coordinar)</option>
             </select>
+            {form.paymentMethod === 'mercadopago' && mpEnabled && (
+              <p className="text-xs text-slate-500 mt-1">
+                Serás redirigido a Mercado Pago para completar el pago de forma segura.
+              </p>
+            )}
           </div>
 
           <div>
@@ -149,7 +176,11 @@ export const StoreCheckout: React.FC = () => {
           </div>
 
           <button type="submit" disabled={isLoading} className="btn-primary w-full py-3">
-            {isLoading ? 'Procesando...' : 'Confirmar pedido'}
+            {isLoading
+              ? 'Procesando...'
+              : form.paymentMethod === 'mercadopago' && mpEnabled
+                ? 'Ir a Mercado Pago'
+                : 'Confirmar pedido'}
           </button>
         </form>
 

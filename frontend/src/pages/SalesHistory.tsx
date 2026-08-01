@@ -47,6 +47,9 @@ export const SalesHistory = () => {
     if (!isFiscal || status === 'NONE') {
       return { label: 'Sin factura', className: 'badge-gray' };
     }
+    if (status === 'NOT_INVOICED') {
+      return { label: 'Sin facturar', className: 'badge-yellow' };
+    }
     if (status === 'COMPLETED' && sale?.cae) {
       return { label: 'Autorizado', className: 'badge-green', cae: sale.cae };
     }
@@ -65,7 +68,7 @@ export const SalesHistory = () => {
   const canInvoiceSale = (sale: any) => {
     const invoiceType = String(sale?.invoiceType || 'NONE').toUpperCase();
     const status = String(sale?.billingStatus || 'NONE').toUpperCase();
-    return ['A', 'B', 'C'].includes(invoiceType) && ['PENDING', 'FAILED'].includes(status);
+    return ['A', 'B', 'C'].includes(invoiceType) && ['NOT_INVOICED', 'PENDING', 'FAILED'].includes(status);
   };
 
   const handleInvoiceSale = async (sale: any) => {

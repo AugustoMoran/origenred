@@ -56,6 +56,29 @@ export const afipApi = createApi({
   endpoints: (builder) => ({
     getTaxpayer: builder.query<any, string>({
       query: (cuit) => `/taxpayer/${cuit}`,
+      transformResponse: (response: any) => {
+        if (response && typeof response.found === 'boolean') {
+          if (response.data) {
+            return {
+              ...response.data,
+              _message: response.message,
+              _found: response.found,
+            };
+          }
+          return {
+            cuit: '',
+            nombre: '',
+            razonSocial: '',
+            fiscalCondition: '',
+            suggestedInvoiceType: 'B',
+            _notFound: true,
+            _found: response.found,
+            _message: response.message,
+            _afipAuthError: Boolean(response.ok === false && response.message),
+          };
+        }
+        return response;
+      },
       providesTags: ['Taxpayer'],
     }),
     getAfipStatus: builder.query<any, void>({
@@ -65,4 +88,3 @@ export const afipApi = createApi({
 });
 
 export const { useGetTaxpayerQuery, useLazyGetTaxpayerQuery, useGetAfipStatusQuery } = afipApi;
-// Redeploy forced 07/01/2026 23:40:15

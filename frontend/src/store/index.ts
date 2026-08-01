@@ -13,6 +13,7 @@ import { afipApi } from '../services/afipApi';
 import { ecommerceApi } from '../services/ecommerceApi';
 import { settingsApi } from '../services/settingsApi';
 import { analyticsApi } from '../services/analyticsApi';
+import { paymentsApi } from '../services/paymentsApi';
 
 export const store = configureStore({
   reducer: {
@@ -30,6 +31,7 @@ export const store = configureStore({
     [ecommerceApi.reducerPath]: ecommerceApi.reducer,
     [settingsApi.reducerPath]: settingsApi.reducer,
     [analyticsApi.reducerPath]: analyticsApi.reducer,
+    [paymentsApi.reducerPath]: paymentsApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -44,7 +46,8 @@ export const store = configureStore({
       afipApi.middleware,
       ecommerceApi.middleware,
       settingsApi.middleware,
-      analyticsApi.middleware
+      analyticsApi.middleware,
+      paymentsApi.middleware
     ),
 });
 
