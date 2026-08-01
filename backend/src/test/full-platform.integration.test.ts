@@ -272,4 +272,72 @@ describe('Full Platform Integration Tests', () => {
       expect(res.body.enableEcommerce).toBe(true);
     });
   });
+
+  describe('Dashboard product analytics', () => {
+    it('should return top products by quantity and profit for date range', async () => {
+      const { token } = await loginAsAdmin('analytics-dashboard@test.com');
+
+      const productA = await Product.create({
+        name: 'Producto A',
+        sku: 'A-001',
+        price: 1000,
+        costPrice: 400,
+        stock: 10,
+        category: 'General',
+      });
+      const productB = await Product.create({
+        name: 'Producto B',
+        sku: 'B-001',
+        price: 2000,
+        costPrice: 500,
+        stock: 10,
+        category: 'General',
+      });
+
+      await Sale.create({
+        items: [
+          {
+            product: productA._id,
+            name: 'Producto A',
+            quantity: 5,
+            price: 1000,
+            costPrice: 400,
+            ivaRate: 21,
+            subtotal: 5000,
+          },
+          {
+            product: productB._id,
+            name: 'Producto B',
+            quantity: 2,
+            price: 2000,
+            costPrice: 500,
+            ivaRate: 21,
+            subtotal: 4000,
+          },
+        ],
+        totalNeto: 9000,
+        totalIva: 0,
+        total: 9000,
+        paymentMethod: 'efectivo',
+        source: 'POS',
+        invoiceType: 'NONE',
+        invoiceNumber: 'TEST-001',
+        seller: (await User.findOne({ email: 'analytics-dashboard@test.com' }))!._id,
+        branch: (await Branch.findOne())!._id,
+        sellerCommissionRate: 0,
+        status: 'COMPLETED',
+        billingStatus: 'NONE',
+      });
+
+      const res = await request(app)
+        .get('/api/analytics/overview')
+        .set('Authorization', `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(Array.isArray(res.body.topByQuantity)).toBe(true);
+      expect(Array.isArray(res.body.topByProfit)).toBe(true);
+      expect(res.body.topByQuantity[0].name).toBe('Producto A');
+      expect(res.body.topByProfit[0].profit).toBeGreaterThan(0);
+    });
+  });
 });

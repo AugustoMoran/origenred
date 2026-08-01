@@ -3,14 +3,12 @@ import {
   getOverviewAnalyticsController,
   getEcommerceAnalyticsController,
 } from '../controllers/analyticsController';
-import { authenticate } from '../../../middleware/authMiddleware';
-import { authorize } from '../../../middleware/roleMiddleware';
+import { authenticate, authorize } from '../../../middleware/authMiddleware';
+import { PERMISSIONS } from '../../auth/constants/permissions';
 
 const router = Router();
 
-router.use(authenticate, authorize(['admin']));
-
-router.get('/overview', getOverviewAnalyticsController);
-router.get('/ecommerce', getEcommerceAnalyticsController);
+router.get('/overview', authenticate, authorize(PERMISSIONS.SALES_VIEW), getOverviewAnalyticsController);
+router.get('/ecommerce', authenticate, authorize(PERMISSIONS.SALES_VIEW), getEcommerceAnalyticsController);
 
 export default router;

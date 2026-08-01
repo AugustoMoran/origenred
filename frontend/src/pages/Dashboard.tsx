@@ -1,7 +1,12 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useGetSalesQuery } from '../services/salesApi';
 import { useGetProductsQuery } from '../services/inventoryApi';
+import { useGetOverviewAnalyticsQuery } from '../services/analyticsApi';
+import { ProductBarChart } from '../components/dashboard/ProductBarChart';
+
+const toInputDate = (date: Date) => date.toISOString().split('T')[0];
+const money = (value: number) => `$${(value || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 const STAT_CONFIGS = [
   {
@@ -39,16 +44,32 @@ const STAT_CONFIGS = [
 ];
 
 export const Dashboard = () => {
+  const monthStart = useMemo(() => {
+    const now = new Date();
+    return toInputDate(new Date(now.getFullYear(), now.getMonth(), 1));
+  }, []);
+  const today = useMemo(() => toInputDate(new Date()), []);
+
+  const [fromDate, setFromDate] = useState(monthStart);
+  const [toDate, setToDate] = useState(today);
+  const [submittedRange, setSubmittedRange] = useState({ from: monthStart, to: today });
+
   const { data: sales = [] } = useGetSalesQuery();
   const { data: products = [] } = useGetProductsQuery();
+  const {
+    data: analytics,
+    isLoading: loadingAnalytics,
+    isFetching: fetchingAnalytics,
+    error: analyticsError,
+  } = useGetOverviewAnalyticsQuery(submittedRange);
 
-  const today = new Date().toISOString().split('T')[0];
+  const todayStr = today;
   const todaySales = sales
-    .filter((s: any) => s.createdAt?.split('T')[0] === today)
+    .filter((s: any) => s.createdAt?.split('T')[0] === todayStr)
     .reduce((acc: number, s: any) => acc + s.total, 0);
   const lowStockItems = products.filter((p: any) => p.stock <= p.minStock).length;
   const totalStock = products.reduce((acc: number, p: any) => acc + p.stock, 0);
-  const todayInvoices = sales.filter((s: any) => s.createdAt?.split('T')[0] === today && s.cae).length;
+  const todayInvoices = sales.filter((s: any) => s.createdAt?.split('T')[0] === todayStr && s.cae).length;
 
   const statValues: Record<string, React.ReactNode> = {
     revenue: `$${todaySales.toLocaleString('es-AR', { minimumFractionDigits: 2 })}`,
@@ -63,6 +84,24 @@ export const Dashboard = () => {
 
   const now = new Date();
   const timeGreeting = now.getHours() < 12 ? 'Buenos días' : now.getHours() < 18 ? 'Buenas tardes' : 'Buenas noches';
+
+  const applyFilter = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (fromDate > toDate) {
+      alert('La fecha "Desde" no puede ser mayor a la fecha "Hasta"');
+      return;
+    }
+    setSubmittedRange({ from: fromDate, to: toDate });
+  };
+
+  const resetToMonth = () => {
+    setFromDate(monthStart);
+    setToDate(today);
+    setSubmittedRange({ from: monthStart, to: today });
+  };
+
+  const topByQuantity = analytics?.topByQuantity || [];
+  const topByProfit = analytics?.topByProfit || [];
 
   return (
     <div className="space-y-6 animate-slide-up">
@@ -94,6 +133,87 @@ export const Dashboard = () => {
           </div>
         ))}
       </div>
+
+      <div className="card p-5">
+        <form onSubmit={applyFilter} className="flex flex-col lg:flex-row lg:items-end gap-4">
+          <div>
+            <h2 className="text-sm font-semibold text-white">Rendimiento de productos</h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Filtrá por fechas para ver los más vendidos y los que más ganancia dejaron.
+            </p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3 lg:ml-auto">
+            <div>
+              <label className="section-heading">Desde</label>
+              <input type="date" className="input" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+            </div>
+            <div>
+              <label className="section-heading">Hasta</label>
+              <input type="date" className="input" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+            </div>
+            <div className="flex gap-2">
+              <button type="submit" className="btn-primary h-[42px] px-4" disabled={fetchingAnalytics}>
+                {fetchingAnalytics ? 'Cargando...' : 'Aplicar'}
+              </button>
+              <button type="button" className="btn-secondary h-[42px] px-4" onClick={resetToMonth}>
+                Mes actual
+              </button>
+            </div>
+          </div>
+        </form>
+
+        {analytics && (
+          <div className="mt-4 pt-4 border-t border-white/[0.05] grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+            <div>
+              <p className="text-xs text-slate-500">Ventas en el período</p>
+              <p className="text-white font-semibold">{analytics.sales.totalCount}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Facturación del período</p>
+              <p className="text-emerald-400 font-semibold">{money(analytics.sales.totalRevenue)}</p>
+            </div>
+            <div>
+              <p className="text-xs text-slate-500">Ticket promedio</p>
+              <p className="text-white font-semibold">{money(analytics.sales.avgTicket)}</p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {analyticsError && (
+        <div className="card p-4 text-sm text-amber-300 bg-amber-500/10 border border-amber-500/20">
+          No se pudieron cargar los gráficos de productos. Verificá permisos de ventas o intentá de nuevo.
+        </div>
+      )}
+
+      {loadingAnalytics ? (
+        <div className="card p-10 text-center text-slate-500 text-sm">Cargando gráficos...</div>
+      ) : (
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <ProductBarChart
+            title="Productos más vendidos"
+            subtitle={`${submittedRange.from} → ${submittedRange.to}`}
+            items={topByQuantity.map((item) => ({
+              name: item.name,
+              value: item.quantity,
+              detail: `Ingresos: ${money(item.revenue)}`,
+            }))}
+            valueLabel={(value) => `${value.toLocaleString('es-AR')} u.`}
+            barClassName="bg-sky-500"
+          />
+          <ProductBarChart
+            title="Productos con más ganancia"
+            subtitle={`${submittedRange.from} → ${submittedRange.to}`}
+            items={topByProfit.map((item) => ({
+              name: item.name,
+              value: item.profit || 0,
+              detail: `${item.quantity} u. · Ventas ${money(item.revenue)} · Costo ${money(item.cost || 0)}`,
+            }))}
+            valueLabel={(value) => money(value)}
+            barClassName="bg-emerald-500"
+          />
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 card p-0 overflow-hidden">
@@ -135,10 +255,7 @@ export const Dashboard = () => {
             { label: 'Punto de Venta', sub: 'Registrar venta', to: '/dashboard/pos', iconPath: 'M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z', accent: 'text-brand-400 bg-brand-500/10 ring-brand-500/20' },
             { label: 'Inventario', sub: 'Gestionar stock', to: '/dashboard/inventory', iconPath: 'M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4', accent: 'text-emerald-400 bg-emerald-500/10 ring-emerald-500/20' },
             { label: 'Ventas', sub: 'Historial fiscal', to: '/dashboard/sales', iconPath: 'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z', accent: 'text-sky-400 bg-sky-500/10 ring-sky-500/20' },
-            { label: 'Usuarios', sub: 'Gestión de accesos', to: '/dashboard/admin/users', iconPath: 'M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z', accent: 'text-slate-400 bg-slate-500/10 ring-slate-500/20' },
-            { label: 'Cat. y Sucursales', sub: 'Catálogo comercial', to: '/dashboard/admin/catalog', iconPath: 'M4 6h16M4 12h16M4 18h16', accent: 'text-violet-400 bg-violet-500/10 ring-violet-500/20' },
             { label: 'Informe Ganancias', sub: 'Costos e IVA', to: '/dashboard/admin/profit-report', iconPath: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z', accent: 'text-amber-400 bg-amber-500/10 ring-amber-500/20' },
-            { label: 'Compras y Deuda', sub: 'Cuenta corriente', to: '/dashboard/admin/supplier-ledger', iconPath: 'M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8V6m0 10v2m9-6a9 9 0 11-18 0 9 9 0 0118 0z', accent: 'text-rose-400 bg-rose-500/10 ring-rose-500/20' },
           ].map(a => (
             <Link key={a.to} to={a.to} className="flex items-center gap-3 p-3 rounded-xl hover:bg-white/[0.04] transition-colors group">
               <div className={`w-8 h-8 rounded-lg flex items-center justify-center ring-1 flex-shrink-0 ${a.accent}`}>

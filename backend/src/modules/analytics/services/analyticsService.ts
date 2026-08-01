@@ -15,7 +15,35 @@ const buildDateRange = (from?: Date, to?: Date) => {
 export const getOverviewAnalytics = async (from?: Date, to?: Date) => {
   const { start, end } = buildDateRange(from, to);
 
-  const [salesSummary, ecommerceSummary, topProducts, userCount, activeProducts, openCarts] = await Promise.all([
+  const productStatsPipeline = [
+    {
+      $match: {
+        status: 'COMPLETED',
+        createdAt: { $gte: start, $lte: end },
+      },
+    },
+    { $unwind: '$items' },
+    {
+      $group: {
+        _id: '$items.product',
+        name: { $first: '$items.name' },
+        quantity: { $sum: '$items.quantity' },
+        revenue: { $sum: '$items.subtotal' },
+        cost: {
+          $sum: {
+            $multiply: [{ $ifNull: ['$items.costPrice', 0] }, '$items.quantity'],
+          },
+        },
+      },
+    },
+    {
+      $addFields: {
+        profit: { $subtract: ['$revenue', '$cost'] },
+      },
+    },
+  ];
+
+  const [salesSummary, ecommerceSummary, productStatsRaw, userCount, activeProducts, openCarts] = await Promise.all([
     Sale.aggregate([
       {
         $match: {
@@ -48,25 +76,7 @@ export const getOverviewAnalytics = async (from?: Date, to?: Date) => {
         },
       },
     ]),
-    Sale.aggregate([
-      {
-        $match: {
-          status: 'COMPLETED',
-          createdAt: { $gte: start, $lte: end },
-        },
-      },
-      { $unwind: '$items' },
-      {
-        $group: {
-          _id: '$items.product',
-          name: { $first: '$items.name' },
-          quantity: { $sum: '$items.quantity' },
-          revenue: { $sum: '$items.subtotal' },
-        },
-      },
-      { $sort: { revenue: -1 } },
-      { $limit: 10 },
-    ]),
+    Sale.aggregate(productStatsPipeline),
     User.countDocuments(),
     Product.countDocuments({ isActive: true, paused: { $ne: true } }),
     Cart.countDocuments({ 'items.0': { $exists: true } }),
@@ -88,6 +98,19 @@ export const getOverviewAnalytics = async (from?: Date, to?: Date) => {
       },
     },
   ]);
+
+  const mapProductRow = (row: any) => ({
+    productId: row._id,
+    name: row.name,
+    quantity: row.quantity,
+    revenue: round2(row.revenue),
+    cost: round2(row.cost),
+    profit: round2(row.profit),
+  });
+
+  const productStats = productStatsRaw.map(mapProductRow);
+  const topByQuantity = [...productStats].sort((a, b) => b.quantity - a.quantity).slice(0, 8);
+  const topByProfit = [...productStats].sort((a, b) => b.profit - a.profit).slice(0, 8);
 
   return {
     range: { from: start, to: end },
@@ -111,12 +134,9 @@ export const getOverviewAnalytics = async (from?: Date, to?: Date) => {
     users: {
       total: userCount,
     },
-    topProducts: topProducts.map((row) => ({
-      productId: row._id,
-      name: row.name,
-      quantity: row.quantity,
-      revenue: round2(row.revenue),
-    })),
+    topProducts: topByQuantity,
+    topByQuantity,
+    topByProfit,
   };
 };
 
