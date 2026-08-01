@@ -1,4 +1,4 @@
-import Afip from '@afipsdk/afip.js';
+import AfipModule from '@afipsdk/afip.js';
 import dotenv from 'dotenv';
 import fs from 'fs';
 import path from 'path';
@@ -7,13 +7,34 @@ import { buildAfipWsfePayload } from '../utils/afipInvoiceBuilder';
 
 dotenv.config();
 
+const Afip = AfipModule as any;
+
+// v1.x de @afipsdk/afip.js exige access_token de pago y bloquea v0.8.x en producción.
+// Usamos WSAA/SOAP local (0.8.1) sin depender del proxy cloud de AfipSDK.
+if (!Afip.__localWsaaPatched) {
+  Afip.prototype.TrackUsage = async function trackUsageNoop() {};
+  Afip.__localWsaaPatched = true;
+}
+
 /**
  * PATH DE TOKENS: Forzamos una carpeta específica para evitar conflictos de permisos
  */
 const TOKENS_DIR = path.join(process.cwd(), 'uploads', '.afip_tokens');
-if (!fs.existsSync(TOKENS_DIR)) {
-  fs.mkdirSync(TOKENS_DIR, { recursive: true });
+const SECRETS_DIR = path.join(process.cwd(), 'uploads', '.afip_secrets');
+for (const dir of [TOKENS_DIR, SECRETS_DIR]) {
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
 }
+
+const CERT_FILE = 'cert.crt';
+const KEY_FILE = 'private.key';
+
+const REQUIRED_AFIP_SERVICES = [
+  { id: 'ws_sr_constancia_inscripcion', label: 'Constancia de Inscripción (padrón / búsqueda CUIT)' },
+  { id: 'wsfe', label: 'Facturación electrónica (WSFE)' },
+  { id: 'ws_sr_padron_a5', label: 'Padrón A5 (fallback consulta CUIT)' },
+];
 
 const decodePem = (value: string | undefined) => {
   if (!value) return undefined;
@@ -109,6 +130,14 @@ const parseBooleanEnv = (value: string | undefined, defaultValue = false) => {
   if (value === undefined) return defaultValue;
   return ['1', 'true', 'yes', 'on'].includes(value.trim().toLowerCase());
 };
+
+const writeSecretsToDisk = (certPem: string, keyPem: string) => {
+  fs.writeFileSync(path.join(SECRETS_DIR, CERT_FILE), certPem, { mode: 0o600 });
+  fs.writeFileSync(path.join(SECRETS_DIR, KEY_FILE), keyPem, { mode: 0o600 });
+};
+
+const getAfipAuthErrorMessage = () =>
+  'ARCA rechazó la autenticación. Verificá en el portal AFIP que el alias OsoNueva tenga delegados los servicios ws_sr_constancia_inscripcion y wsfe para el CUIT 20202042644.';
 
 const resolveFiscalCondition = (details: any): string => {
   const candidates = [
@@ -247,35 +276,25 @@ class AfipService {
     }
 
     try {
+      writeSecretsToDisk(normalizedCert, normalizedKey);
+
       const options: any = {
-        CUIT: companyCuit,
+        CUIT: Number(companyCuit),
         production,
-        cert: normalizedCert,
-        key: normalizedKey,
-        res_folder: TOKENS_DIR,
-        ta_folder: TOKENS_DIR
+        cert: CERT_FILE,
+        key: KEY_FILE,
+        res_folder: SECRETS_DIR,
+        ta_folder: TOKENS_DIR,
       };
 
       this.afip = new Afip(options);
-
-      // GARANTIZAR URLS DE PRODUCCIÓN (ARCA)
-      if (production) {
-        // Forzamos el servidor de login de producción
-        if (this.afip.WSAA) {
-          this.afip.WSAA.service_url = 'https://wsaa.afip.gov.ar/ws/services/LoginCms';
-        }
-        
-        // La librería maneja las otras URLs internamente si 'production: true'
-        // pero ante cualquier duda, aquí las forzaríamos.
-      }
-
       this.currentProduction = production;
-      console.log(`[AFIP] OK -> ENTORNO: ${production ? 'PRODUCCIÓN (ARCA)' : 'HOMOLOGACIÓN (TESTING)'}`);
-      console.log(`[AFIP] CUIT Emisor: ${companyCuit} | Alias: OsoNueva`);
-      
-      this.clearTokensSync();
+      console.log(`[AFIP] OK -> ENTORNO: ${production ? 'PRODUCCIÓN (ARCA local WSAA)' : 'HOMOLOGACIÓN (TESTING)'}`);
+      console.log(`[AFIP] CUIT Emisor: ${companyCuit} | Alias cert: OsoNueva`);
 
+      this.clearTokensSync();
     } catch (e: any) {
+      this.afip = null;
       console.error('[AFIP] Error al inicializar SDK:', e.message);
     }
   }
@@ -413,7 +432,7 @@ class AfipService {
           cuit: cleanCuit,
           _notFound: true,
           _afipAuthError: true,
-          _message: 'ARCA rechazó la autenticación (401). Verificá que el Alias esté vinculado al servicio en el portal AFIP.'
+          _message: getAfipAuthErrorMessage()
         };
       }
 
@@ -488,6 +507,113 @@ class AfipService {
   async getVoucherTypes() {
     if (!this.afip) throw new Error('AFIP no configurado');
     return await this.afip.ElectronicBilling.getVoucherTypes();
+  }
+
+  getConfigSnapshot() {
+    const cert = resolveSecretContent('AFIP_CERT_PEM', 'AFIP_CERT_PATH');
+    const key = resolveSecretContent('AFIP_KEY_PEM', 'AFIP_KEY_PATH');
+    const companyCuit = parseCuit(process.env.COMPANY_CUIT);
+    const production = parseBooleanEnv(process.env.AFIP_PRODUCTION, false);
+    const normalizedCert = cert ? normalizePemContent(cert) : '';
+    const certCuit = normalizedCert ? extractCuitFromCert(normalizedCert) : undefined;
+    const validity = normalizedCert ? getCertValidity(normalizedCert) : undefined;
+
+    const issues: string[] = [];
+    if (!cert || !key) issues.push('Faltan AFIP_CERT_PEM y/o AFIP_KEY_PEM.');
+    if (companyCuit.length !== 11) issues.push('COMPANY_CUIT debe tener 11 dígitos.');
+    if (normalizedCert && key && !isMatchingCertAndKey(normalizedCert, normalizePemContent(key))) {
+      issues.push('El certificado y la clave privada no coinciden.');
+    }
+    if (validity?.isExpired) issues.push('El certificado AFIP está vencido.');
+    if (certCuit && companyCuit && certCuit !== companyCuit) {
+      issues.push(`COMPANY_CUIT=${companyCuit} no coincide con el CUIT del certificado (${certCuit}).`);
+    }
+    if (process.env.AFIP_ACCESS_TOKEN) {
+      issues.push('AFIP_ACCESS_TOKEN no es necesario: el backend usa WSAA local (no requiere AfipSDK cloud).');
+    }
+    if (process.env.ENABLE_AFIP_QUEUE !== 'true') {
+      issues.push('ENABLE_AFIP_QUEUE no está en true (facturación async deshabilitada).');
+    }
+    if (!process.env.REDIS_URL) {
+      issues.push('REDIS_URL no configurado (requerido para facturación async).');
+    }
+
+    return {
+      configured: Boolean(this.afip),
+      production,
+      companyCuit: companyCuit || null,
+      certCuit: certCuit || null,
+      certAlias: 'OsoNueva',
+      certValidTo: validity?.validTo || null,
+      certExpired: validity?.isExpired ?? null,
+      certKeyMatch: normalizedCert && key ? isMatchingCertAndKey(normalizedCert, normalizePemContent(key)) : null,
+      puntoVenta: Number(process.env.AFIP_PTO_VTA || 1),
+      enableQueue: process.env.ENABLE_AFIP_QUEUE === 'true',
+      hasRedis: Boolean(process.env.REDIS_URL),
+      authMode: 'local-wsaa',
+      issues,
+    };
+  }
+
+  async runDiagnostics(sampleCuit = '20394100359') {
+    const config = this.getConfigSnapshot();
+    if (!this.afip) {
+      return {
+        ok: false,
+        config,
+        services: [],
+        sampleLookup: null,
+        message: 'AFIP no inicializado. Revisá variables de entorno y logs de Render.',
+      };
+    }
+
+    const services: Array<{ id: string; label: string; ok: boolean; error?: string }> = [];
+
+    for (const service of REQUIRED_AFIP_SERVICES) {
+      try {
+        await this.afip.GetServiceTA(service.id);
+        services.push({ id: service.id, label: service.label, ok: true });
+      } catch (error: any) {
+        services.push({
+          id: service.id,
+          label: service.label,
+          ok: false,
+          error: String(error?.message || error),
+        });
+      }
+    }
+
+    let sampleLookup: any = null;
+    if (services.some((s) => s.id === 'ws_sr_constancia_inscripcion' && s.ok)) {
+      try {
+        const details = await this.getTaxpayerDetails(sampleCuit);
+        sampleLookup = {
+          cuit: sampleCuit,
+          found: !details?._notFound,
+          nombre: details?.nombre || details?.razonSocial || '',
+          authError: Boolean((details as any)?._afipAuthError),
+        };
+      } catch (error: any) {
+        sampleLookup = {
+          cuit: sampleCuit,
+          found: false,
+          error: String(error?.message || error),
+        };
+      }
+    }
+
+    const ok = services.every((s) => s.ok) && Boolean(sampleLookup?.found || sampleLookup === null);
+
+    return {
+      ok,
+      config,
+      services,
+      sampleLookup,
+      requiredPortalServices: REQUIRED_AFIP_SERVICES.map((s) => s.id),
+      message: ok
+        ? 'AFIP operativo: autenticación WSAA y consulta de padrón OK.'
+        : 'Hay fallas de autenticación o consulta. Revisá servicios delegados al alias OsoNueva en el portal AFIP.',
+    };
   }
 }
 
