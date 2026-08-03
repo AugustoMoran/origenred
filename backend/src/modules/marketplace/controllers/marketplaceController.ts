@@ -44,6 +44,7 @@ import {
   updateReportStatus,
   REPORT_REASON_LABELS,
 } from '../services/reportService';
+import { reindexAllListings } from '../services/meilisearchService';
 
 // ── Público ──────────────────────────────────────────────
 
@@ -239,6 +240,23 @@ export async function approveSellerController(req: Request, res: Response) {
 export async function createCategoryController(req: Request, res: Response) {
   const category = await MarketplaceCategory.create(req.body);
   res.status(201).json(category);
+}
+
+export async function reindexListingsController(_req: Request, res: Response) {
+  try {
+    const result = await reindexAllListings();
+    if (!result.enabled) {
+      return res.status(400).json({
+        message: 'Meilisearch no configurado. Agrega MEILISEARCH_HOST y MEILISEARCH_API_KEY al .env',
+      });
+    }
+    res.json({
+      message: `Índice actualizado: ${result.indexed} productos activos indexados`,
+      ...result,
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || 'Error al reindexar' });
+  }
 }
 
 export async function listReportsController(req: Request, res: Response) {

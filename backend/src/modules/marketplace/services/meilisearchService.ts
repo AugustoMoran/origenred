@@ -1,5 +1,5 @@
 import { features, meilisearchConfig } from '../../../config/features';
-import { IListing } from '../models/Listing';
+import { IListing, Listing } from '../models/Listing';
 
 const LISTINGS_INDEX = 'listings';
 
@@ -68,33 +68,33 @@ export const ensureListingsIndex = async () => {
   ]);
 };
 
+const toIndexDocument = (listing: IListing) => ({
+  id: String(listing._id),
+  title: listing.title,
+  description: listing.description,
+  brand: listing.brand,
+  color: listing.color,
+  size: listing.size,
+  price: listing.price,
+  category: String(listing.category),
+  province: listing.province,
+  city: listing.city,
+  status: listing.status,
+  freeShipping: listing.freeShipping,
+  condition: listing.condition,
+  origenRankScore: listing.origenRankScore,
+  salesCount: listing.salesCount,
+  createdAt: listing.createdAt?.getTime?.() || Date.now(),
+  slug: listing.slug,
+  imageUrl: listing.images?.[0]?.url,
+});
+
 export const indexListing = async (listing: IListing) => {
   const meili = getClient();
   if (!meili || listing.status !== 'active') return;
 
   const index = meili.index(LISTINGS_INDEX);
-  await index.addDocuments([
-    {
-      id: String(listing._id),
-      title: listing.title,
-      description: listing.description,
-      brand: listing.brand,
-      color: listing.color,
-      size: listing.size,
-      price: listing.price,
-      category: String(listing.category),
-      province: listing.province,
-      city: listing.city,
-      status: listing.status,
-      freeShipping: listing.freeShipping,
-      condition: listing.condition,
-      origenRankScore: listing.origenRankScore,
-      salesCount: listing.salesCount,
-      createdAt: listing.createdAt?.getTime?.() || Date.now(),
-      slug: listing.slug,
-      imageUrl: listing.images?.[0]?.url,
-    },
-  ]);
+  await index.addDocuments([toIndexDocument(listing)]);
 };
 
 export const removeListingFromIndex = async (listingId: string) => {
@@ -112,4 +112,19 @@ export const searchListings = async (query: string, options: Record<string, unkn
     filter: 'status = active',
     ...options,
   });
+};
+
+export const reindexAllListings = async () => {
+  const meili = getClient();
+  if (!meili) return { enabled: false, indexed: 0 };
+
+  await ensureListingsIndex();
+
+  const listings = await Listing.find({ status: 'active' });
+  if (listings.length === 0) return { enabled: true, indexed: 0 };
+
+  const index = meili.index(LISTINGS_INDEX);
+  await index.addDocuments(listings.map(toIndexDocument));
+
+  return { enabled: true, indexed: listings.length };
 };

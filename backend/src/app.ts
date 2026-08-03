@@ -9,6 +9,7 @@ import rateLimit from 'express-rate-limit';
 import mongoose from 'mongoose';
 import morgan from 'morgan';
 import path from 'path';
+import { ensureListingsIndex, isMeilisearchEnabled } from './modules/marketplace/services/meilisearchService';
 
 dotenv.config();
 
@@ -153,6 +154,18 @@ export async function start() {
   try {
     const mongo = process.env.MONGO_URI || 'mongodb://localhost:27017/origenred';
     await mongoose.connect(mongo);
+
+    if (isMeilisearchEnabled()) {
+      try {
+        await ensureListingsIndex();
+        console.log('Meilisearch listings index ready');
+      } catch (meiliErr: any) {
+        console.warn('Meilisearch index setup failed:', meiliErr?.message || meiliErr);
+      }
+    } else {
+      console.log('Meilisearch disabled (set MEILISEARCH_HOST + MEILISEARCH_API_KEY to enable)');
+    }
+
     const server = app.listen(PORT, () => console.log(`Server listening ${PORT}`));
 
     // Initialize Socket.IO

@@ -21,6 +21,7 @@ import {
   listPendingSellersController,
   approveSellerController,
   createCategoryController,
+  reindexListingsController,
   listReportsController,
   resolveReportController,
   toggleFavoriteController,
@@ -89,6 +90,7 @@ router.get('/admin/sellers', authenticate, requireAdmin, listSellersAdminControl
 router.get('/admin/sellers/pending', authenticate, requireAdmin, listPendingSellersController);
 router.patch('/admin/sellers/:id/status', authenticate, requireAdmin, approveSellerController);
 router.post('/admin/categories', authenticate, requireAdmin, createCategoryController);
+router.post('/admin/search/reindex', authenticate, requireAdmin, reindexListingsController);
 router.get('/admin/reports', authenticate, requireAdmin, listReportsController);
 router.patch('/admin/reports/:id', authenticate, requireAdmin, resolveReportController);
 

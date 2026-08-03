@@ -55,3 +55,9 @@ frontend/src/
 docker-compose up --build
 ```
 Incluye MongoDB, Redis y Meilisearch local.
+
+### Meilisearch
+1. Con Docker: `MEILISEARCH_HOST=http://localhost:7700` y la master key definida en `docker-compose.yml`.
+2. Al iniciar el backend se crea el índice `listings` automáticamente.
+3. Reindexar productos activos (admin): `POST /api/marketplace/admin/search/reindex`
+4. Sin Meilisearch, la búsqueda usa MongoDB (fallback en `listingService`).
