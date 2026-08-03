@@ -22,7 +22,16 @@
   }
 }
 
-@layer components {
+@layer base {
+  .marketplace-theme {
+    background-color: #F8FAFC;
+    color: #0F1B3C;
+  }
+  .marketplace-theme body,
+  .marketplace-theme #root {
+    background-color: #F8FAFC;
+  }
+}
 
   /* ── Surfaces ─────────────────────────────── */
   .surface {

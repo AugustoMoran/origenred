@@ -7,14 +7,24 @@ import {
   LoginRedirectRoute,
   MaintenanceGuard,
 } from './components/ecommerce/RouteGuards';
-import { AdminUsers, AdminCatalog, AdminProfitReport, AdminSupplierLedger, AdminStoreSettings } from './pages/admin';
+import { AdminUsers, AdminCatalog, AdminProfitReport, AdminSupplierLedger, AdminStoreSettings, AdminMarketplaceSellers } from './pages/admin';
 import { Dashboard } from './pages/Dashboard';
 import { Inventory } from './pages/Inventory';
 import { POS } from './pages/POS';
 import { SalesHistory } from './pages/SalesHistory';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
-import { StoreHome } from './pages/store/StoreHome';
+import { OrigenRedHome } from './pages/marketplace/OrigenRedHome';
+import { MarketplaceSearchPage } from './pages/marketplace/MarketplaceSearchPage';
+import { MarketplaceListingDetail } from './pages/marketplace/MarketplaceListingDetail';
+import { SellerRegisterPage } from './pages/marketplace/SellerRegisterPage';
+import { SellerLayout, SellerProtectedRoute } from './components/marketplace/SellerLayout';
+import { SellerDashboard } from './pages/marketplace/seller/SellerDashboard';
+import { SellerListingsPage } from './pages/marketplace/seller/SellerListingsPage';
+import { SellerListingFormPage } from './pages/marketplace/seller/SellerListingFormPage';
+import { MarketplaceCheckoutPage } from './pages/marketplace/MarketplaceCheckoutPage';
+import { MarketplaceOrderConfirmation } from './pages/marketplace/MarketplaceOrderConfirmation';
+import { SellerMercadoPagoPage } from './pages/marketplace/seller/SellerMercadoPagoPage';
 import { StoreProducts } from './pages/store/StoreProducts';
 import { StoreProductDetail } from './pages/store/StoreProductDetail';
 import { StoreCheckout } from './pages/store/StoreCheckout';
@@ -37,7 +47,14 @@ const router = createBrowserRouter([
       </MaintenanceGuard>
     ),
     children: [
-      { path: '/', element: <StoreHome /> },
+      { path: '/', element: <OrigenRedHome /> },
+      { path: '/buscar', element: <MarketplaceSearchPage /> },
+      { path: '/p/:slug', element: <MarketplaceListingDetail /> },
+      { path: '/vender', element: <SellerRegisterPage /> },
+      { path: '/comprar', element: <MarketplaceCheckoutPage /> },
+      { path: '/compras/confirmacion/:orderNumber', element: <MarketplaceOrderConfirmation /> },
+      { path: '/compras/exito', element: <MarketplaceOrderConfirmation /> },
+      { path: '/compras/pendiente', element: <MarketplaceOrderConfirmation /> },
       { path: '/products', element: <StoreProducts /> },
       { path: '/products/:id', element: <StoreProductDetail /> },
       { path: '/checkout', element: <StoreCheckout /> },
@@ -78,6 +95,25 @@ const router = createBrowserRouter([
   {
     path: '/dashboard/admin/profit-report',
     element: <DashboardLayout adminOnly><AdminProfitReport /></DashboardLayout>,
+  },
+  {
+    path: '/vendedor',
+    element: (
+      <SellerProtectedRoute>
+        <SellerLayout />
+      </SellerProtectedRoute>
+    ),
+    children: [
+      { index: true, element: <SellerDashboard /> },
+      { path: 'productos', element: <SellerListingsPage /> },
+      { path: 'productos/nuevo', element: <SellerListingFormPage /> },
+      { path: 'productos/:id/editar', element: <SellerListingFormPage /> },
+      { path: 'mercadopago', element: <SellerMercadoPagoPage /> },
+    ],
+  },
+  {
+    path: '/dashboard/admin/marketplace-sellers',
+    element: <DashboardLayout adminOnly><AdminMarketplaceSellers /></DashboardLayout>,
   },
   {
     path: '/dashboard/admin/supplier-ledger',

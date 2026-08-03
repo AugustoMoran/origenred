@@ -1,6 +1,7 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from './authSlice';
 import cartReducer from './cartSlice';
+import marketplaceCartReducer from './marketplaceCartSlice';
 import { authApi } from '../services/authApi';
 import { inventoryApi } from '../services/inventoryApi';
 import { salesApi } from '../services/salesApi';
@@ -13,12 +14,13 @@ import { afipApi } from '../services/afipApi';
 import { ecommerceApi } from '../services/ecommerceApi';
 import { settingsApi } from '../services/settingsApi';
 import { analyticsApi } from '../services/analyticsApi';
-import { paymentsApi } from '../services/paymentsApi';
+import { marketplaceApi } from '../services/marketplaceApi';
 
 export const store = configureStore({
   reducer: {
     auth: authReducer,
     cart: cartReducer,
+    marketplaceCart: marketplaceCartReducer,
     [authApi.reducerPath]: authApi.reducer,
     [inventoryApi.reducerPath]: inventoryApi.reducer,
     [salesApi.reducerPath]: salesApi.reducer,
@@ -32,6 +34,7 @@ export const store = configureStore({
     [settingsApi.reducerPath]: settingsApi.reducer,
     [analyticsApi.reducerPath]: analyticsApi.reducer,
     [paymentsApi.reducerPath]: paymentsApi.reducer,
+    [marketplaceApi.reducerPath]: marketplaceApi.reducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware().concat(
@@ -47,7 +50,8 @@ export const store = configureStore({
       ecommerceApi.middleware,
       settingsApi.middleware,
       analyticsApi.middleware,
-      paymentsApi.middleware
+      paymentsApi.middleware,
+      marketplaceApi.middleware
     ),
 });
 

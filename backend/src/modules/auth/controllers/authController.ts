@@ -34,7 +34,7 @@ export async function publicRegisterController(req: Request, res: Response) {
       return res.status(409).json({ message: 'El email ya está registrado' });
     }
 
-    const user = await register(String(email), String(password), ['user'], {}, name);
+    const user = await register(String(email), String(password), ['comprador'], {}, name);
     res.status(201).json({
       id: user.id,
       name: user.name,

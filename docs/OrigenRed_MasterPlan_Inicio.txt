@@ -1,0 +1,10170 @@
+
+OrigenRed - Documento Maestro de Especificación (Inicio)
+ObjetivoEste documento será la especificación técnica y funcional del proyecto OrigenRed. Por su alcance, se desarrollará en múltiples entregas manteniendo una única estructura.
+Estructura prevista
+Volumen I: Visión, negocio y reglas.Volumen II: UX/UI y experiencia completa.Volumen III: Arquitectura técnica.Volumen IV: Modelo de datos.Volumen V: API.Volumen VI: Roadmap.Volumen VII: Prompts de desarrollo.
+Resumen de decisiones confirmadas
+• Marketplace argentino.• Web + React Native (Expo).• React + Vite + TypeScript.• Node.js + Express + TypeScript.• MongoDB.• Monolito modular.• Cloudflare R2 para almacenamiento.• Mercado Pago con split 95/5.• Comisión sólo sobre el producto.• Chat interno únicamente después de comprar.• Envíos con cálculo por código postal.• EnvíoPack preparado.• SEO completo.• Google Analytics, Search Console y Meta Pixel.• 100 publicaciones gratuitas por vendedor.• Vendedores aprobados manualmente.• Perfil resumido del vendedor, sin tienda completa gratuita.• Desarrollo de sitios web como servicio adicional.
+Plan de documentación
+El documento final contendrá varios cientos de páginas debido al nivel de detalle requerido.Cada volumen desarrollará exhaustivamente un área del sistema sin omitir reglas de negocio,diagramas, entidades, flujos y decisiones técnicas.OrigenRed - Documento MaestroVolumen I - Visión, Objetivos y Modelo de Negocio
+1. Visión
+OrigenRed es un marketplace argentino diseñado para conectar compradores con vendedoresindependientes mediante una experiencia moderna, intuitiva y confiable. La plataformaestá pensada para funcionar tanto como sitio web como aplicación móvil, compartiendola misma lógica de negocio y una identidad visual consistente.
+2. Misión
+Reducir la barrera de entrada para emprendedores permitiéndoles vender sin costosfijos, monetizando únicamente cuando concretan una venta.
+3. Objetivos del producto
+Marketplace nacional preparado para escalar.
+Publicación gratuita de productos.
+Comisión del 5% únicamente sobre el valor del producto.
+Integración con Mercado Pago mediante vinculación de cuentas.
+Experiencia premium pero extremadamente simple.
+Escalabilidad desde el primer día.
+Base técnica preparada para millones de publicaciones.
+4. Principios de diseño
+El usuario nunca debe sentirse perdido.
+Todas las acciones importantes deben requerir pocos pasos.
+La confianza debe estar visible en cada pantalla.
+El rendimiento es una prioridad.
+La versión móvil tiene la misma importancia que la web.
+Cada módulo debe ser independiente dentro del monolito modular.
+5. Modelo de negocio
+Compradores y vendedores utilizan la plataforma sin costo de acceso.Cada vendedor dispone de hasta 100 publicaciones activas. Cuando una venta se concreta,Mercado Pago distribuye automáticamente el dinero: 95% para el vendedor y 5% paraOrigenRed. El envío no forma parte de la base de cálculo de la comisión.
+6. Servicios complementarios
+OrigenRed ofrecerá opcionalmente servicios profesionales para los vendedores:desarrollo de páginas web, posicionamiento SEO, Google Search Console, Google Analytics,Meta Ads y otras soluciones de marketing digital. Estos servicios constituyen una líneade negocio independiente del marketplace.
+7. Roles
+Administrador
+Control absoluto de la plataforma, aprobación de vendedores, moderación, configuración global, atención de reclamos, gestión de servicios y métricas.
+Vendedor
+Publicación de productos, administración de stock, ventas, envíos y atención postventa.
+Comprador
+Compra con o sin cuenta, favoritos, historial, chat post compra y reclamos.
+8. Reglas fundamentales
+Todos los vendedores son aprobados manualmente.
+No existen tiendas completas gratuitas dentro del marketplace.
+El chat entre comprador y vendedor solo se habilita después de la compra.
+Las redes sociales del vendedor no se muestran antes de comprar.
+Los productos denunciados llegan inmediatamente al administrador.
+El vendedor es responsable de devoluciones, garantías y datos logísticos.
+El cálculo de envío se realiza antes del pago utilizando código postal.
+Próximos volúmenes
+El siguiente documento desarrollará la experiencia de usuario completa pantalla porpantalla, incluyendo wireframes conceptuales, estados, navegación y comportamiento decada componente de la interfaz.
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN II
+EXPERIENCIA DE USUARIO (UX) E INTERFAZ (UI)
+Versión: 1.0
+
+Capítulo 1 — Filosofía del Diseño
+OrigenRed no pretende ser simplemente un ecommerce.
+El objetivo es construir un ecosistema donde cualquier emprendedor pueda comenzar a vender desde el primer día sin tener conocimientos técnicos.
+Toda la experiencia debe transmitir cuatro sensaciones:
+confianza 
+rapidez 
+simplicidad 
+profesionalismo 
+La plataforma debe sentirse moderna pero sin sobrecargar visualmente al usuario.
+Nunca debe existir una pantalla donde el usuario no sepa qué hacer.
+Cada acción importante debe requerir la menor cantidad posible de pasos.
+Si Mercado Libre puede realizar una acción en cinco pasos, OrigenRed debería intentar resolverla en tres.
+
+Principios de UX
+Toda la aplicación respetará los siguientes principios.
+1. Claridad
+Siempre debe existir una acción principal claramente visible.
+Ejemplo:
+Producto
+Comprar ahora
+Debe destacar mucho más que
+Agregar a favoritos
+
+2. Consistencia
+Todos los botones iguales realizan la misma acción.
+Los colores tendrán siempre el mismo significado.
+Ejemplo
+Verde
+Confirmación
+Azul
+Información
+Rojo
+Eliminar
+Amarillo
+Advertencia
+
+3. Feedback inmediato
+Cuando el usuario realiza cualquier acción:
+Debe recibir una respuesta.
+Ejemplo
+Publicar producto
+↓
+Animación
+↓
+"Producto publicado correctamente"
+Nunca dejar un botón sin responder.
+
+4. Velocidad percibida
+Aunque una acción tarde algunos segundos:
+El usuario debe sentir que la aplicación está trabajando.
+Utilizar:
+Skeleton loading 
+Placeholders 
+Animaciones suaves 
+Barra de progreso 
+
+5. Responsive real
+No se trata solamente de adaptar tamaños.
+Cada dispositivo tendrá una experiencia optimizada.
+Desktop
+Aprovecha ancho completo.
+Tablet
+Mayor separación entre componentes.
+Celular
+Interfaz pensada para uso con una sola mano.
+
+Capítulo 2 — Identidad Visual
+OrigenRed necesita una identidad propia.
+No debe parecer una copia de Mercado Libre.
+La inspiración es:
+Marketplace moderno.
+Minimalismo.
+Espacios amplios.
+Mucho blanco (o modo oscuro configurable en el futuro).
+Sombras suaves.
+Animaciones discretas.
+
+Estilo
+No utilizar:
+bordes gruesos 
+colores extremadamente saturados 
+interfaces recargadas 
+Sí utilizar:
+tarjetas limpias 
+iconografía simple 
+microanimaciones 
+componentes grandes 
+tipografía cómoda 
+
+Paleta inicial
+(No definitiva)
+Color principal
+Azul profundo.
+Representa confianza.
+Color secundario
+Naranja.
+Representa acción.
+Verde
+Estados exitosos.
+Rojo
+Errores.
+Grises
+Fondos.
+
+Tipografía
+Una única familia tipográfica.
+Jerarquía clara.
+Título principal
+Grande.
+Subtítulo
+Mediano.
+Texto
+Muy legible.
+Jamás utilizar fuentes extravagantes.
+
+Espaciados
+Toda la aplicación utilizará un sistema uniforme.
+Ejemplo
+8 px
+16 px
+24 px
+32 px
+48 px
+Nunca márgenes aleatorios.
+
+Capítulo 3 — Navegación
+La navegación debe ser prácticamente idéntica entre Web y App.
+
+Barra superior
+Siempre visible.
+Contendrá:
+Logo.
+Buscador.
+Categorías.
+Favoritos.
+Carrito.
+Notificaciones.
+Perfil.
+
+En móvil:
+Se transforma.
+Logo.
+Buscador.
+Menú hamburguesa.
+
+Menú lateral (usuario)
+Mi cuenta
+Mis compras
+Favoritos
+Configuración
+Cerrar sesión
+
+Menú vendedor
+Dashboard
+Productos
+Ventas
+Envíos
+Estadísticas
+Configuración
+Solicitar página web
+
+Menú administrador
+Usuarios
+Vendedores
+Productos
+Pedidos
+Denuncias
+Configuración
+Finanzas
+Servicios
+Logs
+Chat global
+
+Capítulo 4 — Pantalla de Inicio
+La Home es la pantalla más importante de OrigenRed.
+Debe generar descubrimiento.
+No simplemente mostrar productos.
+
+Orden de bloques
+1
+Barra de búsqueda.
+Muy grande.
+Debe ser protagonista.
+
+2
+Banner principal.
+Campañas.
+Eventos.
+Promociones.
+
+3
+Productos recomendados.
+Basado en:
+Historial.
+Categorías.
+Ubicación.
+
+4
+Cerca tuyo.
+Productos cercanos.
+Mayor prioridad logística.
+
+5
+Lo más vendido.
+Ranking inteligente.
+
+6
+Nuevos productos.
+
+7
+Categorías.
+Solo aparecen categorías con productos.
+Nunca mostrar categorías vacías.
+
+8
+Vendedores destacados.
+No por pago.
+Sino por reputación.
+
+9
+Promociones.
+
+10
+Footer.
+
+Capítulo 5 — Buscador Inteligente
+Este será uno de los módulos más importantes de toda la plataforma.
+No será un buscador literal.
+Será un buscador semántico.
+Ejemplo
+Usuario escribe:
+zapatillas negras talle 42 cerca mío
+El sistema interpreta:
+Producto
+Zapatillas.
+Color
+Negro.
+Talle
+
+Ubicación
+Cercana.
+
+Otro ejemplo
+celular samsung menos de 500 mil
+Interpreta:
+Categoría
+Celulares.
+Marca
+Samsung.
+Precio máximo
+
+
+Otro ejemplo
+campera hombre xl azul
+Detecta automáticamente:
+Categoría.
+Sexo.
+Talle.
+Color.
+
+Autocompletado
+Mientras escribe.
+Mostrar:
+Productos.
+Categorías.
+Marcas.
+Vendedores.
+
+Historial
+Guardar últimas búsquedas.
+Solo del usuario.
+
+Tendencias
+Mostrar búsquedas populares.
+
+Filtros
+Categoría.
+Provincia.
+Ciudad.
+Distancia.
+Precio mínimo.
+Precio máximo.
+Color.
+Marca.
+Stock.
+Envío gratis.
+Retiro.
+Reputación.
+Más vendidos.
+Más nuevos.
+Mayor descuento.
+
+Ordenamiento
+Por defecto:
+Ranking inteligente.
+Opciones:
+Mayor precio.
+Menor precio.
+Más vendidos.
+Más nuevos.
+Mayor reputación.
+Más cercanos.
+Entrega más rápida.
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN II
+Capítulo 6 — Página de Producto
+
+Objetivo
+La ficha de producto tiene un único objetivo:
+Generar confianza suficiente para que el usuario compre sin dudas.
+Todo elemento que distraiga de ese objetivo debe eliminarse.
+
+Estructura General
+La página estará organizada en el siguiente orden.
+──────────────────────────────────────
+
+Barra Superior
+
+──────────────────────────────────────
+
+Galería de imágenes
+
+Información principal
+
+──────────────────────────────────────
+
+Precio
+
+Variantes
+
+Stock
+
+Calculador de envío
+
+Botón Comprar
+
+Agregar al carrito
+
+──────────────────────────────────────
+
+Información resumida del vendedor
+
+──────────────────────────────────────
+
+Descripción
+
+Especificaciones
+
+──────────────────────────────────────
+Productos relacionados
+──────────────────────────────────────
+Opiniones
+──────────────────────────────────────
+Footer
+
+6.1 Galería de Imágenes
+La galería es el elemento más importante de toda la publicación.
+Debe ocupar aproximadamente el 40% del ancho en Desktop.
+En Mobile debe ser el primer elemento visible.
+
+Cantidad de imágenes
+Mínimo:
+1
+Máximo:
+10
+
+Calidad
+Las imágenes se almacenarán en Cloudflare R2.
+Al subirlas:
+El backend generará automáticamente distintas resoluciones.
+Ejemplo
+Original
+
+↓
+
+1600 px
+
+↓
+
+800 px
+
+↓
+
+400 px
+
+↓
+
+Thumbnail
+Esto reduce muchísimo el consumo de datos.
+
+Zoom
+Desktop
+Hover con zoom.
+
+Mobile
+Pinch Zoom.
+
+Orden
+El vendedor puede reordenarlas.
+
+Imagen principal
+Siempre visible.
+
+Video
+Cada publicación puede tener
+1 video
+Máximo
+15 segundos
+Máximo
+20 MB
+Formato
+MP4
+El video nunca debe reproducirse automáticamente.
+
+6.2 Información Principal
+A la derecha de las imágenes.
+Debe contener únicamente información importante.
+Orden.
+
+Título
+Ejemplo
+Zapatillas Adidas Forum Mid Hombre
+
+Marca
+Si existe.
+
+Código interno
+Solo visible para vendedor.
+
+Estado
+Nuevo
+Usado
+Reacondicionado
+Digital
+Servicio
+
+Ubicación
+Ejemplo
+Morón
+
+Buenos Aires
+No mostrar dirección exacta.
+
+Cantidad vendida
+Ejemplo
++532 vendidos
+Esto genera confianza.
+
+6.3 Precio
+El precio debe ser el protagonista.
+Grande.
+Muy visible.
+
+Mostrar
+Precio actual
+
+Si existe oferta
+Mostrar
+$120.000
+
+Antes
+
+$150.000
+
+20%
+OFF
+
+Cuotas
+Mercado Pago informa cuotas disponibles.
+Mostrar automáticamente.
+
+6.4 Variantes
+El sistema permitirá variantes completamente dinámicas.
+No todos los productos tendrán variantes.
+Por eso existirán Toggles.
+
+Color
+Toggle
+Activado
+↓
+Lista de colores.
+
+Talle
+Toggle
+↓
+Lista de talles.
+
+Calzado
+Toggle
+↓
+36
+37
+38
+39
+40
+...
+
+Cada variante puede tener
+Stock propio.
+
+Ejemplo
+Negro
+
+40
+
+Stock
+
+5
+
+------
+
+Negro
+
+41
+
+Stock
+
+8
+
+------
+
+Blanco
+
+40
+
+Stock
+
+3
+Esto evita errores.
+
+6.5 Stock
+Siempre visible.
+Ejemplos.
+Disponible
+Últimas unidades
+Sin stock
+Nunca mostrar
+0 disponibles
+La experiencia debe ser amigable.
+
+6.6 Calculador de Envío
+Uno de los módulos más importantes.
+
+El usuario solo ingresa
+Código Postal
+Ejemplo
+1708
+↓
+Calcular
+↓
+Resultado
+Entrega estimada
+
+2 a 4 días
+
+Costo
+$4.800
+
+También mostrar.
+Opciones.
+Envío a domicilio.
+Retiro en sucursal.
+Retiro por el vendedor.
+Punto de entrega.
+
+Si el vendedor no configuró envíos.
+Mostrar.
+Este vendedor coordina la entrega luego de la compra.
+Nunca ocultarlo.
+Debe informarse ANTES del pago.
+
+6.7 Botones
+Siempre visibles.
+Comprar Ahora.
+Agregar al carrito.
+Favorito.
+Compartir.
+
+Comprar
+Debe ser el botón dominante.
+
+Agregar al carrito
+Secundario.
+
+Favorito
+Icono.
+
+Compartir
+Genera enlace.
+
+6.8 Información del Vendedor
+No queremos una tienda completa.
+Queremos transmitir confianza.
+
+Mostrar.
+Logo.
+Nombre comercial.
+Verificado.
+Ubicación.
+Calificación.
+Cantidad de ventas.
+Tiempo vendiendo.
+Botón
+Ver más productos.
+
+Si contrató una web desarrollada por OrigenRed
+Mostrar
+Visitar sitio oficial
+Este enlace es un beneficio premium.
+Solo aparece si realmente desarrollaste esa web.
+
+NO mostrar.
+WhatsApp.
+Instagram.
+Facebook.
+Teléfono.
+Mail.
+Dirección exacta.
+Antes de comprar.
+Porque perderíamos la comisión.
+
+6.9 Indicadores de Confianza
+Muy importantes.
+Ejemplo.
+✔ Vendedor verificado
+✔ Pago protegido
+✔ Compra segura
+✔ Protección OrigenRed
+✔ Chat habilitado luego de comprar
+Estos pequeños detalles aumentan muchísimo la conversión.
+
+6.10 Descripción
+Debe aceptar.
+Texto.
+Negritas.
+Listas.
+Tablas.
+Imágenes opcionales.
+Videos NO.
+
+Debe estar organizada.
+No un bloque enorme.
+
+Ejemplo.
+Descripción.
+Características.
+Qué incluye.
+Garantía.
+Entrega.
+
+6.11 Especificaciones Técnicas
+Cada categoría tendrá atributos distintos.
+Ejemplo.
+Celular.
+Marca
+Modelo
+RAM
+Almacenamiento
+Pantalla
+Batería
+
+Ropa.
+Material
+Color
+Talle
+Temporada
+
+Herramientas.
+Potencia
+Voltaje
+Peso
+Marca
+
+Esto mejora muchísimo el SEO.
+
+6.12 Productos Relacionados
+El algoritmo utilizará.
+Categoría.
+Marca.
+Precio.
+Ubicación.
+Historial del usuario.
+
+Nunca serán anuncios pagos.
+
+6.13 Opiniones
+Solo compradores reales.
+Nunca permitir opiniones falsas.
+
+Cada opinión tendrá.
+Calificación.
+Comentario.
+Fecha.
+Compra verificada.
+
+Administrador puede ocultar comentarios ofensivos.
+Nunca editarlos.
+
+6.14 SEO
+Cada producto tendrá automáticamente.
+Título SEO.
+Descripción SEO.
+URL amigable.
+Open Graph.
+Twitter Cards.
+Schema.org Product.
+Canonical.
+Sitemap.
+
+Ejemplo.
+origenred.com/productos/
+
+zapatillas-adidas-forum-mid-hombre
+
+6.15 Accesibilidad
+Todas las imágenes tendrán ALT.
+Todos los botones.
+ARIA Label.
+Navegación por teclado.
+Contraste adecuado.
+
+6.16 Rendimiento
+La ficha del producto debe abrir en menos de
+2 segundos.
+Objetivo.
+Menos de
+1 segundo.
+
+Las imágenes se cargan progresivamente.
+Lazy Loading.
+
+Videos.
+Solo cuando el usuario los reproduce.
+
+6.17 Preparación para IA
+Aunque inicialmente no usemos IA para publicaciones, la ficha del producto quedará preparada para futuras funciones como:
+Resumen automático de la descripción. 
+Comparación entre productos similares. 
+Recomendaciones inteligentes. 
+Respuestas automáticas sobre especificaciones del producto. 
+La estructura de datos deberá permitir incorporar estas funciones sin modificar el modelo principal.
+
+Capítulo 7 — Carrito de Compras (Introducción)
+El carrito será uno de los módulos más complejos porque OrigenRed permite comprar productos de distintos vendedores en una sola operación.
+Cada vendedor mantiene:
+su stock. 
+su envío. 
+su logística. 
+su responsabilidad. 
+Pero para el comprador la experiencia debe sentirse como una única compra, aunque internamente el sistema la divida en múltiples pedidos.
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN II
+Capítulo 6 — Página de Producto
+
+Objetivo
+La ficha de producto tiene un único objetivo:
+Generar confianza suficiente para que el usuario compre sin dudas.
+Todo elemento que distraiga de ese objetivo debe eliminarse.
+
+Estructura General
+La página estará organizada en el siguiente orden.
+──────────────────────────────────────
+
+Barra Superior
+
+──────────────────────────────────────
+
+Galería de imágenes
+
+Información principal
+
+──────────────────────────────────────
+
+Precio
+
+Variantes
+
+Stock
+
+Calculador de envío
+
+Botón Comprar
+
+Agregar al carrito
+
+──────────────────────────────────────
+
+Información resumida del vendedor
+
+──────────────────────────────────────
+
+Descripción
+
+Especificaciones
+
+──────────────────────────────────────
+Productos relacionados
+──────────────────────────────────────
+Opiniones
+──────────────────────────────────────
+Footer
+
+6.1 Galería de Imágenes
+La galería es el elemento más importante de toda la publicación.
+Debe ocupar aproximadamente el 40% del ancho en Desktop.
+En Mobile debe ser el primer elemento visible.
+
+Cantidad de imágenes
+Mínimo:
+1
+Máximo:
+10
+
+Calidad
+Las imágenes se almacenarán en Cloudflare R2.
+Al subirlas:
+El backend generará automáticamente distintas resoluciones.
+Ejemplo
+Original
+
+↓
+
+1600 px
+
+↓
+
+800 px
+
+↓
+
+400 px
+
+↓
+
+Thumbnail
+Esto reduce muchísimo el consumo de datos.
+
+Zoom
+Desktop
+Hover con zoom.
+
+Mobile
+Pinch Zoom.
+
+Orden
+El vendedor puede reordenarlas.
+
+Imagen principal
+Siempre visible.
+
+Video
+Cada publicación puede tener
+1 video
+Máximo
+15 segundos
+Máximo
+20 MB
+Formato
+MP4
+El video nunca debe reproducirse automáticamente.
+
+6.2 Información Principal
+A la derecha de las imágenes.
+Debe contener únicamente información importante.
+Orden.
+
+Título
+Ejemplo
+Zapatillas Adidas Forum Mid Hombre
+
+Marca
+Si existe.
+
+Código interno
+Solo visible para vendedor.
+
+Estado
+Nuevo
+Usado
+Reacondicionado
+Digital
+Servicio
+
+Ubicación
+Ejemplo
+Morón
+
+Buenos Aires
+No mostrar dirección exacta.
+
+Cantidad vendida
+Ejemplo
++532 vendidos
+Esto genera confianza.
+
+6.3 Precio
+El precio debe ser el protagonista.
+Grande.
+Muy visible.
+
+Mostrar
+Precio actual
+
+Si existe oferta
+Mostrar
+$120.000
+
+Antes
+
+$150.000
+
+20%
+OFF
+
+Cuotas
+Mercado Pago informa cuotas disponibles.
+Mostrar automáticamente.
+
+6.4 Variantes
+El sistema permitirá variantes completamente dinámicas.
+No todos los productos tendrán variantes.
+Por eso existirán Toggles.
+
+Color
+Toggle
+Activado
+↓
+Lista de colores.
+
+Talle
+Toggle
+↓
+Lista de talles.
+
+Calzado
+Toggle
+↓
+36
+37
+38
+39
+40
+...
+
+Cada variante puede tener
+Stock propio.
+
+Ejemplo
+Negro
+
+40
+
+Stock
+
+5
+
+------
+
+Negro
+
+41
+
+Stock
+
+8
+
+------
+
+Blanco
+
+40
+
+Stock
+
+3
+Esto evita errores.
+
+6.5 Stock
+Siempre visible.
+Ejemplos.
+Disponible
+Últimas unidades
+Sin stock
+Nunca mostrar
+0 disponibles
+La experiencia debe ser amigable.
+
+6.6 Calculador de Envío
+Uno de los módulos más importantes.
+
+El usuario solo ingresa
+Código Postal
+Ejemplo
+1708
+↓
+Calcular
+↓
+Resultado
+Entrega estimada
+
+2 a 4 días
+
+Costo
+$4.800
+
+También mostrar.
+Opciones.
+Envío a domicilio.
+Retiro en sucursal.
+Retiro por el vendedor.
+Punto de entrega.
+
+Si el vendedor no configuró envíos.
+Mostrar.
+Este vendedor coordina la entrega luego de la compra.
+Nunca ocultarlo.
+Debe informarse ANTES del pago.
+
+6.7 Botones
+Siempre visibles.
+Comprar Ahora.
+Agregar al carrito.
+Favorito.
+Compartir.
+
+Comprar
+Debe ser el botón dominante.
+
+Agregar al carrito
+Secundario.
+
+Favorito
+Icono.
+
+Compartir
+Genera enlace.
+
+6.8 Información del Vendedor
+No queremos una tienda completa.
+Queremos transmitir confianza.
+
+Mostrar.
+Logo.
+Nombre comercial.
+Verificado.
+Ubicación.
+Calificación.
+Cantidad de ventas.
+Tiempo vendiendo.
+Botón
+Ver más productos.
+
+Si contrató una web desarrollada por OrigenRed
+Mostrar
+Visitar sitio oficial
+Este enlace es un beneficio premium.
+Solo aparece si realmente desarrollaste esa web.
+
+NO mostrar.
+WhatsApp.
+Instagram.
+Facebook.
+Teléfono.
+Mail.
+Dirección exacta.
+Antes de comprar.
+Porque perderíamos la comisión.
+
+6.9 Indicadores de Confianza
+Muy importantes.
+Ejemplo.
+✔ Vendedor verificado
+✔ Pago protegido
+✔ Compra segura
+✔ Protección OrigenRed
+✔ Chat habilitado luego de comprar
+Estos pequeños detalles aumentan muchísimo la conversión.
+
+6.10 Descripción
+Debe aceptar.
+Texto.
+Negritas.
+Listas.
+Tablas.
+Imágenes opcionales.
+Videos NO.
+
+Debe estar organizada.
+No un bloque enorme.
+
+Ejemplo.
+Descripción.
+Características.
+Qué incluye.
+Garantía.
+Entrega.
+
+6.11 Especificaciones Técnicas
+Cada categoría tendrá atributos distintos.
+Ejemplo.
+Celular.
+Marca
+Modelo
+RAM
+Almacenamiento
+Pantalla
+Batería
+
+Ropa.
+Material
+Color
+Talle
+Temporada
+
+Herramientas.
+Potencia
+Voltaje
+Peso
+Marca
+
+Esto mejora muchísimo el SEO.
+
+6.12 Productos Relacionados
+El algoritmo utilizará.
+Categoría.
+Marca.
+Precio.
+Ubicación.
+Historial del usuario.
+
+Nunca serán anuncios pagos.
+
+6.13 Opiniones
+Solo compradores reales.
+Nunca permitir opiniones falsas.
+
+Cada opinión tendrá.
+Calificación.
+Comentario.
+Fecha.
+Compra verificada.
+
+Administrador puede ocultar comentarios ofensivos.
+Nunca editarlos.
+
+6.14 SEO
+Cada producto tendrá automáticamente.
+Título SEO.
+Descripción SEO.
+URL amigable.
+Open Graph.
+Twitter Cards.
+Schema.org Product.
+Canonical.
+Sitemap.
+
+Ejemplo.
+origenred.com/productos/
+
+zapatillas-adidas-forum-mid-hombre
+
+6.15 Accesibilidad
+Todas las imágenes tendrán ALT.
+Todos los botones.
+ARIA Label.
+Navegación por teclado.
+Contraste adecuado.
+
+6.16 Rendimiento
+La ficha del producto debe abrir en menos de
+2 segundos.
+Objetivo.
+Menos de
+1 segundo.
+
+Las imágenes se cargan progresivamente.
+Lazy Loading.
+
+Videos.
+Solo cuando el usuario los reproduce.
+
+6.17 Preparación para IA
+Aunque inicialmente no usemos IA para publicaciones, la ficha del producto quedará preparada para futuras funciones como:
+Resumen automático de la descripción. 
+Comparación entre productos similares. 
+Recomendaciones inteligentes. 
+Respuestas automáticas sobre especificaciones del producto. 
+La estructura de datos deberá permitir incorporar estas funciones sin modificar el modelo principal.
+
+Capítulo 7 — Carrito de Compras (Introducción)
+El carrito será uno de los módulos más complejos porque OrigenRed permite comprar productos de distintos vendedores en una sola operación.
+Cada vendedor mantiene:
+su stock. 
+su envío. 
+su logística. 
+su responsabilidad. 
+Pero para el comprador la experiencia debe sentirse como una única compra, aunque internamente el sistema la divida en múltiples pedidos.
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN II
+Capítulo 8 — Checkout Inteligente y Motor de Pagos
+
+Objetivo
+El checkout tiene un único objetivo:
+Que el usuario pueda pagar con la menor cantidad de pasos posibles, con la máxima confianza y sin errores.
+Todo el flujo debe transmitir seguridad.
+El usuario nunca debe preguntarse:
+¿Mi compra se realizó? 
+¿Se cobró dos veces? 
+¿Tengo que esperar? 
+¿Dónde veo el estado? 
+Toda esa información debe ser inmediata.
+
+Filosofía
+El checkout de OrigenRed debe parecer extremadamente simple.
+Pero internamente realizará decenas de procesos.
+El comprador nunca verá esa complejidad.
+
+Flujo General
+Carrito
+
+↓
+
+Validaciones
+
+↓
+
+Cálculo final
+
+↓
+
+Mercado Pago
+
+↓
+
+Webhook
+
+↓
+
+Pago aprobado
+
+↓
+
+Crear órdenes
+
+↓
+
+Actualizar stock
+
+↓
+
+Dividir dinero
+
+↓
+
+Abrir chats
+
+↓
+
+Generar notificaciones
+
+↓
+
+Actualizar estadísticas
+
+↓
+Mostrar confirmación
+
+Etapa 1
+Validación Final
+Antes de enviar al usuario a Mercado Pago.
+El backend debe validar absolutamente todo nuevamente.
+Nunca confiar en el frontend.
+Se valida:
+✓ Producto activo
+✓ Producto existente
+✓ Stock suficiente
+✓ Precio actualizado
+✓ Variantes
+✓ Estado vendedor
+✓ Mercado Pago conectado
+✓ Peso
+✓ Dimensiones
+✓ Método de envío
+✓ Costos
+✓ Restricciones
+✓ Publicación no suspendida
+✓ Usuario no bloqueado
+Todo.
+Si falla una sola.
+No se genera el pago.
+
+Ejemplo
+Producto
+Stock
+
+2
+Usuario quiere
+Comprar
+
+5
+Resultado
+No hay stock suficiente.
+
+Etapa 2
+Generación del Resumen
+El backend construye el resumen definitivo.
+Ejemplo
+Productos
+$180.000
+-----------------
+Envíos
+$12.300
+-----------------
+Total
+$192.300
+
+Internamente.
+Pedido vendedor A
+
+$50.000
+
+----------------
+
+Pedido vendedor B
+
+$130.000
+----------------
+Envíos separados
+$12.300
+
+Etapa 3
+Creación de la Preferencia de Mercado Pago
+Aquí aparece una decisión arquitectónica muy importante.
+Mi propuesta
+No permitir que el frontend cree preferencias.
+Siempre.
+Siempre.
+Siempre.
+El Backend.
+Flujo.
+Frontend
+↓
+POST
+/orders/create-payment
+↓
+
+Backend
+
+↓
+
+Valida
+
+↓
+
+Mercado Pago
+
+↓
+
+Preference ID
+
+↓
+
+Frontend
+
+↓
+
+Checkout Pro
+Esto mejora muchísimo la seguridad.
+
+División del Dinero
+Como decidimos.
+No queremos recibir el dinero nosotros para luego transferirlo.
+Queremos.
+Cliente
+
+↓
+
+Mercado Pago
+
+↓
+
+95%
+
+Vendedor
+
+↓
+
+5%
+OrigenRed
+Automáticamente.
+
+Importante
+Esto significa que OrigenRed funciona como un verdadero marketplace.
+No como un intermediario manual.
+
+Productos Propios
+Cuando el vendedor sea.
+OrigenRed.
+El flujo cambia.
+Cliente
+
+↓
+
+Mercado Pago
+↓
+100%
+OrigenRed
+
+Cálculo
+Ejemplo.
+Producto
+$100.000
+Envío
+$6.000
+Total
+$106.000
+Distribución.
+95.000
+
+↓
+
+Vendedor
+
+-----------
+
+5.000
+
+↓
+
+OrigenRed
+
+-----------
+
+6.000
+
+↓
+
+Costo envío
+La comisión nunca se calcula sobre el envío.
+
+¿Qué pasa si hay tres vendedores?
+Ejemplo.
+Producto A
+
+100.000
+
+---------
+
+Producto B
+
+60.000
+
+---------
+
+Producto C
+
+80.000
+Internamente.
+Pedido 1
+
+↓
+
+95.000
+
+↓
+
+Vendedor A
+
+--------
+
+Pedido 2
+
+↓
+
+57.000
+
+↓
+
+Vendedor B
+
+--------
+
+Pedido 3
+
+↓
+
+76.000
+
+↓
+
+Vendedor C
+
+--------
+OrigenRed
+↓
+12.000
+Todo automático.
+
+Estados del Pago
+El pago tendrá su propia máquina de estados.
+Pendiente
+
+↓
+
+Procesando
+
+↓
+
+Aprobado
+
+↓
+
+Acreditado
+
+↓
+
+Cancelado
+
+↓
+
+Rechazado
+
+↓
+
+Reembolsado
+Nunca utilizar simplemente.
+Pagado
+No Pagado
+
+Webhooks
+Este módulo será crítico.
+Nunca confiar.
+En el retorno del navegador.
+Solo.
+En el Webhook.
+Flujo.
+Usuario paga
+
+↓
+
+Mercado Pago
+
+↓
+
+Webhook
+
+↓
+
+Backend
+↓
+Validación firma
+↓
+Actualizar pedido
+
+Regla Fundamental
+El pedido.
+NO existe.
+Hasta que Mercado Pago confirme.
+Nunca antes.
+
+Reintentos
+Si el Webhook falla.
+El sistema debe poder.
+Reintentar.
+Nunca perder una venta.
+
+Auditoría
+Toda operación queda registrada.
+Ejemplo.
+Hora
+
+Usuario
+
+IP
+
+Pago
+
+Estado
+
+Webhook recibido
+
+Resultado
+Esto será muy útil.
+Cuando un cliente diga.
+"No se acreditó."
+
+Idempotencia
+Esto es extremadamente importante.
+Mercado Pago puede enviar.
+El mismo Webhook.
+Varias veces.
+El backend debe detectar.
+Que ya fue procesado.
+Nunca.
+Duplicar.
+Pedidos.
+Chats.
+Comisiones.
+Stock.
+Notificaciones.
+
+Errores
+Si Mercado Pago responde.
+Pendiente
+El pedido queda.
+Pendiente.
+No se descuenta stock definitivamente.
+Solo permanece reservado.
+
+Tiempo de Reserva
+Yo propondría.
+30 minutos.
+No 20.
+¿Por qué?
+Porque algunos bancos tardan.
+
+Después.
+Liberar.
+Stock.
+
+Pagos Rechazados
+Pantalla.
+No pudimos procesar tu pago.
+Mostrar.
+Intentar nuevamente.
+Cambiar medio.
+Volver al carrito.
+
+Nunca perder.
+El carrito.
+
+Compra Exitosa
+Pantalla.
+Debe ser espectacular.
+No un simple.
+Compra realizada
+Mostrar.
+✔ Pago aprobado
+✔ Número pedido
+✔ Chat habilitado
+✔ Seguimiento
+✔ Ver compras
+✔ Seguir comprando
+
+Mails
+Al aprobar.
+Enviar.
+Mail comprador.
+Mail vendedor.
+Notificación Push.
+Notificación Web.
+
+Chat
+Automáticamente.
+Crear.
+Sala Compra 58291
+Participantes.
+Comprador.
+Vendedor.
+Administrador (modo invisible hasta intervenir).
+
+Comisión
+Registrar.
+Venta
+
+$100.000
+
+↓
+
+Comisión
+
+5.000
+
+↓
+
+Registrada
+Nunca calcularla luego.
+
+Estadísticas
+Actualizar inmediatamente.
+Comprador.
+Cantidad compras.
+
+Vendedor.
+Cantidad ventas.
+Facturación.
+
+Administrador.
+Comisiones.
+Ventas totales.
+Productos vendidos.
+Usuarios activos.
+
+Nueva propuesta: Motor Antifraude (Agregar desde el MVP)
+Esta idea no la habíamos hablado, pero considero que vale muchísimo la pena incorporarla desde el inicio.
+Cada compra recibirá internamente un puntaje de riesgo.
+Por ejemplo:
+Cuenta recién creada. 
+Muchas compras rechazadas. 
+Distancia muy inusual. 
+Varias compras idénticas en pocos minutos. 
+Cambios frecuentes de dirección. 
+Intentos repetidos de pago. 
+Cada evento suma puntos.
+Si el puntaje supera un umbral configurable desde el panel de administración:
+la compra queda marcada para revisión, 
+el administrador recibe una alerta, 
+el sistema registra la operación para auditoría. 
+No bloquearía automáticamente las ventas (para no perjudicar compradores legítimos), pero sí agregaría una capa de protección muy útil a futuro.
+
+Nueva propuesta: Centro de Eventos (Event Bus Interno)
+Otra mejora importante para la escalabilidad.
+Cada acción importante genera un evento interno.
+Ejemplo:
+OrderPaid
+
+↓
+
+Actualizar stock
+
+↓
+
+Actualizar estadísticas
+
+↓
+
+Crear chat
+
+↓
+
+Enviar Push
+
+↓
+
+Enviar Email
+
+↓
+
+Registrar auditoría
+
+↓
+
+Actualizar reputación
+En lugar de que el controlador haga todo junto, el sistema publica un evento y cada módulo reacciona.
+Esto mantiene el código mucho más limpio y facilita agregar funcionalidades sin romper las existentes.
+
+Fin del Capítulo 8
+Con este capítulo ya quedaron definidos:
+El flujo financiero. 
+La integración con Mercado Pago. 
+La separación de órdenes. 
+La creación de pedidos. 
+La apertura automática del chat. 
+La actualización de estadísticas. 
+La auditoría. 
+La estrategia de webhooks. 
+La reserva de stock. 
+La seguridad del proceso de pago. 
+Próximo capítulo: Motor Logístico de OrigenRed
+Ese capítulo será probablemente el segundo más complejo de toda la plataforma. Vamos a diseñar toda la logística de envíos para que funcione con múltiples vendedores, EnvíoPack, cálculo por código postal, retiros, múltiples sucursales y futuras integraciones sin tener que rediseñar el sistema. Además, quiero proponerte una arquitectura logística que creo que puede convertirse en otro gran diferencial de OrigenRed.
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN II
+Capítulo 9 — Motor Logístico
+
+Objetivo
+La logística de OrigenRed debe cumplir cinco objetivos.
+1
+Ser extremadamente simple para el comprador.
+
+2
+No obligar al vendedor a conocer cuestiones técnicas.
+
+3
+Permitir distintos tipos de vendedores.
+Ejemplo
+un emprendedor desde su casa. 
+una empresa. 
+una fábrica. 
+un comercio. 
+una distribuidora. 
+
+4
+Poder integrar nuevos operadores logísticos sin modificar el sistema.
+
+5
+Ser completamente escalable.
+
+Filosofía
+La logística nunca será responsabilidad de OrigenRed.
+OrigenRed únicamente será quien conecta:
+Comprador
+↓
+Marketplace
+↓
+Vendedor
+↓
+Empresa logística
+
+Arquitectura
+El sistema no conocerá EnvíoPack directamente.
+Conocerá un concepto.
+Shipping Provider
+Después.
+Podrá existir.
+Correo Argentino
+
+OCA
+
+Andreani
+
+EnvíoPack
+
+Moto Mensajería
+
+Retiro Local
+
+Envío Propio
+
+FutureProvider
+Todos implementarán la misma interfaz.
+Esto permite cambiar un proveedor sin tocar el resto del sistema.
+
+Tipos de Entrega
+Cada publicación podrá ofrecer uno o varios métodos.
+
+Envío a domicilio
+El más común.
+
+Retiro en sucursal logística
+Ejemplo.
+Correo Argentino.
+
+Retiro en local
+El vendedor tiene local.
+
+Punto de entrega
+Ejemplo.
+Shopping
+
+Sucursal
+
+Kiosco
+Depósito
+
+Envío propio
+El vendedor utiliza.
+Cadetería.
+Moto.
+Camioneta.
+
+Entrega Digital
+Para cursos.
+Software.
+Licencias.
+Servicios.
+No requiere logística física.
+
+Configuración del Vendedor
+Cada vendedor tendrá un asistente.
+No una pantalla complicada.
+
+Paso 1
+Seleccionar.
+¿Qué tipos de entrega ofrecés?
+
+Paso 2
+Configurar.
+Dirección de origen.
+
+Paso 3
+Agregar.
+Sucursales.
+Si posee.
+
+Paso 4
+Configurar.
+Envío gratis.
+
+Paso 5
+Guardar.
+
+Nunca más.
+
+Dirección del Vendedor
+Cada vendedor tendrá.
+Dirección principal.
+Pero podrá agregar.
+Muchas.
+Ejemplo.
+Depósito Central
+
+Morón
+
+--------------
+
+Sucursal Ramos
+
+--------------
+
+Sucursal Castelar
+
+--------------
+
+Sucursal Ituzaingó
+
+Cada producto puede salir.
+Desde cualquiera.
+
+Nueva Idea (muy importante)
+Centro Logístico por Producto
+No todos los productos salen del mismo lugar.
+Ejemplo.
+Una empresa.
+Tiene.
+Depósito Buenos Aires.
+Depósito Córdoba.
+Depósito Rosario.
+Cuando publica.
+Puede elegir.
+Producto
+
+↓
+
+Sale desde
+
+Rosario
+No desde la dirección principal.
+Esto reduce muchísimo los costos.
+Y prepara OrigenRed para empresas grandes.
+
+Datos Obligatorios
+Todo producto físico.
+Debe tener.
+Peso.
+Alto.
+Ancho.
+Largo.
+Unidad.
+Siempre.
+
+Nunca permitir.
+Publicar.
+Sin estos datos.
+Porque rompe.
+El cálculo logístico.
+
+Validaciones
+Si el vendedor pone.
+Peso
+0 gramos
+No permitir.
+
+Si pone.
+200 kilos
+
+para un celular
+Advertencia.
+
+Dimensiones
+Podrían tener.
+Validaciones inteligentes.
+Según categoría.
+Ejemplo.
+Televisor.
+No puede medir.
+2 cm.
+
+Cálculo del Envío
+El usuario.
+Solo ingresará.
+Código Postal.
+
+El backend hará.
+CP comprador
+
+↓
+
+CP vendedor
+
+↓
+
+Peso
+
+↓
+
+Dimensiones
+
+↓
+
+Proveedor
+
+↓
+
+Costo
+↓
+Tiempo
+↓
+Respuesta
+
+Nunca.
+Calcular.
+En el Frontend.
+
+Resultado
+Ejemplo.
+Entrega
+
+2 a 4 días
+
+---------------
+
+Costo
+$5.200
+---------------
+Proveedor
+Correo Argentino
+
+Envío Gratis
+El vendedor podrá configurar.
+
+Caso 1
+Siempre.
+
+Caso 2
+Compras superiores.
+Ejemplo.
+$80.000
+
+Caso 3
+Distancia.
+Ejemplo.
+Hasta
+15 km
+
+Caso 4
+Solo ciertas provincias.
+
+Caso 5
+Solo ciertos productos.
+
+Múltiples Envíos
+Uno de los módulos más importantes.
+Ejemplo.
+Compra.
+Notebook
+
+Córdoba
+
+-------------
+
+Remera
+
+Buenos Aires
+
+-------------
+
+Mate
+
+Misiones
+Internamente.
+Pedido 1
+
+------------
+
+Pedido 2
+
+------------
+
+Pedido 3
+Cada uno.
+Calcula.
+Su envío.
+
+Nunca intentar.
+Unificarlos.
+
+Estado del Envío
+Cada pedido.
+Tiene.
+Su propio estado.
+Pendiente
+
+↓
+
+Preparando
+
+↓
+
+Despachado
+
+↓
+
+En tránsito
+
+↓
+
+Disponible retiro
+
+↓
+Entregado
+
+Nunca mezclar.
+Con estados del pago.
+
+Tracking
+Cuando exista.
+Mostrar.
+Número seguimiento.
+
+Botón.
+Ver seguimiento
+
+Si el proveedor.
+Tiene API.
+Mostrar.
+Seguimiento.
+En tiempo real.
+
+Sin API
+Si no.
+El vendedor.
+Actualiza manualmente.
+
+Chat
+Cuando el vendedor.
+Despacha.
+El comprador recibe.
+Tu pedido
+
+ya fue despachado.
+Y puede continuar la conversación desde el chat.
+
+Reprogramar Entrega
+Nueva idea.
+Muy útil.
+Si el comprador.
+No puede recibir.
+El vendedor.
+Puede.
+Reprogramar
+Nueva fecha.
+
+Sucursales
+Cada vendedor.
+Puede tener.
+Muchas.
+Cada una.
+Con.
+Horario.
+Teléfono.
+Coordenadas.
+
+Distancia
+Nueva idea.
+El buscador.
+Utilizará.
+La distancia.
+Como factor.
+No solamente.
+Precio.
+Ejemplo.
+Dos productos.
+Iguales.
+Uno.
+A 2 km.
+Otro.
+A 1800 km.
+El primero.
+Obtendrá.
+Mayor puntuación.
+Porque.
+Reduce.
+Costo logístico.
+Y tiempo.
+
+Tiempo Estimado
+Cada publicación.
+Debe mostrar.
+Antes de comprar.
+Ejemplo.
+Llega
+
+entre
+
+miércoles
+
+y
+
+viernes
+No solamente.
+3 días
+Es más amigable.
+
+Zonas sin Cobertura
+Ejemplo.
+Un vendedor.
+No envía.
+A Tierra del Fuego.
+El sistema.
+Debe informarlo.
+Antes.
+Del pago.
+
+Restricciones
+Ejemplo.
+Producto
+
+Inflamable
+El proveedor.
+No lo acepta.
+Debe.
+Advertirse.
+
+Seguro
+Nueva propuesta.
+Cada vendedor.
+Podrá activar.
+Envío asegurado
+El costo.
+Lo define.
+El proveedor.
+O.
+El propio vendedor.
+
+Logística para Servicios
+No existe.
+Envío.
+El checkout.
+Omite.
+Todo.
+
+Logística para Productos Digitales
+Ejemplo.
+Curso.
+Ebook.
+Licencia.
+El sistema.
+Automáticamente.
+Pasa.
+Pago aprobado
+
+↓
+
+Entrega digital
+
+↓
+Chat
+↓
+Pedido finalizado
+
+Arquitectura Modular
+Este módulo quedará dividido.
+En.
+Shipping
+├── Providers
+├── Calculator
+├── Tracking
+├── Pickup
+├── Branches
+
+├── Rules
+
+├── Events
+Nunca.
+Todo junto.
+
+Nueva propuesta: Simulador de Envíos (Administrador)
+Esto no lo habíamos hablado y creo que puede ayudarte muchísimo cuando un vendedor tenga problemas.
+Desde el panel de administración podrías tener una herramienta donde ingresás:
+código postal de origen, 
+código postal de destino, 
+peso, 
+dimensiones, 
+proveedor. 
+Y el sistema simula exactamente el mismo cálculo que verá el comprador.
+Con esto podés verificar rápidamente si un problema es de la configuración del vendedor o del proveedor logístico.
+
+Nueva propuesta: Calidad Logística del Vendedor
+Además de la reputación general, cada vendedor tendrá un indicador interno de desempeño logístico.
+Ejemplos de métricas:
+tiempo promedio hasta despachar, 
+porcentaje de entregas exitosas, 
+cancelaciones por falta de stock, 
+errores de peso o dimensiones, 
+reclamos relacionados con envíos. 
+Este puntaje puede influir en el algoritmo de posicionamiento sin que el vendedor tenga que pagar para aparecer mejor.
+
+Fin del Capítulo 9
+Con este capítulo queda definida toda la arquitectura logística de OrigenRed:
+múltiples operadores, 
+múltiples sucursales, 
+múltiples pedidos, 
+cálculo por código postal, 
+productos físicos, 
+digitales, 
+servicios, 
+seguimiento, 
+estados, 
+integración futura. 
+
+Antes de continuar con el siguiente capítulo quiero proponerte una mejora importante
+Hasta ahora hablamos del algoritmo de posicionamiento de forma general, pero considero que deberíamos dedicarle un capítulo completo, porque va a definir qué productos ve primero cada usuario y será uno de los activos más valiosos de OrigenRed.
+No quiero hacer un algoritmo simple por ventas. Mi propuesta es diseñar un motor de ranking híbrido, que combine:
+cercanía geográfica, 
+historial del comprador, 
+reputación del vendedor, 
+calidad de la publicación, 
+velocidad logística, 
+conversión, 
+novedades, 
+rotación para dar oportunidades a vendedores nuevos. 
+Creo que ese algoritmo puede convertirse en uno de los grandes diferenciales de la plataforma y merece una especificación completa.
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN II
+Capítulo 10 — Motor Inteligente de Posicionamiento (OrigenRank)
+Nuevo nombre propuesto: OrigenRank
+No lo llamaría simplemente "algoritmo".
+Sería un módulo propio.
+Así como Mercado Libre tiene sus algoritmos internos.
+Amazon tiene los suyos.
+OrigenRed tendrá:
+OrigenRank™
+(Este nombre incluso podría registrarse como parte de la marca.)
+
+Objetivo
+Mostrar al comprador:
+El producto que tiene más probabilidades de satisfacer su necesidad.
+NO
+El que más dinero deja.
+NO
+El que pagó publicidad.
+NO
+El del vendedor más grande.
+
+La filosofía de OrigenRed será:
+La mejor experiencia para el comprador genera más ventas para todos.
+
+Principios
+OrigenRank nunca utilizará un único criterio.
+Será un algoritmo híbrido.
+Cada publicación tendrá un puntaje dinámico.
+Ejemplo.
+Producto
+
+↓
+
+OrigenRank Score
+
+↓
+
+87.42 puntos
+Ese puntaje nunca será visible.
+Solo interno.
+
+¿Por qué?
+Porque si los vendedores conocen exactamente el algoritmo...
+Lo van a intentar manipular.
+
+Variables
+En lugar de una sola.
+Habrá decenas.
+Ejemplo.
+Ventas.
+Conversión.
+Ubicación.
+Stock.
+Reputación.
+Tiempo de respuesta.
+Calidad.
+Velocidad logística.
+Devoluciones.
+Etc.
+
+Filosofía
+No queremos que pase esto.
+Siempre vende
+
+Empresa grande
+
+↓
+
+Siempre aparece primera
+
+↓
+
+Nunca vende
+
+Emprendedor nuevo
+Eso mata el marketplace.
+
+Tampoco queremos.
+Todos aparecen igual.
+
+↓
+
+Los malos vendedores
+
+tienen la misma prioridad.
+Tampoco sirve.
+
+Queremos equilibrio.
+
+Score Base
+Todo producto nuevo comienza.
+Con.
+50 puntos
+Ni arriba.
+Ni abajo.
+
+Después.
+El sistema.
+Aprende.
+
+Variable 1
+Calidad de Publicación
+Muy importante.
+Evaluar.
+Cantidad de fotos.
+Calidad imágenes.
+Descripción.
+Categoría correcta.
+Peso.
+Dimensiones.
+Variantes completas.
+Marca.
+Especificaciones.
+
+Ejemplo.
+1 foto
+
+↓
+
+Pierde puntos
+
+--------------
+
+8 fotos
+
+↓
+
+Gana puntos
+
+Variable 2
+Conversión
+Este indicador será uno de los más importantes.
+Ejemplo.
+100 personas.
+Ven.
+El producto.
+Solo compra.
+
+↓
+Conversión.
+1%.
+
+Otro.
+100 personas.
+Lo ven.
+Compran.
+
+↓
+18%.
+
+Ese producto.
+Es claramente mejor.
+Debe subir.
+
+Variable 3
+Cercanía
+Esto fue una excelente decisión que tomaste.
+OrigenRank.
+Siempre tendrá en cuenta.
+La ubicación.
+
+Ejemplo.
+Usuario.
+Morón.
+Producto A.
+Morón.
+Producto B.
+Jujuy.
+Mismo precio.
+Misma reputación.
+Misma calidad.
+↓
+Gana.
+Morón.
+
+¿Por qué?
+Menor envío.
+Menor tiempo.
+Mayor satisfacción.
+
+Variable 4
+Reputación del Vendedor
+No solamente estrellas.
+También.
+Tiempo respuesta.
+Cancelaciones.
+Problemas.
+Demoras.
+Reclamos.
+
+Variable 5
+Calidad Logística
+El capítulo anterior.
+Genera.
+Un puntaje.
+
+Ejemplo.
+Despacha.
+Siempre.
+En menos de.
+24 horas.
+↓
+Sube.
+
+Nunca despacha.
+↓
+Baja.
+
+Variable 6
+Stock
+No queremos mostrar.
+Productos.
+Con.
+Stock
+
+1
+Durante meses.
+
+Si un vendedor.
+Siempre tiene stock.
+Gana.
+Puntos.
+
+Variable 7
+Novedad
+Muy importante.
+Producto nuevo.
+Debe tener.
+Visibilidad.
+
+Yo haría.
+Una pequeña bonificación.
+Durante.
+Los primeros.
+15 días.
+
+Después.
+Desaparece.
+
+Esto ayuda.
+A emprendedores.
+
+Variable 8
+Rotación Inteligente
+Esta idea.
+Creo que puede ser.
+Uno de los diferenciales.
+Nunca mostrar.
+Siempre.
+Los mismos productos.
+Ejemplo.
+Top.
+20 productos.
+↓
+Cada usuario.
+Ve.
+Algunas posiciones.
+Rotadas.
+Dentro de un rango.
+
+Así.
+Todos.
+Tienen oportunidades.
+
+Variable 9
+Historial del Usuario
+Si un usuario.
+Compra.
+Herramientas.
+No mostrar.
+Principalmente.
+Vestidos.
+
+Aprender.
+Sin invadir.
+La privacidad.
+
+Variable 10
+Categoría Favorita
+Si el usuario.
+Siempre.
+Busca.
+Electrónica.
+Mostrar.
+Más electrónica.
+
+Variable 11
+Horario
+Nueva idea.
+Muy potente.
+Ejemplo.
+Son.
+22:00.
+Mostrar.
+Productos.
+Con despacho.
+Al día siguiente.
+
+Otro.
+Es Navidad.
+Mostrar.
+Regalos.
+
+Otro.
+Es invierno.
+Más camperas.
+
+Variable 12
+Tendencias
+Detectar.
+Qué empieza.
+A venderse.
+Mucho.
+En pocos días.
+
+Subir.
+Naturalmente.
+
+Variable 13
+Denuncias
+Producto.
+Denunciado.
+↓
+Pierde.
+Visibilidad.
+Hasta.
+Resolver.
+
+Variable 14
+Devoluciones
+Muchas devoluciones.
+↓
+Pierde.
+Puntos.
+
+Variable 15
+Tiempo Publicado
+No queremos.
+Que un producto.
+Publicado.
+Hace.
+6 años.
+Siga.
+Siempre.
+Primero.
+
+El algoritmo.
+Debe refrescar.
+Resultados.
+
+Variable 16
+Calidad Multimedia
+Fotos.
+Resolución.
+Orden.
+Video.
+Todo suma.
+
+Variable 17
+Tiempo de Permanencia
+Nueva idea.
+Muy buena.
+Ejemplo.
+Usuario.
+Entra.
+Permanece.
+4 minutos.
+↓
+Buena publicación.
+
+Entra.
+Sale.
+En.
+3 segundos.
+↓
+Algo.
+No convence.
+
+Variable 18
+Favoritos
+Muchos favoritos.
+↓
+Producto interesante.
+
+Variable 19
+Compartidos
+Si mucha gente.
+Comparte.
+Un producto.
+Eso también.
+Es una señal.
+
+Variable 20
+Velocidad de Venta
+Ejemplo.
+Publica.
+↓
+En dos días.
+Vende.
+20 unidades.
+↓
+Algo.
+Está funcionando.
+
+Equilibrador
+Esta será una de las partes más importantes.
+Yo no permitiría.
+Que una sola variable.
+Supere.
+El.
+30%.
+Del puntaje.
+Ejemplo.
+Ventas.
+Nunca.
+Podrán definir.
+Todo.
+Así evitamos monopolios.
+
+Inteligencia Adaptativa
+OrigenRank.
+No tendrá.
+Pesos.
+Fijos.
+Los pesos.
+Podrán modificarse.
+Desde.
+El panel administrador.
+Ejemplo.
+Ventas
+
+25%
+
+----------
+
+Reputación
+
+20%
+
+----------
+
+Distancia
+
+20%
+
+----------
+
+Conversión
+
+15%
+
+----------
+
+Novedad
+
+10%
+
+----------
+
+Logística
+
+10%
+Todo editable.
+Sin tocar código.
+
+Modo Evento
+Nueva propuesta.
+Administrador.
+Puede activar.
+Hot Sale
+Black Friday
+Cyber Monday
+
+Navidad
+
+Día del Padre
+OrigenRank.
+Automáticamente.
+Prioriza.
+Productos.
+Relacionados.
+
+Modo Emergencia
+Nueva idea.
+Muy útil.
+Si un vendedor.
+Tiene.
+Miles.
+De denuncias.
+↓
+Administrador.
+Puede.
+Reducir.
+Su visibilidad.
+Sin suspenderlo.
+
+Aprendizaje Futuro
+Hoy.
+No utilizaremos IA.
+Pero.
+OrigenRank.
+Debe estar preparado.
+Para.
+Aprender.
+Patrones.
+En el futuro.
+
+Dashboard del Administrador
+Vos vas a tener una pantalla exclusiva para este motor.
+Con gráficos como:
+Productos con mejor puntuación. 
+Variables que más influyen. 
+Categorías con mayor conversión. 
+Productos estancados. 
+Productos con muchas visitas y pocas ventas. 
+Vendedores que crecieron más rápido. 
+Publicaciones que necesitan mejorar. 
+Todo configurable.
+
+Nueva propuesta: Modo Descubrimiento
+Esta es una idea original que creo que puede diferenciar muchísimo a OrigenRed.
+Cada cierto porcentaje de resultados (por ejemplo, 1 de cada 10 productos), el algoritmo reserva un espacio para publicaciones con buen potencial pero poca exposición.
+No importa si son nuevas o de un vendedor pequeño.
+Si cumplen criterios mínimos de calidad, reciben una oportunidad real de ser vistas.
+Beneficios:
+evita que los vendedores nuevos queden invisibles, 
+incentiva publicaciones de calidad, 
+mantiene el marketplace dinámico, 
+evita que siempre aparezcan los mismos productos. 
+Este porcentaje también sería configurable desde el panel de administración.
+
+Mi propuesta más importante hasta ahora
+Quiero agregar una regla que creo que puede convertirse en una filosofía de OrigenRed:
+"Ningún vendedor debería sentirse invisible."
+Ese principio puede guiar todas las decisiones del algoritmo.
+El objetivo no es que todos aparezcan igual.
+El objetivo es que todos tengan oportunidades reales de competir si ofrecen buenos productos y buen servicio.
+Eso, además de ser justo, incentiva que los vendedores mejoren continuamente en lugar de depender de pagar publicidad para existir.
+
+Fin del Capítulo 10
+Con este capítulo ya quedó diseñado el cerebro del marketplace.
+No es simplemente un ordenamiento por ventas, sino un sistema dinámico, configurable y preparado para evolucionar.
+
+Próximo capítulo: Panel del Comprador y Gestión de la Cuenta
+Ahí vamos a diseñar absolutamente toda la experiencia del usuario después de registrarse:
+perfil, 
+historial, 
+favoritos, 
+direcciones, 
+métodos de pago, 
+notificaciones, 
+configuración, 
+seguridad, 
+privacidad, 
+reclamos, 
+devoluciones, 
+seguimiento, 
+y algunas ideas nuevas que creo que pueden hacer que OrigenRed se sienta mucho más moderno que un marketplace tradicional. 
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN II
+Capítulo 11 — Panel del Comprador
+
+Objetivo
+El panel del comprador será el lugar donde el usuario administrará absolutamente toda su actividad dentro de OrigenRed.
+Debe transmitir una sensación de orden.
+El usuario nunca debe preguntarse:
+¿Dónde está mi compra? 
+¿Cómo contacto al vendedor? 
+¿Cómo hago un reclamo? 
+¿Cómo vuelvo a comprar? 
+¿Dónde veo mis favoritos? 
+Todo debe encontrarse en pocos segundos.
+
+Filosofía
+La pantalla principal del comprador será un Dashboard Personal.
+No simplemente una lista.
+
+Dashboard
+Al ingresar verá.
+Hola Augusto 👋
+
+Bienvenido nuevamente.
+Debajo aparecerán tarjetas.
+
+Mis compras
+Cantidad total.
+
+Pedidos en camino
+Cantidad.
+
+Favoritos
+Cantidad.
+
+Mensajes nuevos
+Cantidad.
+
+Últimos movimientos
+Actividad reciente.
+
+Todo resumido.
+
+Menú Lateral
+Mi Cuenta
+Mis Compras
+Seguimiento
+Favoritos
+Direcciones
+Notificaciones
+Chats
+Configuración
+Ayuda
+Cerrar sesión
+
+Mi Perfil
+Información editable.
+Foto.
+Nombre.
+Apellido.
+Correo.
+Teléfono.
+Fecha de nacimiento (opcional).
+Provincia.
+Ciudad.
+Código Postal.
+
+Nunca mostrar datos innecesarios públicamente.
+
+Direcciones
+El usuario puede guardar varias.
+Ejemplo.
+Casa.
+Trabajo.
+Padres.
+Departamento.
+
+Cada dirección tendrá.
+Alias.
+Dirección.
+Código Postal.
+Provincia.
+Ciudad.
+Observaciones.
+
+Una será la principal.
+
+Compra como Invitado
+Si el usuario compró sin cuenta.
+Al registrarse posteriormente.
+El sistema podrá ofrecer.
+¿Querés vincular tus compras anteriores?
+Utilizando.
+Mail.
+Teléfono.
+Código de compra.
+Esto mejora muchísimo la experiencia.
+
+Mis Compras
+La pantalla más utilizada.
+Cada compra será una tarjeta.
+
+Ejemplo.
+Compra
+
+#54821
+
+15 Julio
+
+$128.000
+
+Estado
+
+En camino
+
+Botones.
+Ver detalle.
+Chat.
+Seguimiento.
+Comprar nuevamente.
+Solicitar devolución.
+
+Vista Detallada
+Dentro de una compra.
+Verá.
+Productos.
+Estado.
+Envío.
+Pago.
+Mensajes.
+Factura (si existe).
+Datos del vendedor.
+Tiempo estimado.
+
+Seguimiento
+Toda la información.
+En una línea temporal.
+Ejemplo.
+Pago aprobado
+
+↓
+
+Pedido confirmado
+
+↓
+
+Preparando
+
+↓
+
+Despachado
+
+↓
+
+En camino
+
+↓
+
+Entregado
+Muy visual.
+
+Favoritos
+No será solamente.
+Una lista.
+Permitirá.
+Buscar.
+Ordenar.
+Eliminar.
+Mover.
+Compartir.
+
+Además.
+Cuando un producto favorito.
+Baje de precio.
+El usuario recibe.
+Una notificación.
+
+Cuando vuelva.
+A tener stock.
+También.
+
+Historial
+OrigenRed recordará.
+Productos vistos.
+Búsquedas.
+Categorías favoritas.
+Siempre respetando la política de privacidad.
+
+Recomendaciones
+No invasivas.
+Basadas en.
+Historial.
+Favoritos.
+Compras.
+Ubicación.
+
+Nunca mostrar publicidad agresiva.
+
+Chat
+Todos los chats.
+En una única pantalla.
+Cada conversación.
+Asociada.
+A una compra.
+Nunca chats sueltos.
+
+Ejemplo.
+Compra #54821
+↓
+Chat
+
+Esto evita confusión.
+
+Notificaciones
+Clasificadas.
+Compras.
+Envíos.
+Mensajes.
+Promociones.
+Sistema.
+
+El usuario podrá desactivar.
+Cada tipo.
+Individualmente.
+
+Configuración
+Idioma.
+Tema.
+(Notar que inicialmente solo existirá modo claro, pero el sistema quedará preparado para modo oscuro en el futuro).
+Notificaciones.
+Privacidad.
+Seguridad.
+
+Seguridad
+Cambiar contraseña.
+Cerrar sesiones.
+Dispositivos conectados.
+Último acceso.
+
+Nueva propuesta.
+Mostrar.
+Último inicio de sesión
+
+Hace 2 horas
+
+Chrome
+
+Windows
+
+Buenos Aires
+Muy útil.
+
+Centro de Ayuda
+No quiero un simple FAQ.
+Quiero un asistente.
+Con categorías.
+Compras.
+Pagos.
+Envíos.
+Reembolsos.
+Cuenta.
+Seguridad.
+
+Y abajo.
+Un botón.
+Contactar soporte
+Que abrirá el chat con el equipo de OrigenRed.
+
+Sistema de Reclamos
+Si existe un problema.
+El usuario podrá.
+Abrir un caso.
+
+Elegirá.
+No recibí el producto.
+Producto incorrecto.
+Producto dañado.
+Vendedor no responde.
+Otro.
+
+El sistema genera.
+Número de caso.
+Y el administrador recibe.
+Una notificación inmediata.
+
+Devoluciones
+Como definimos.
+El usuario solicita.
+↓
+El vendedor responde.
+↓
+Si no hay acuerdo.
+↓
+OrigenRed interviene.
+
+Todo.
+Dentro del mismo flujo.
+
+Historial de Reembolsos
+El usuario podrá ver.
+Monto.
+Fecha.
+Estado.
+Motivo.
+
+Nueva propuesta: Centro de Actividad
+Una pantalla con toda la actividad del usuario.
+Ejemplo.
+Hoy
+
+Agregaste
+
+2 favoritos
+
+--------------
+
+Ayer
+
+Compraste
+
+Auriculares
+
+--------------
+
+Hace 3 días
+
+Recibiste
+
+Campera
+Muy útil.
+
+Nueva propuesta: Listas
+No solamente favoritos.
+También.
+Listas personalizadas.
+Ejemplo.
+Regalos
+
+--------------
+
+Para el negocio
+
+--------------
+
+Hogar
+
+--------------
+
+Pendientes
+Esto hace que OrigenRed sea mucho más útil.
+
+Nueva propuesta: Compartir Carrito
+Un usuario puede compartir.
+Todo su carrito.
+Con otra persona.
+Mediante un enlace.
+Ideal.
+Para familias.
+Empresas.
+Regalos.
+
+Nueva propuesta: Recordatorios
+El usuario puede marcar.
+Recordarme comprar nuevamente
+Ejemplo.
+Alimento para mascotas.
+Cada.
+30 días.
+No realiza la compra automáticamente.
+Solo recuerda.
+
+Nueva propuesta: Comparador
+Desde favoritos.
+Elegir.
+Hasta.
+4 productos.
+Y compararlos.
+Precio.
+Características.
+Envío.
+Tiempo.
+Vendedor.
+
+Nueva propuesta: Centro de Garantías
+Todas las garantías.
+En un mismo lugar.
+Con fechas.
+Y vencimientos.
+Si el vendedor ofrece garantía.
+
+Nueva propuesta: Programa de Confianza
+(No es un programa de puntos).
+Es un indicador.
+Que refleja.
+La buena conducta.
+Del comprador.
+Ejemplo.
+No abusar de devoluciones.
+No generar reclamos falsos.
+Pagos exitosos.
+Esto puede ayudar al sistema antifraude y a resolver disputas, pero no debe limitar derechos del comprador. Es una herramienta interna para mejorar la calidad de la comunidad.
+
+Accesibilidad
+Todo el panel.
+Funciona.
+Con teclado.
+Lectores de pantalla.
+Contraste adecuado.
+Tipografía escalable.
+
+Rendimiento
+Objetivo.
+Toda pantalla.
+Debe cargar.
+En menos de.
+2 segundos.
+Ideal.
+1 segundo.
+
+Preparado para App
+Todo este panel.
+Debe ser exactamente el mismo.
+En React Native.
+Solo cambia.
+La navegación.
+No la lógica.
+
+Una propuesta importante para OrigenRed
+Quiero agregar un concepto propio:
+"Centro Personal"
+En lugar de que el usuario tenga pantallas aisladas, todo gira alrededor de un único panel.
+Desde ahí puede:
+comprar, 
+seguir pedidos, 
+hablar con vendedores, 
+gestionar reclamos, 
+administrar direcciones, 
+revisar notificaciones, 
+guardar favoritos, 
+comparar productos, 
+repetir compras. 
+Esto hace que la experiencia sea mucho más coherente y sencilla.
+
+Fin del Capítulo 11
+Con este capítulo queda completamente diseñada la experiencia del comprador dentro de OrigenRed.
+
+Próximo capítulo: Panel del Vendedor
+Y, sinceramente, creo que va a ser uno de los capítulos más extensos de toda la documentación.
+Ahí vamos a diseñar el verdadero "ERP liviano" de OrigenRed:
+dashboard del vendedor, 
+publicación de productos, 
+gestión de stock, 
+ventas, 
+envíos, 
+estadísticas, 
+chat, 
+reputación, 
+configuración de Mercado Pago, 
+servicios de OrigenRed (sitio web, Meta Ads, Google Analytics, etc.), 
+y muchas herramientas que van a hacer que vender en OrigenRed sea mucho más cómodo que en otros marketplaces. Creo que ese panel puede convertirse en uno de los mayores motivos para que los vendedores elijan tu plataforma. 
+Top of Form
+
+Bottom of Form
+Hay una frase muy conocida en el mundo de los marketplaces:
+"Si el vendedor gana dinero, el marketplace gana dinero."
+Por eso el panel del vendedor no puede ser simplemente un lugar para publicar productos. Tiene que convertirse en una herramienta que le ayude a vender más, administrar mejor y crecer dentro del ecosistema.
+En mi opinión, este será uno de los puntos que más diferencie a OrigenRed de otros marketplaces.
+
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN II
+Capítulo 12 — Panel del Vendedor
+
+Objetivo
+El panel del vendedor será un Centro de Operaciones.
+Desde aquí administrará todo su negocio dentro de OrigenRed.
+No queremos que tenga que entrar a diez pantallas distintas.
+Todo debe estar organizado y ser fácil de entender.
+
+Filosofía
+Un vendedor debe poder:
+publicar un producto en menos de 2 minutos, 
+encontrar una venta en menos de 10 segundos, 
+responder un comprador inmediatamente, 
+saber cuánto vendió hoy apenas abre el panel. 
+
+Dashboard Principal
+Al ingresar verá un resumen.
+Hola Juan 👋
+
+Bienvenido nuevamente.
+Debajo aparecerán tarjetas.
+
+Ventas del día
+Monto vendido.
+
+Ventas del mes
+Monto total.
+
+Productos activos
+Cantidad.
+
+Productos sin stock
+Cantidad.
+
+Pedidos pendientes
+Cantidad.
+
+Mensajes sin responder
+Cantidad.
+
+Reputación
+Puntaje.
+
+Tiempo promedio de despacho
+Ejemplo.
+18 horas
+
+Nivel logístico
+Ejemplo.
+Excelente
+
+Todo esto debe verse sin hacer clic en ningún lado.
+
+Menú
+Dashboard
+Productos
+Ventas
+Pedidos
+Envíos
+Mensajes
+Estadísticas
+Mercado Pago
+Configuración
+Servicios OrigenRed
+Ayuda
+
+Productos
+Será uno de los módulos más utilizados.
+
+Vista
+Tabla.
+o
+Tarjetas.
+El vendedor elige.
+
+Cada producto mostrará.
+Imagen.
+Título.
+Precio.
+Stock.
+Estado.
+Ventas.
+Visitas.
+Conversión.
+Botón editar.
+
+Buscador
+Buscar por.
+Nombre.
+SKU.
+Categoría.
+Marca.
+Estado.
+
+Acciones Masivas
+Muy importante.
+Seleccionar.
+20 productos.
+Y ejecutar.
+Editar precio.
+Cambiar categoría.
+Pausar.
+Eliminar.
+Cambiar stock.
+Duplicar.
+
+Esto ahorra muchísimo tiempo.
+
+Publicar Producto
+El asistente tendrá pasos.
+No un formulario eterno.
+
+Paso 1
+Información.
+Título.
+Descripción.
+Categoría.
+Marca.
+
+Paso 2
+Fotos.
+Video.
+
+Paso 3
+Precio.
+Stock.
+Variantes.
+
+Paso 4
+Logística.
+Peso.
+Alto.
+Ancho.
+Largo.
+Origen.
+Métodos de envío.
+
+Paso 5
+Vista previa.
+Publicar.
+
+Calidad de Publicación
+Mientras completa.
+Aparece un indicador.
+Calidad
+
+82%
+Ejemplo.
+Agregar más fotos.
+
+Descripción corta.
+
+Peso faltante.
+
+Video agregado.
+
+Este indicador impactará en OrigenRank.
+
+Límite de Publicaciones
+Como definimos.
+Máximo.
+100 publicaciones.
+Cuando llega.
+Mostrar.
+Llegaste al límite de publicaciones.
+
+Podés eliminar publicaciones antiguas
+o contratar tu sitio web con OrigenRed.
+Nunca bloquear abruptamente.
+
+Ventas
+Cada venta.
+Será una tarjeta.
+Con.
+Número.
+Fecha.
+Comprador.
+Estado.
+Importe.
+Comisión.
+Envío.
+Chat.
+
+Detalle
+Dentro.
+Productos.
+Datos comprador.
+Método envío.
+Estado.
+Seguimiento.
+Mensajes.
+Botón despachar.
+Botón cancelar.
+
+Chat
+Cada venta.
+Tiene.
+Su propia conversación.
+Nunca mezclar clientes.
+
+Envíos
+Panel específico.
+Con.
+Pedidos pendientes.
+Despachados.
+Entregados.
+Problemas.
+
+Si usa EnvíoPack.
+Podrá generar etiquetas automáticamente cuando esa integración esté disponible.
+
+Gestión de Stock
+Muy importante.
+El vendedor puede.
+Editar.
+Stock individual.
+Por variante.
+O de forma masiva.
+
+Alertas
+Ejemplo.
+10 productos con bajo stock.
+
+Estadísticas
+Este módulo debe ser uno de los diferenciales.
+No mostrar solo ventas.
+Mostrar negocio.
+
+Indicadores
+Ventas.
+Ganancias brutas.
+Comisión pagada.
+Productos vendidos.
+Visitas.
+Conversión.
+Favoritos.
+Tiempo respuesta.
+Reputación.
+
+Gráficos
+Ventas.
+Últimos.
+7 días.
+30 días.
+12 meses.
+
+Productos más vendidos.
+
+Productos menos vistos.
+
+Categorías más vendidas.
+
+Horarios con más ventas.
+
+Provincias donde más vende.
+
+Ticket promedio.
+
+Conversión.
+
+Todo visual.
+
+Mercado Pago
+Una pantalla exclusiva.
+Estado.
+Cuenta vinculada.
+Correo.
+Última sincronización.
+Botón.
+Desvincular cuenta.
+
+También.
+Botón.
+Actualizar permisos.
+
+Configuración
+Datos comerciales.
+Logo.
+Nombre.
+Descripción.
+Políticas.
+Dirección.
+Sucursales.
+Horarios.
+
+Servicios de OrigenRed
+Este módulo me parece muy importante para tu negocio.
+Será un lugar donde el vendedor descubre servicios que pueden ayudarlo a crecer.
+No será invasivo.
+
+Crear mi página web
+Explicación breve:
+"¿Querés una tienda profesional con tu propio dominio, diseño personalizado y optimizada para vender? Nosotros la desarrollamos para vos."
+Botón:
+Solicitar asesoramiento
+
+Posicionamiento en Google
+Descripción:
+"Mejorá tu presencia en Google para que más clientes encuentren tu negocio."
+Botón.
+Solicitar.
+
+Meta Ads
+Descripción.
+"Creamos campañas profesionales para Facebook e Instagram."
+Botón.
+Solicitar.
+
+Google Analytics
+Descripción.
+"Conocé el comportamiento de tus clientes y tomá mejores decisiones."
+
+SEO
+Descripción.
+"Optimizamos tu sitio para aparecer mejor posicionado en los buscadores."
+
+Integraciones
+En el futuro.
+WhatsApp Business.
+Google Business Profile.
+TikTok.
+Instagram Shopping.
+
+Centro de Aprendizaje (Nueva propuesta)
+Quiero agregar algo que creo que puede marcar una diferencia enorme.
+Una sección con contenido educativo.
+Ejemplos.
+Cómo sacar mejores fotos. 
+Cómo escribir una buena descripción. 
+Cómo embalar correctamente. 
+Cómo reducir devoluciones. 
+Cómo responder clientes. 
+Cómo vender más. 
+Esto ayuda a que los vendedores mejoren, y si ellos venden más, OrigenRed también.
+
+Salud de la Cuenta
+Un indicador general.
+Ejemplo.
+Salud de tu cuenta
+
+92%
+Basado en:
+publicaciones completas, 
+despacho a tiempo, 
+reclamos, 
+cancelaciones, 
+stock actualizado, 
+calidad de las descripciones. 
+Este indicador no reemplaza la reputación, sino que sirve como guía para el vendedor.
+
+Recomendaciones Inteligentes
+El panel puede mostrar sugerencias automáticas como:
+"Tus productos con video convierten un 18% más." 
+"Tenés 5 publicaciones sin peso cargado." 
+"Responder más rápido mejora tu posicionamiento." 
+"Este producto tiene muchas visitas y pocas ventas. Revisá el precio." 
+No son alertas obligatorias, sino consejos prácticos.
+
+Centro de Notificaciones
+Todas las novedades del vendedor en un solo lugar.
+Ejemplos:
+Nueva venta. 
+Nuevo mensaje. 
+Producto denunciado. 
+Publicación pausada. 
+Reclamo abierto. 
+Actualización de políticas. 
+Recomendaciones del sistema. 
+Con filtros por tipo y estado (leídas/no leídas).
+
+Preparado para Escalar
+Este panel debe estar diseñado para soportar:
+vendedores con 5 productos, 
+vendedores con 100 productos, 
+empresas con miles de ventas mensuales (si en el futuro ampliás el límite o incorporás planes). 
+La arquitectura no debe asumir nunca que el volumen será pequeño.
+
+Mi propuesta más importante para este panel
+No quiero que el vendedor sienta que OrigenRed es solamente un lugar donde publica productos.
+Quiero que sienta que es una herramienta que lo ayuda a hacer crecer su negocio.
+Esa diferencia cambia completamente la relación con la plataforma.
+En lugar de pensar:
+"Pago una comisión."
+Va a pensar:
+"Gracias a OrigenRed vendo más."
+Y eso hace que el 5% de comisión tenga mucho más valor percibido.
+
+Fin del Capítulo 12
+Con este capítulo queda completamente diseñado el panel del vendedor.
+Ya definimos:
+publicación de productos, 
+administración, 
+ventas, 
+stock, 
+envíos, 
+estadísticas, 
+integración con Mercado Pago, 
+servicios adicionales, 
+herramientas de crecimiento. 
+
+Próximo capítulo: Panel de Administración (SuperAdmin)
+Y te adelanto algo: este no será un panel de administración común.
+Va a ser un verdadero centro de comando desde donde vas a poder controlar absolutamente todo OrigenRed:
+usuarios, 
+vendedores, 
+publicaciones, 
+pagos, 
+comisiones, 
+denuncias, 
+chats, 
+algoritmos, 
+configuración, 
+métricas, 
+auditorías, 
+seguridad, 
+marketing, 
+soporte, 
+y herramientas exclusivas para que puedas administrar una plataforma con miles de vendedores sin perder el control. En mi opinión, será el capítulo más grande de toda la documentación.
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN II
+Capítulo 13 — Panel del Administrador (SuperAdmin)
+
+Filosofía
+El administrador debe poder controlar absolutamente todo lo que sucede en OrigenRed desde un único lugar.
+Nunca deberá abrir la base de datos para resolver un problema.
+Nunca deberá modificar datos manualmente desde MongoDB.
+Todo deberá existir dentro del panel.
+
+Objetivos
+El panel debe permitir:
+administrar usuarios, 
+administrar vendedores, 
+administrar publicaciones, 
+administrar pedidos, 
+administrar denuncias, 
+administrar chats, 
+administrar servicios, 
+administrar la plataforma, 
+administrar algoritmos, 
+administrar estadísticas, 
+administrar integraciones. 
+
+Dashboard Principal
+Cuando ingreses vas a ver un resumen ejecutivo.
+
+Usuarios registrados
+158.420
+
+Usuarios conectados ahora
+348
+
+Vendedores activos
+1.285
+
+Productos publicados
+94.532
+
+Productos pendientes de revisión
+12
+
+Ventas del día
+$12.450.000
+
+Comisión generada hoy
+$622.500
+
+Pedidos pendientes
+Cantidad.
+
+Reclamos abiertos
+Cantidad.
+
+Chats activos
+Cantidad.
+
+Productos denunciados
+Cantidad.
+
+Todo en tiempo real.
+
+Dashboard Modular
+Todos los widgets.
+Podrán ocultarse.
+Moverse.
+Reordenarse.
+Redimensionarse.
+Como un escritorio.
+
+Menú Principal
+Dashboard
+Usuarios
+Vendedores
+Productos
+Pedidos
+Pagos
+Logística
+Denuncias
+Chats
+Servicios
+Marketing
+Estadísticas
+Configuraciones
+Auditoría
+Seguridad
+Sistema
+
+Usuarios
+Uno de los módulos más importantes.
+
+Buscador Inteligente
+Podrás buscar por.
+Nombre.
+Apellido.
+Correo.
+ID.
+Teléfono.
+Usuario.
+Provincia.
+Estado.
+Rol.
+
+Ejemplo.
+augusto
+↓
+Resultados inmediatos.
+
+Ficha del Usuario
+Foto.
+Nombre.
+Correo.
+Estado.
+Rol.
+Fecha registro.
+Último acceso.
+IP reciente.
+Dispositivos.
+Cantidad compras.
+Cantidad ventas.
+Denuncias.
+Chats.
+Pedidos.
+
+Todo en una sola pantalla.
+
+Acciones
+Desde la ficha.
+Podrás.
+Editar.
+Suspender.
+Bloquear.
+Eliminar.
+Cambiar rol.
+Enviar mensaje.
+Ver actividad.
+Ver auditoría.
+
+Nunca necesitarás acceder a MongoDB.
+
+Gestión de Roles
+Muy importante.
+No quiero un sistema rígido.
+
+Existirá.
+Comprador
+
+Vendedor
+
+Administrador
+
+SuperAdministrador
+Pero internamente.
+Los permisos.
+Serán independientes.
+Ejemplo.
+Puede editar productos
+
+Sí
+
+------------
+
+Puede suspender usuarios
+
+No
+
+------------
+
+Puede modificar algoritmo
+
+Sí
+Esto deja preparado el sistema para futuros empleados.
+
+Gestión de Vendedores
+Pantalla exclusiva.
+Con filtros.
+
+Estado.
+Activo.
+Suspendido.
+Pendiente.
+Bloqueado.
+
+También.
+Cantidad de ventas.
+Facturación.
+Tiempo respuesta.
+Nivel logístico.
+Reputación.
+Comisión generada.
+
+Aprobar Vendedor
+Como definimos.
+Todo vendedor.
+Debe ser aprobado por vos.
+
+Flujo.
+Solicitud
+
+↓
+
+Revisión
+
+↓
+
+Aprobado
+
+↓
+
+Rol vendedor
+
+↓
+Puede publicar
+
+Suspensión
+No eliminar.
+Suspender.
+Con motivo.
+Ejemplo.
+Incumplimiento de políticas
+
+El sistema registra.
+Quién suspendió.
+Cuándo.
+Y por qué.
+
+Productos
+Pantalla enorme.
+Con filtros.
+
+Buscar por.
+ID.
+Título.
+Vendedor.
+Categoría.
+Estado.
+Provincia.
+Denuncias.
+Ventas.
+
+Acciones.
+Editar.
+Pausar.
+Ocultar.
+Eliminar.
+Duplicar.
+Mover categoría.
+Cambiar vendedor.
+
+Publicaciones Sensibles
+Como definimos.
+Si el sistema detecta.
+Palabras.
+Categorías.
+Imágenes.
+O comportamientos sospechosos.
+↓
+Estado.
+Pendiente de revisión
+Hasta que el administrador decida.
+
+Denuncias
+Uno de los módulos más importantes.
+Cada denuncia.
+Tendrá.
+Motivo.
+Usuario.
+Producto.
+Fecha.
+Estado.
+Prioridad.
+
+Botones.
+Resolver.
+Responder.
+Ocultar.
+Eliminar.
+Suspender vendedor.
+Solicitar información.
+
+Sistema de Prioridades
+Nueva propuesta.
+No todas las denuncias.
+Son iguales.
+
+Prioridad Baja
+Error descripción.
+
+Media
+Producto duplicado.
+
+Alta
+Producto prohibido.
+
+Crítica
+Fraude.
+Estafa.
+Contenido ilegal.
+
+Esto ordena automáticamente tu trabajo.
+
+Centro de Moderación
+Otra idea importante.
+Todas las publicaciones.
+Pendientes.
+En una cola.
+Con navegación rápida.
+
+Podrás.
+Aprobar.
+Rechazar.
+Editar.
+Suspender.
+En segundos.
+
+Pedidos
+Podrás buscar.
+Por.
+Número.
+Comprador.
+Vendedor.
+Estado.
+Monto.
+Fecha.
+
+Ver.
+Todo.
+Incluso.
+Chats.
+Pago.
+Seguimiento.
+Historial.
+
+Pagos
+Pantalla exclusiva.
+Con.
+Estado.
+Monto.
+Comisión.
+Webhook.
+Mercado Pago.
+Logs.
+
+Si algo falla.
+Lo ves inmediatamente.
+
+Comisión
+Nueva propuesta.
+Dashboard financiero.
+Con.
+Comisiones.
+Por día.
+Semana.
+Mes.
+Año.
+
+Top vendedores.
+Mayor comisión.
+Menor comisión.
+
+Esto ayuda muchísimo.
+A entender el negocio.
+
+Logística
+Podrás ver.
+Todos los envíos.
+En un mapa.
+(Preparado para una futura integración).
+
+Filtros.
+Despachados.
+Demorados.
+Entregados.
+Problemas.
+
+Centro de Chat
+Esta será una herramienta muy poderosa.
+Vos podrás abrir cualquier conversación.
+Sin que los usuarios sepan que estás observando.
+Modo supervisor.
+No participás.
+Solo leés.
+
+Si necesitás intervenir.
+Presionás.
+Entrar al chat
+Y automáticamente aparecés identificado como:
+Soporte OrigenRed.
+Nunca como vendedor.
+
+Mensajes Directos
+Como pediste.
+Desde el panel.
+Podrás seleccionar.
+Uno.
+Diez.
+Mil usuarios.
+Y enviarles.
+Un mensaje.
+Ejemplo.
+Mantenimiento programado.
+
+Mañana de 02:00 a 03:00.
+
+También.
+Solo vendedores.
+Solo compradores.
+Solo suspendidos.
+Solo una provincia.
+Etc.
+
+Centro de Servicios
+Muy importante para tu negocio.
+Vas a poder administrar.
+Quién contrató.
+Página Web.
+SEO.
+Meta Ads.
+Google Analytics.
+Google Search Console.
+Marketing.
+
+Cada cliente.
+Tendrá.
+Estado.
+Al día
+
+--------
+
+Próximo vencimiento
+
+--------
+
+En mora
+
+--------
+
+Suspendido
+Tal como habías pedido.
+
+CRM Integrado (Nueva propuesta)
+Creo que este módulo puede darte muchísimo valor.
+Cada vendedor tendrá una ficha comercial.
+No técnica.
+Sino comercial.
+Ejemplo.
+Empresa
+
+ABC Deportes
+
+---------
+
+Último contacto
+
+15/08
+
+---------
+
+Interesado
+
+Meta Ads
+
+---------
+
+Tiene sitio web
+
+Sí
+
+---------
+
+Pendiente
+
+Renovación SEO
+Esto transforma OrigenRed en una herramienta para vender tus propios servicios.
+
+Configuración Global
+Todo lo importante.
+Editable.
+Sin tocar código.
+
+Ejemplos.
+Comisión.
+5%
+
+Máximo publicaciones.
+100
+
+Tiempo reserva stock.
+30 minutos
+
+Bonificación productos nuevos.
+15 días
+
+Variables de OrigenRank.
+Pesos.
+Todo.
+
+Variables del Marketplace
+Acá quiero hacer una propuesta que considero muy importante.
+Crear un módulo llamado:
+Laboratorio
+Desde ahí podrás activar o desactivar funcionalidades sin desplegar una nueva versión.
+Ejemplos:
+Activar videos en publicaciones. 
+Habilitar favoritos por listas. 
+Cambiar el porcentaje del "Modo Descubrimiento". 
+Activar una nueva categoría. 
+Mostrar una promoción temporal. 
+Probar un nuevo algoritmo de búsqueda. 
+Esto te permite experimentar con la plataforma de forma controlada.
+
+Auditoría
+Absolutamente todo queda registrado.
+Ejemplos:
+Administrador Augusto
+
+Suspendió vendedor
+
+15:38
+
+IP
+XXX
+
+Administrador
+
+Modificó comisión
+
+5%
+
+↓
+
+6%
+
+Hora
+
+Usuario
+
+IP
+
+Nunca debe existir una acción administrativa sin registro.
+
+Seguridad
+Doble autenticación obligatoria para administradores.
+Registro de dispositivos.
+Historial de sesiones.
+Alertas por inicio de sesión sospechoso.
+Posibilidad de cerrar sesiones remotamente.
+
+Backups
+Desde el panel.
+Podrás ver:
+último backup exitoso, 
+tamaño, 
+fecha, 
+estado. 
+Y disparar un backup manual si fuera necesario.
+
+Salud del Sistema
+Dashboard técnico.
+Uso de CPU.
+Uso de memoria.
+Base de datos.
+Almacenamiento en Cloudflare R2.
+Cantidad de imágenes.
+Tiempo promedio de respuesta de la API.
+Estado de Mercado Pago.
+Estado de EnvíoPack.
+Estado de notificaciones Push.
+Todo centralizado.
+
+Centro de Alertas
+Si ocurre algo importante.
+No quiero que tengas que descubrirlo.
+El sistema debe avisarte.
+Ejemplos:
+Mercado Pago dejó de responder. 
+EnvíoPack presenta errores. 
+Hay más de 50 denuncias en una hora. 
+Un vendedor tiene un pico anormal de cancelaciones. 
+El almacenamiento supera el 80%. 
+Hay intentos repetidos de acceso al panel. 
+
+Mi propuesta más importante para el SuperAdmin
+No diseñaría este panel como un simple CRUD gigante.
+Lo diseñaría como un Centro de Comando.
+Que cuando abras OrigenRed cada mañana, en menos de un minuto puedas saber:
+cómo está la empresa, 
+cuánto facturó, 
+qué problemas existen, 
+qué vendedores necesitan atención, 
+qué servicios podés ofrecer, 
+qué riesgos detectó el sistema. 
+Es decir, que el panel te permita dirigir el negocio, no solamente administrarlo.
+
+Fin del Capítulo 13
+Con este capítulo queda diseñada la operación completa de OrigenRed desde tu punto de vista como propietario y administrador.
+Ya no hablamos solo de un marketplace: estamos definiendo una plataforma preparada para convertirse en una empresa tecnológica escalable.
+
+Creo que el siguiente capítulo merece un tratamiento especial.
+Hasta ahora diseñamos la plataforma.
+Ahora quiero diseñar la identidad de OrigenRed como empresa:
+onboarding, 
+primera experiencia, 
+branding, 
+estrategia de crecimiento, 
+gamificación, 
+retención de usuarios, 
+viralización, 
+programa de referidos, 
+reputación, 
+confianza, 
+y todos los pequeños detalles que hacen que una plataforma deje de ser "una web" y se convierta en una marca que la gente recuerde y recomiende. 
+En mi opinión, ese capítulo puede ser el que transforme a OrigenRed en un producto con identidad propia, más allá de la tecnología.
+Hasta ahora diseñamos una excelente plataforma.
+Ahora vamos a diseñar por qué la gente va a elegir OrigenRed y no otra.
+Una plataforma puede tener mejor código, mejor infraestructura y mejor UI, pero si no genera una conexión con el usuario, nunca llega a ser una marca.
+Con este capítulo quiero empezar a construir esa marca.
+
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN II
+Capítulo 14 — Branding, Identidad y Crecimiento
+
+Filosofía
+OrigenRed no debe vender productos.
+Debe vender oportunidades.
+La misión de OrigenRed es:
+Conectar personas, emprendedores y empresas para que puedan crecer juntas mediante una plataforma simple, transparente y moderna.
+La venta es una consecuencia.
+No el objetivo.
+
+Valores
+Toda decisión futura deberá respetar estos principios.
+Transparencia
+El usuario debe entender siempre qué está ocurriendo.
+No ocultar comisiones.
+No ocultar costos.
+No utilizar publicidad engañosa.
+
+Igualdad de oportunidades
+Un vendedor nuevo puede competir con uno grande.
+No existe prioridad por pagar.
+La prioridad la determina la calidad.
+
+Confianza
+Toda interacción debe generar seguridad.
+Pagos.
+Chats.
+Perfiles.
+Seguimientos.
+Todo.
+
+Simplicidad
+Menos pasos.
+Menos formularios.
+Menos pantallas.
+Más productividad.
+
+Escalabilidad
+Toda decisión debe permitir crecer.
+No diseñar para 100 usuarios.
+Diseñar para millones.
+
+Eslogan (propuesta)
+No es definitivo, pero algunas ideas:
+Donde nacen los negocios. 
+El origen de tus ventas. 
+Conectando oportunidades. 
+Vendé sin límites. 
+Tu negocio empieza acá. 
+Todo empieza en OrigenRed. 
+Mi favorita es:
+Todo empieza en OrigenRed.
+Porque sirve tanto para compradores como para vendedores.
+
+Onboarding del Comprador
+Cuando un usuario entra por primera vez.
+No debe encontrarse con una pantalla vacía.
+
+Paso 1
+Mensaje de bienvenida.
+Explicando muy brevemente.
+Qué es OrigenRed.
+
+Paso 2
+Seleccionar intereses.
+Ejemplo.
+Tecnología.
+Moda.
+Hogar.
+Deportes.
+Mascotas.
+Libros.
+Herramientas.
+Vehículos.
+
+Esto mejora las recomendaciones iniciales.
+
+Paso 3
+Ingresar Código Postal.
+No dirección.
+Solo CP.
+Así.
+La Home.
+Ya aparece.
+Personalizada.
+
+Paso 4
+Listo.
+Ya puede comprar.
+
+Onboarding del Vendedor
+Cuando un usuario aprobado por vos obtiene el rol de vendedor.
+Se activa un recorrido guiado.
+
+Paso 1
+Completar datos comerciales.
+
+Paso 2
+Conectar Mercado Pago.
+
+Paso 3
+Configurar envíos.
+
+Paso 4
+Agregar logo.
+
+Paso 5
+Publicar primer producto.
+
+Paso 6
+Verificar publicación.
+
+Todo acompañado por un indicador de progreso.
+Ejemplo:
+Perfil del vendedor
+███████░░░
+70%
+
+Perfil Completo
+Nueva idea.
+Cada vendedor tendrá un porcentaje.
+Ejemplo.
+Perfil
+
+95%
+Basado en.
+Logo.
+Descripción.
+Mercado Pago.
+Envíos.
+Productos.
+Fotos.
+Políticas.
+
+Esto motiva a completar la información.
+
+Primer Producto
+Cuando publica el primero.
+Mostrar.
+🎉
+
+Felicitaciones.
+
+Ya formás parte de OrigenRed.
+Este tipo de pequeños detalles generan pertenencia.
+
+Primera Venta
+Otra animación.
+🎉
+
+¡Realizaste tu primera venta!
+Y mostrar.
+Consejos.
+Sobre cómo continuar.
+
+Hitos
+Nueva propuesta.
+El sistema celebra.
+10 ventas.
+50 ventas.
+100 ventas.
+500 ventas.
+1000 ventas.
+No con premios.
+Con reconocimiento.
+
+Logros
+No quiero convertirlo en un juego.
+Pero sí en una experiencia agradable.
+Ejemplo.
+✔ Primer producto.
+
+✔ Primera venta.
+
+✔ Primer cliente recurrente.
+
+✔ 100 ventas.
+
+✔ Excelente reputación.
+
+✔ 1 año en OrigenRed.
+
+Programa de Referidos
+Esta idea me parece muy buena para crecer.
+Cada vendedor tendrá.
+Un enlace.
+Ejemplo.
+origenred.com/r/augustomoran
+Si un nuevo vendedor.
+Se registra.
+Y vos luego lo aprobás.
+Queda asociado.
+
+Más adelante.
+Podrás decidir.
+Si otorgás beneficios.
+No es obligatorio.
+Pero la arquitectura quedará preparada.
+
+Compartir Publicaciones
+Cada producto.
+Debe generar automáticamente.
+Enlaces para compartir.
+WhatsApp.
+Facebook.
+Instagram.
+X.
+Telegram.
+Email.
+Con Open Graph configurado.
+
+QR
+Cada publicación.
+Puede generar.
+Un QR.
+Ideal.
+Para locales físicos.
+
+Tiendas Favoritas
+Como definimos.
+Los usuarios.
+Podrán seguir vendedores.
+No habrá perfiles tipo red social.
+Solo.
+Favoritos.
+
+Notificaciones Inteligentes
+Ejemplos.
+Tu producto favorito bajó de precio.
+
+Volvió el stock.
+
+El vendedor respondió.
+
+Tu envío ya salió.
+
+Nunca enviar notificaciones innecesarias.
+
+Emails
+Todos los correos.
+Mantendrán la misma identidad visual.
+Colores.
+Tipografía.
+Logo.
+Botones.
+Todo consistente.
+
+Push Notifications
+Aplicación.
+React Native.
+Notificaciones.
+Para.
+Ventas.
+Compras.
+Mensajes.
+Envíos.
+Actualizaciones importantes.
+
+Centro de Novedades
+Nueva idea.
+Dentro de OrigenRed.
+Existirá una sección.
+¿Qué hay de nuevo?
+Cada vez que agregues una función.
+La anunciás.
+Con imágenes.
+Y explicación.
+
+Mantenimiento
+Si la plataforma entra en mantenimiento.
+El usuario.
+Debe saber.
+Qué sucede.
+Y cuándo volverá.
+Nunca mostrar.
+Error 500.
+
+Landing para Servicios
+Como hablamos.
+Existirá una sección.
+Servicios para Vendedores.
+Con muy buen diseño.
+Pero sin ser invasiva.
+
+Servicios.
+Diseño Web.
+SEO.
+Google Search Console.
+Google Analytics.
+Meta Ads.
+Optimización.
+Integraciones.
+Consultoría.
+
+Todo.
+Con botones.
+Solicitar asesoramiento
+Que abrirán un chat con vos.
+No un formulario interminable.
+
+Comunidad (Preparado)
+No se implementará al inicio.
+Pero la arquitectura permitirá.
+Más adelante.
+Agregar.
+Foros.
+Consejos.
+Preguntas.
+Respuestas.
+Eventos.
+
+Blog
+Muy importante.
+No por contenido.
+Por SEO.
+Publicar.
+Guías.
+Novedades.
+Tutoriales.
+Historias de vendedores.
+Consejos.
+Esto genera tráfico orgánico.
+
+Google
+Toda la plataforma.
+Debe estar preparada para.
+Google Search Console.
+Google Analytics.
+Open Graph.
+Sitemap.
+Robots.
+Canonical.
+Datos estructurados.
+Rich Snippets.
+Todo.
+Desde el inicio.
+
+Rendimiento
+Objetivos.
+Lighthouse.
+95+
+SEO.
+95+
+Performance.
+95+
+Best Practices.
+
+Accessibility.
+
+
+Nueva propuesta: Centro de Ideas
+Esto creo que puede ser muy valioso.
+Dentro del perfil.
+Existirá.
+Sugerencias
+Los usuarios.
+Podrán enviar ideas.
+Vos.
+Las verás.
+Las aprobás.
+Las rechazás.
+O.
+Las marcás.
+Como.
+En desarrollo.
+Esto hace que la comunidad sienta que participa en la evolución de la plataforma.
+
+Nueva propuesta: Roadmap Público
+Podrías tener una página pública donde se muestren funciones:
+Planeadas. 
+En desarrollo. 
+Lanzadas. 
+Con esto generás transparencia y expectativa.
+
+Nueva propuesta: Estado de la Plataforma
+Una página pública.
+Donde cualquier persona pueda ver:
+API operativa. 
+Mercado Pago operativo. 
+Envíos operativos. 
+Chat operativo. 
+Notificaciones operativas. 
+Esto transmite mucha confianza, especialmente para vendedores.
+
+Nueva propuesta: Academia OrigenRed
+Esta creo que puede convertirse en un activo enorme.
+Una sección con cursos gratuitos para vendedores.
+Por ejemplo:
+Cómo vender más. 
+Cómo sacar fotos. 
+Cómo escribir títulos. 
+Cómo preparar paquetes. 
+Cómo reducir devoluciones. 
+Cómo usar Meta Ads. 
+Cómo aprovechar Google. 
+Cómo crear una marca. 
+Y, cuando un vendedor quiera dar el siguiente paso, ahí mismo podrá contratar tus servicios profesionales.
+Esto genera un círculo virtuoso:
+ayudás al vendedor, 
+mejora la calidad del marketplace, 
+aumentan las ventas, 
+aumentan tus oportunidades de negocio. 
+
+La idea que considero más importante de todo este capítulo
+Quiero que OrigenRed tenga una personalidad.
+Que cuando alguien diga:
+"Vendé por OrigenRed."
+No piense solamente:
+"Es otra página para publicar productos."
+Sino que piense:
+"Ahí me ayudan a crecer."
+Eso cambia completamente la percepción de la marca.
+No competís solo por precio o comisión.
+Competís por la experiencia que ofrecés.
+
+Fin del Capítulo 14
+Con este capítulo ya dejamos de hablar únicamente de software.
+Empezamos a diseñar una empresa tecnológica.
+Una marca.
+Un ecosistema.
+Y una visión de crecimiento.
+
+Mi propuesta para el siguiente volumen
+Hasta ahora definimos qué hace OrigenRed.
+El siguiente paso es definir cómo está construido.
+El Volumen III debería ser completamente técnico y convertirse en la guía para el desarrollo:
+Arquitectura monolítica modular. 
+Estructura completa de carpetas. 
+Modelo de base de datos MongoDB. 
+APIs REST. 
+Autenticación. 
+Permisos. 
+Eventos internos. 
+Integración con Mercado Pago. 
+Integración con EnvíoPack. 
+Cloudflare R2. 
+SEO. 
+React. 
+React Native con Expo. 
+Estrategia de despliegue. 
+Escalabilidad. 
+Seguridad. 
+Testing. 
+CI/CD. 
+Ese documento será, literalmente, el plano de ingeniería de OrigenRed. En mi opinión, será el volumen más técnico y el que permitirá convertir toda esta visión en una aplicación real y escalable.
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN III
+Arquitectura General
+
+Filosofía
+Toda decisión técnica debe responder una sola pregunta.
+¿Esto permitirá que OrigenRed pueda crecer diez veces sin tener que reescribirse?
+Si la respuesta es no.
+No entra.
+
+Stack Tecnológico
+Frontend Web
+React 19
+TypeScript
+Vite
+Redux Toolkit
+React Router
+React Query (TanStack Query)
+React Hook Form
+Zod
+Axios
+Framer Motion
+
+Mobile
+React Native
+Expo
+TypeScript
+Redux Toolkit
+React Query
+Expo Notifications
+Expo Secure Store
+Expo Location
+Expo Camera
+Expo Image Picker
+Expo Linking
+
+¿Por qué Expo?
+Porque nos permite publicar tanto en Android como en iPhone con una sola base de código, integrar notificaciones push, cámara, geolocalización y autenticación de forma mucho más rápida. Más adelante, si necesitás alguna API nativa muy específica, siempre podés salir del flujo administrado.
+
+Backend
+Node.js
+Express
+TypeScript
+
+¿Por qué Express y no NestJS?
+Porque ya tenés experiencia con Express.
+El proyecto va a crecer mucho.
+No necesitamos agregar complejidad innecesaria.
+Con una buena arquitectura.
+Express alcanza perfectamente.
+
+Base de Datos
+MongoDB
+Replica Set.
+Preparado.
+Para.
+Transacciones.
+
+Cache
+Redis.
+Desde el día uno.
+
+No solamente para sesiones.
+También.
+Productos.
+Búsquedas.
+Ranking.
+Notificaciones.
+Rate Limiting.
+Tokens temporales.
+
+Almacenamiento
+Cloudflare R2.
+No Cloudinary.
+¿Por qué?
+Porque vas a tener.
+Millones.
+De imágenes.
+Y videos.
+Cloudflare R2.
+Sale muchísimo más barato.
+Además.
+No cobra egreso.
+Lo cual es enorme.
+
+CDN
+Cloudflare.
+Todo.
+Pasará.
+Por Cloudflare.
+
+Imágenes.
+Videos.
+API.
+Cache.
+Firewall.
+Protección DDoS.
+
+Base de Datos de Búsquedas
+Acá quiero hacer una propuesta.
+No usar MongoDB.
+Para buscar productos.
+Usaría.
+Meilisearch.
+¿Por qué?
+Porque la diferencia es gigantesca.
+Mongo.
+Busca.
+Meilisearch.
+Encuentra.
+Con errores ortográficos.
+Con sinónimos.
+Con relevancia.
+Con velocidad.
+Con filtros.
+Con autocomplete.
+Y consume muy pocos recursos.
+En un marketplace esto marca una diferencia enorme.
+
+Cola de Procesos
+BullMQ.
+Con Redis.
+
+Todo.
+Lo pesado.
+Nunca debe ejecutarse.
+Durante una petición HTTP.
+
+Ejemplos.
+Enviar emails.
+Generar miniaturas.
+Procesar videos.
+Enviar Push.
+Actualizar estadísticas.
+Actualizar OrigenRank.
+Sincronizar Mercado Pago.
+Sincronizar EnvíoPack.
+
+Estructura del Proyecto
+No quiero una carpeta.
+controllers.
+models.
+routes.
+services.
+Eso funciona.
+En proyectos chicos.
+Este.
+No lo será.
+
+Quiero algo así.
+/apps
+    /web
+    /mobile
+    /admin
+/packages
+    /ui
+    /types
+    /utils
+/server
+    /modules
+Y dentro de modules.
+auth
+users
+vendors
+products
+categories
+cart
+orders
+payments
+shipping
+chat
+notifications
+search
+analytics
+moderation
+reports
+admin
+marketing
+services
+support
+reviews
+wishlist
+ranking
+uploads
+settings
+Cada uno.
+Independiente.
+
+Dentro de cada módulo
+Ejemplo.
+Products.
+products
+controllers
+services
+repositories
+validators
+routes
+schemas
+events
+workers
+dto
+types
+tests
+
+index.ts
+Todo encapsulado.
+
+Nunca.
+Un módulo.
+Debe conocer.
+Cómo funciona.
+Otro.
+
+Siempre.
+A través.
+De interfaces.
+
+Comunicación
+Quiero incorporar una arquitectura basada en eventos.
+Ejemplo.
+Pedido Pagado
+Genera.
+OrderPaidEvent
+Y automáticamente.
+Se disparan.
+Sin que Order conozca.
+Quién escucha.
+
+Ejemplo.
+Actualizar Stock
+
+Enviar Push
+
+Enviar Mail
+
+Crear Chat
+
+Actualizar Estadísticas
+
+Actualizar Ranking
+
+Registrar Auditoría
+Todos escuchan.
+Ese evento.
+
+Esto hace.
+El sistema.
+Muchísimo más desacoplado.
+
+Configuración
+Nunca.
+Hardcodear.
+Valores.
+Todo.
+En.
+/settings
+Editable.
+Desde.
+Panel Admin.
+
+Variables
+Ejemplo.
+commission
+ranking
+shipping
+payments
+notifications
+uploads
+security
+maintenance
+Todo configurable.
+
+API
+Nunca.
+Una sola.
+Gigante.
+
+Separada.
+Por módulos.
+/api/auth
+
+/api/products
+
+/api/orders
+/api/payments
+/api/chat
+/api/admin
+
+/api/vendors
+Muchísimo más ordenado.
+
+Versionado
+Desde el día uno.
+/api/v1
+Aunque exista.
+Una sola versión.
+El día que salga.
+La V2.
+No romperás.
+Nada.
+
+Documentación
+Swagger.
+OpenAPI.
+Automática.
+Toda.
+La API.
+Documentada.
+
+Validaciones
+Nunca confiar.
+En React.
+Todo.
+Se vuelve.
+A validar.
+En backend.
+Con Zod.
+
+Errores
+Respuesta única.
+Ejemplo.
+{
+  "success": false,
+  "error": {
+    "code": "PRODUCT_NOT_FOUND",
+    "message": "Producto inexistente"
+  }
+}
+Nunca mensajes distintos.
+
+Logs
+Pino.
+No console.log.
+Nunca.
+
+Los logs.
+Deben tener.
+Nivel.
+Request ID.
+Usuario.
+Tiempo.
+IP.
+Módulo.
+
+Seguridad
+Helmet.
+Rate Limit.
+CORS.
+CSRF (cuando corresponda).
+JWT.
+Refresh Token.
+Cookies HttpOnly.
+Rotación.
+Revocación.
+Todo.
+
+Autenticación
+Access Token.
+15 minutos.
+Refresh.
+30 días.
+Revocable.
+
+Subida de Archivos
+Nunca.
+Directamente.
+Al backend.
+El cliente solicita una URL firmada.
+Sube directamente a Cloudflare R2.
+Después notifica al backend.
+Eso reduce muchísimo la carga del servidor y mejora la velocidad.
+
+Arquitectura Mobile
+La app React Native no tendrá lógica propia.
+Consumirá exactamente la misma API que la web.
+Así mantenemos un solo backend y una única fuente de verdad para las reglas de negocio.
+
+UI Compartida
+Quiero proponerte algo muy importante.
+Crear un paquete interno llamado:
+/packages/ui
+Ahí vivirán:
+Botones. 
+Inputs. 
+Cards. 
+Tablas. 
+Modales. 
+Colores. 
+Tipografías. 
+Iconografía. 
+Componentes reutilizables. 
+La web, el panel de administración y parte de la app móvil compartirán el mismo lenguaje visual.
+Esto reduce muchísimo el mantenimiento.
+
+Diseño System: Origen Design System
+No diseñaría componentes "sueltos".
+Crearía un sistema de diseño propio.
+Con reglas claras para:
+Espaciados. 
+Bordes. 
+Elevaciones. 
+Sombras. 
+Estados. 
+Animaciones. 
+Colores. 
+Tipografía. 
+Iconos. 
+Formularios. 
+Esto hace que toda la plataforma se vea consistente y profesional.
+
+Mi recomendación más importante de este volumen
+No construyas OrigenRed como "una aplicación grande".
+Construí una plataforma compuesta por módulos independientes que comparten una visión común.
+Eso te va a permitir crecer muchísimo más rápido y con menos deuda técnica.
+
+Fin del Capítulo 1 — Arquitectura General
+Con este capítulo queda definida la base técnica sobre la que se apoyará todo el proyecto.
+Y quiero adelantarte algo: el próximo capítulo será uno de los más largos de todo el documento.
+Vamos a diseñar la base de datos completa.
+No solo las colecciones de MongoDB, sino también:
+relaciones lógicas, 
+índices, 
+estrategias de búsqueda, 
+auditoría, 
+versionado, 
+soft delete, 
+optimización, 
+eventos, 
+cache, 
+y cómo hacer que la plataforma siga respondiendo rápido incluso con millones de productos y usuarios. 
+Ese capítulo va a ser, literalmente, el plano estructural de OrigenRed.
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN III
+Capítulo 2 — Modelo de Datos (MongoDB)
+
+Filosofía
+Quiero establecer una regla que se aplicará en toda la plataforma.
+Cada colección representa un concepto de negocio.
+No una pantalla.
+No un formulario.
+No una API.
+Un concepto de negocio.
+Eso hace que el sistema sea muchísimo más limpio.
+
+Colecciones Principales
+No vamos a tener solamente Users y Products.
+Vamos a separar correctamente cada dominio.
+La propuesta es esta:
+users
+roles
+permissions
+vendors
+products
+productVariants
+productImages
+categories
+brands
+orders
+orderItems
+payments
+paymentEvents
+shipments
+shipmentEvents
+carts
+wishlist
+addresses
+conversations
+messages
+notifications
+reports
+moderationQueue
+reviews
+analyticsEvents
+searchIndexes
+services
+commissions
+settings
+auditLogs
+systemLogs
+featureFlags
+pushTokens
+
+sessions
+Esto parece mucho.
+Pero en realidad cada colección tiene una única responsabilidad.
+
+users
+Contendrá solamente datos del usuario.
+Nunca información comercial.
+Nunca productos.
+Nunca estadísticas.
+Ejemplo.
+_id
+
+email
+
+username
+
+passwordHash
+status
+roleId
+verified
+avatar
+phone
+lastLogin
+createdAt
+updatedAt
+
+vendors
+Separada de users.
+¿Por qué?
+Porque no todos los usuarios serán vendedores.
+Además.
+Un vendedor tendrá muchísima información.
+Logo.
+Nombre comercial.
+Descripción.
+Mercado Pago.
+Reputación.
+Horarios.
+Sucursales.
+Etc.
+No quiero ensuciar users.
+
+Ejemplo.
+userId
+businessName
+slug
+logo
+description
+verified
+shippingConfig
+reputation
+marketplaceScore
+createdAt
+
+categories
+Muy importante.
+No guardar categorías como texto.
+Siempre.
+Referencias.
+Ejemplo.
+Electrónica
+
+↓
+
+_id
+Así podremos cambiar nombres sin romper productos.
+
+Cada categoría tendrá.
+name
+
+slug
+
+parentId
+
+icon
+seo
+enabled
+order
+
+Permitirá subcategorías infinitas.
+
+brands
+Separada.
+No texto libre.
+Esto mejora búsquedas.
+Y filtros.
+
+products
+La colección más importante.
+No debe crecer descontroladamente.
+Solo datos esenciales.
+vendorId
+title
+slug
+description
+categoryId
+brandId
+price
+stock
+status
+shipping
+dimensions
+weight
+origin
+score
+views
+sales
+favorites
+publishedAt
+updatedAt
+
+Nada de guardar imágenes aquí.
+
+productImages
+Separada.
+productId
+url
+thumbnail
+order
+alt
+
+isPrimary
+Esto evita documentos gigantes.
+
+productVariants
+No quiero variantes mezcladas.
+Ejemplo.
+Producto
+
+↓
+
+Remera
+Variantes.
+Rojo
+
+S
+
+Stock 4
+---------
+Rojo
+M
+Stock 8
+---------
+Azul
+XL
+Stock 3
+Cada combinación.
+Será un documento.
+
+orders
+No guardar todo.
+Mantener.
+buyerId
+status
+paymentStatus
+shippingStatus
+subtotal
+shipping
+commission
+total
+createdAt
+
+orderItems
+Separados.
+Porque un pedido.
+Puede tener.
+Muchos productos.
+Y además, como definimos anteriormente, un mismo carrito puede dividirse automáticamente en varias órdenes si intervienen distintos vendedores.
+Por eso cada orderItem guardará también el vendorId, aunque la orden pertenezca a un solo vendedor después de la división.
+
+payments
+No confiar solamente.
+En Mercado Pago.
+Guardar.
+Todo.
+Internamente.
+orderId
+
+provider
+
+providerPaymentId
+
+status
+amount
+commission
+sellerAmount
+createdAt
+
+paymentEvents
+Esta colección me parece fundamental.
+Cada webhook recibido.
+Se guarda.
+Nunca se pierde.
+Ejemplo.
+payment.created
+
+payment.updated
+payment.approved
+payment.rejected
+refund.created
+Esto facilita muchísimo el soporte y las auditorías.
+
+shipments
+Separada.
+orderId
+vendorId
+carrier
+trackingNumber
+status
+estimatedDelivery
+shippingCost
+createdAt
+
+shipmentEvents
+Igual que Mercado Pago.
+Todo movimiento.
+Se registra.
+Etiqueta creada
+
+↓
+
+Despachado
+
+↓
+
+En tránsito
+
+↓
+
+Entregado
+Nunca se pisa información.
+Siempre se agrega historial.
+
+carts
+Un carrito por usuario.
+Con expiración automática.
+Debe soportar productos de múltiples vendedores.
+Y ya preparado para dividir el checkout en órdenes independientes.
+
+wishlist
+Separada del usuario.
+Esto permite escalar muchísimo mejor.
+Cada favorito será un registro.
+Así las consultas son rápidas.
+
+addresses
+El usuario puede tener muchas.
+No embebidas.
+Colección independiente.
+
+conversations
+Cada conversación.
+Nace de una compra.
+Nunca existirán conversaciones "libres".
+orderId
+
+buyerId
+
+vendorId
+status
+createdAt
+
+messages
+Separada.
+Cada mensaje.
+Un documento.
+conversationId
+senderId
+type
+text
+attachments
+read
+createdAt
+Esto permite millones de mensajes sin inflar una conversación.
+
+notifications
+No quiero notificaciones efímeras.
+Todo queda registrado.
+Tipo.
+Estado.
+Leída.
+Fecha.
+Canal.
+
+reports
+Las denuncias.
+reporterId
+
+targetId
+
+reason
+
+status
+priority
+adminId
+resolution
+
+moderationQueue
+Otra colección.
+Porque una publicación puede estar.
+Pendiente.
+Aprobada.
+Rechazada.
+Suspendida.
+Y necesitamos registrar el flujo de revisión.
+
+reviews
+Preparada para el futuro.
+Aunque inicialmente no habilitemos calificaciones públicas.
+La estructura ya estará lista.
+
+analyticsEvents
+Esta colección será enorme.
+Pero extremadamente valiosa.
+Cada evento.
+Un documento.
+Ejemplos.
+Producto visto
+
+Producto compartido
+
+Favorito agregado
+
+Compra iniciada
+
+Compra cancelada
+
+Checkout iniciado
+
+Búsqueda realizada
+
+Filtro utilizado
+Estos datos alimentarán estadísticas y OrigenRank.
+
+commissions
+Una colección exclusiva.
+Para registrar.
+Cada comisión.
+Que gana OrigenRed.
+orderId
+vendorId
+amount
+percentage
+status
+createdAt
+Esto te permitirá generar reportes financieros muy precisos.
+
+services
+Acá vivirán los servicios que vos vendés.
+Ejemplo.
+vendorId
+serviceType
+status
+startDate
+renewalDate
+monthlyFee
+
+notes
+ServicioType podría ser:
+Sitio Web. 
+SEO. 
+Meta Ads. 
+Google Analytics. 
+Google Search Console. 
+Mantenimiento. 
+Todo centralizado.
+
+settings
+Muy importante.
+No quiero configuración hardcodeada.
+Todo.
+Persistido.
+En base de datos.
+Ejemplos.
+marketplaceCommission
+rankingWeights
+maximumProducts
+maintenanceMode
+shippingDefaults
+featureFlags
+Y editable desde el panel de administración.
+
+featureFlags
+Aunque ya exista una sección visual en el panel.
+Internamente tendrá su propia colección.
+Ejemplo.
+enableVideos
+
+enablePremium
+
+enableReviews
+
+enableCoupons
+
+enableReferralProgram
+Esto permite activar funciones sin desplegar una nueva versión.
+
+auditLogs
+Esta colección es obligatoria.
+Cada acción administrativa importante.
+Queda registrada.
+userId
+action
+entity
+entityId
+oldValue
+newValue
+ip
+device
+createdAt
+Nunca se elimina.
+
+systemLogs
+Separada de la auditoría.
+Aquí se registran eventos técnicos.
+Errores.
+Integraciones.
+Procesos.
+Workers.
+Webhooks.
+
+sessions
+Cada inicio de sesión.
+Un documento.
+Así podrás cerrar sesiones específicas desde el panel.
+
+pushTokens
+Preparado para React Native.
+Cada dispositivo tendrá su propio token.
+Con plataforma.
+Android.
+iOS.
+Último uso.
+Estado.
+
+Estrategia de Índices
+Esto es crítico.
+No basta con crear las colecciones.
+Hay que pensar cómo se consultarán.
+Ejemplos:
+products
+Índices por:
+slug (único), 
+vendorId, 
+categoryId, 
+status, 
+publishedAt, 
+score, 
+price. 
+
+orders
+Índices por:
+buyerId, 
+vendorId, 
+status, 
+createdAt. 
+
+users
+Índices por:
+email (único), 
+username (único), 
+roleId. 
+
+conversations
+Índice por:
+orderId. 
+Así encontrar el chat asociado a una compra es inmediato.
+
+Soft Delete
+No eliminar registros importantes.
+Agregar.
+deletedAt
+
+deletedBy
+
+deleteReason
+Así conservamos el historial y evitamos pérdidas accidentales.
+
+Versionado de Documentos
+Para entidades críticas como productos y configuraciones globales, propongo guardar un número de versión.
+Ejemplo.
+version: 7
+Esto facilitará migraciones futuras y permitirá detectar conflictos de edición.
+
+Convenciones Globales
+Todas las colecciones deberán tener:
+createdAt
+
+updatedAt
+Y cuando corresponda:
+createdBy
+
+updatedBy
+Esto simplifica auditorías y soporte.
+
+Mi propuesta más importante para el modelo de datos
+No diseñemos la base pensando únicamente en almacenar información.
+Diseñémosla para responder preguntas rápidamente.
+Porque en un marketplace real las consultas más importantes no son:
+"¿Cuál es el precio del producto?"
+Sino:
+¿Qué categoría más creció este mes? 
+¿Qué vendedor está teniendo problemas? 
+¿Qué productos convierten mejor? 
+¿Qué provincias compran más? 
+¿Qué búsquedas no encontraron resultados? 
+¿Qué usuarios abandonan el carrito? 
+Si la base está bien diseñada desde el principio, responder esas preguntas será sencillo.
+
+Fin del Capítulo 2
+Con este capítulo queda definido el modelo de datos principal de OrigenRed.
+No solamente las colecciones, sino también su filosofía, responsabilidades y criterios de escalabilidad.
+
+Próximo capítulo: Arquitectura de APIs y Flujo Completo de Negocio
+Ahí vamos a definir:
+todos los endpoints REST, 
+autenticación, 
+permisos, 
+flujo completo desde que un comprador abre un producto hasta que el vendedor cobra, 
+webhooks, 
+eventos internos, 
+integración con Mercado Pago, 
+integración con EnvíoPack, 
+y cómo interactúan todos los módulos entre sí sin quedar acoplados. 
+Ese será el documento que prácticamente permitirá empezar a implementar el backend módulo por módulo.
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN III
+Capítulo 3 — Arquitectura de APIs y Flujo Completo del Negocio
+
+Filosofía
+La API de OrigenRed seguirá cinco principios fundamentales:
+RESTful y consistente. 
+Versionada desde el inicio (/api/v1). 
+Validación completa en el backend. 
+Respuestas con formato uniforme. 
+Seguridad por defecto. 
+
+Estructura General
+Todas las rutas vivirán bajo:
+/api/v1
+Y estarán agrupadas por módulos.
+Ejemplo:
+/api/v1/auth
+/api/v1/users
+/api/v1/vendors
+/api/v1/products
+/api/v1/categories
+/api/v1/cart
+/api/v1/orders
+/api/v1/payments
+/api/v1/shipping
+/api/v1/chat
+/api/v1/admin
+/api/v1/settings
+/api/v1/search
+/api/v1/uploads
+/api/v1/services
+/api/v1/notifications
+/api/v1/reports
+/api/v1/analytics
+Nunca mezclaremos responsabilidades.
+
+Estándar de Respuesta
+Todas las respuestas exitosas tendrán una estructura uniforme.
+Ejemplo:
+{
+  "success": true,
+  "data": {},
+  "meta": {}
+}
+Errores:
+{
+  "success": false,
+  "error": {
+    "code": "PRODUCT_NOT_FOUND",
+    "message": "Producto inexistente"
+  }
+}
+Esto simplifica muchísimo el frontend.
+
+Autenticación
+Público
+No requiere sesión.
+Ejemplos:
+Ver productos. 
+Buscar productos. 
+Ver categorías. 
+Ver tiendas. 
+Estimar envío. 
+Registrarse. 
+Iniciar sesión. 
+
+Usuario
+Requiere JWT.
+Puede:
+Comprar. 
+Favoritos. 
+Chat. 
+Direcciones. 
+Historial. 
+
+Vendedor
+Puede además:
+Publicar. 
+Editar productos propios. 
+Configurar envíos. 
+Vincular Mercado Pago. 
+Ver estadísticas. 
+
+Administrador
+Acceso al Backoffice.
+
+Permisos
+No quiero validar solamente el rol.
+Quiero validar permisos.
+Ejemplo.
+Administrador
+
+↓
+
+Puede editar productos
+
+No
+
+↓
+
+Puede suspender vendedores
+
+Sí
+Así podremos crear empleados con permisos específicos.
+
+Flujo Completo de una Compra
+Ahora viene el circuito más importante de toda la plataforma.
+
+Paso 1
+El comprador entra a un producto.
+↓
+Se registra un evento.
+ProductViewed
+Este evento actualiza:
+estadísticas, 
+OrigenRank, 
+analíticas. 
+Sin ralentizar la respuesta.
+
+Paso 2
+Calcula el envío.
+El usuario ingresa únicamente el Código Postal.
+La API consulta la configuración del vendedor.
+Y devuelve:
+costo estimado, 
+transportistas disponibles, 
+tiempo estimado, 
+si aplica envío gratis, 
+si requiere coordinación posterior. 
+Todo antes del checkout.
+
+Paso 3
+Agregar al carrito.
+El sistema verifica:
+stock, 
+estado del producto, 
+vendedor habilitado. 
+
+Paso 4
+Checkout.
+Aquí ocurre una validación completa.
+recalcular precios, 
+recalcular envío, 
+recalcular stock, 
+validar comisión, 
+validar vendedor. 
+Nunca confiar en los datos enviados por el navegador.
+
+Paso 5
+Carrito Multivendedor
+Si existen tres vendedores.
+Internamente ocurre esto.
+Carrito
+
+↓
+
+Vendedor A
+
+↓
+
+Orden A
+
+------------
+
+Vendedor B
+
+↓
+
+Orden B
+
+------------
+
+Vendedor C
+
+↓
+
+Orden C
+Pero el comprador sigue viendo una sola compra agrupada.
+
+Paso 6
+Pago
+Como definimos.
+Cada vendedor tendrá vinculada su cuenta de Mercado Pago mediante OAuth.
+El backend genera una preferencia de pago.
+Con la distribución correspondiente.
+Mercado Pago acredita automáticamente:
+95% al vendedor. 
+5% a OrigenRed. 
+El costo del envío se asigna según la configuración logística del pedido. Si el vendedor ofrece envío gratis, ese costo corre por su cuenta; si no, lo paga el comprador como un concepto separado. La comisión del 5% siempre se calcula solo sobre el valor de los productos, nunca sobre el envío.
+
+Paso 7
+Webhook
+Mercado Pago envía.
+payment.approved
+Nuestro backend.
+No confía inmediatamente.
+Primero consulta nuevamente la API de Mercado Pago para verificar:
+estado, 
+importe, 
+moneda, 
+receptor, 
+referencia. 
+Solo después confirma la compra.
+
+Paso 8
+Eventos
+Cuando el pago queda aprobado.
+Se genera.
+OrderPaidEvent
+Y automáticamente.
+Los módulos escuchan.
+Stock
+
+↓
+
+Descontar
+
+---------
+
+Chat
+
+↓
+
+Crear conversación
+
+---------
+
+Notificaciones
+
+↓
+
+Enviar Push
+
+---------
+
+Email
+
+↓
+
+Confirmación
+
+---------
+
+Analytics
+
+↓
+
+Registrar venta
+
+---------
+
+Ranking
+
+↓
+
+Actualizar score
+
+---------
+
+Comisiones
+
+↓
+
+Registrar ingreso
+
+---------
+
+Auditoría
+
+↓
+
+Guardar evento
+Ningún módulo conoce al otro.
+Todos escuchan el mismo evento.
+
+Paso 9
+Panel del Vendedor
+El pedido aparece inmediatamente.
+Con estado.
+Pago confirmado
+Y se habilita el chat.
+
+Paso 10
+Despacho
+El vendedor.
+Despacha.
+↓
+Actualiza estado.
+↓
+Si EnvíoPack está integrado.
+Se sincroniza automáticamente.
+Si no.
+Puede cargar el seguimiento manualmente.
+
+Paso 11
+Entrega
+Cuando el envío finaliza.
+↓
+Estado.
+Entregado
+↓
+Se habilita.
+Devolución.
+Si corresponde.
+
+Flujo del Chat
+Muy importante.
+El chat.
+Nunca existe.
+Antes.
+De la compra.
+Flujo.
+Compra
+
+↓
+
+Pago aprobado
+
+↓
+
+Crear conversación
+
+↓
+
+Chat habilitado
+Esto evita ventas por fuera de la plataforma.
+
+Flujo de Publicación
+Vendedor.
+↓
+Crear producto.
+↓
+Validaciones.
+↓
+Detección automática.
+↓
+¿Contenido sensible?
+↓
+No.
+↓
+Publicar inmediatamente.
+
+Si detecta riesgo.
+↓
+ModerationQueue.
+↓
+Administrador revisa.
+↓
+Publicar o rechazar.
+
+Flujo de Denuncias
+Usuario.
+↓
+Denunciar.
+↓
+Reports.
+↓
+Prioridad automática.
+↓
+Administrador.
+↓
+Resolución.
+↓
+Notificaciones.
+
+Flujo de Suspensión
+Administrador.
+↓
+Suspender vendedor.
+↓
+Publicaciones pausadas.
+↓
+No recibe nuevas ventas.
+↓
+Pedidos existentes siguen su curso hasta resolverse, salvo que intervengas manualmente.
+Esto protege a los compradores.
+
+Flujo de Servicios
+Vendedor.
+↓
+Panel.
+↓
+Solicitar sitio web.
+↓
+CRM.
+↓
+Administrador.
+↓
+Contacto.
+↓
+Presupuesto.
+↓
+Proyecto.
+Todo integrado.
+
+Integración con Cloudflare R2
+Quiero definir el flujo correctamente.
+El frontend solicita una URL firmada. 
+El backend la genera. 
+El archivo se sube directamente a R2. 
+R2 responde. 
+El frontend envía únicamente la URL al backend. 
+El backend registra la imagen. 
+Nunca pasar archivos pesados por Express.
+
+Integración con Meilisearch
+Cuando un producto:
+se crea, 
+se modifica, 
+se elimina, 
+cambia de estado, 
+se genera un evento.
+ProductUpdated
+El worker actualiza el índice de búsqueda.
+Así la API principal nunca espera la indexación.
+
+Rate Limiting
+Cada módulo tendrá límites distintos.
+Ejemplo.
+Login.
+Más estricto.
+Búsquedas.
+Muy permisivo.
+Administrador.
+Protección especial.
+Webhooks.
+Solo IPs autorizadas.
+
+Idempotencia
+Esto es algo que quiero dejar definido desde el inicio.
+Los webhooks de Mercado Pago y otros proveedores pueden llegar repetidos.
+Por eso toda operación crítica debe ser idempotente.
+Ejemplo.
+Si llega dos veces el mismo payment.approved, el sistema debe detectar que ya fue procesado y no descontar stock dos veces ni generar dos chats.
+
+Correlation ID
+Cada request recibirá un identificador único.
+Ese ID viajará por:
+logs, 
+eventos, 
+workers, 
+webhooks. 
+Así, cuando haya un problema, podrás reconstruir todo el recorrido de una operación.
+
+Health Checks
+El backend expondrá endpoints internos para monitoreo.
+Ejemplo:
+estado de MongoDB, 
+Redis, 
+Cloudflare R2, 
+Mercado Pago, 
+EnvíoPack, 
+Meilisearch. 
+Esto facilitará el monitoreo y futuras integraciones con herramientas de observabilidad.
+
+Mi propuesta más importante para este capítulo
+Toda la plataforma debe comportarse como un sistema de eventos.
+Las APIs no deberían encargarse de "hacer todo".
+Su responsabilidad será:
+validar, 
+guardar, 
+emitir un evento. 
+El resto del trabajo lo realizan los módulos especializados.
+Esto hace que el sistema sea mucho más escalable, mantenible y fácil de extender.
+
+Fin del Capítulo 3
+Con este capítulo ya quedó definido el flujo completo del negocio, desde que un comprador abre un producto hasta que el vendedor recibe el dinero y el pedido queda entregado.
+Ya no hablamos solamente de pantallas o colecciones de base de datos.
+Ahora quedó definido cómo se mueve la información dentro de OrigenRed y cómo interactúan entre sí todos los módulos de la plataforma.
+
+Próximo capítulo: Seguridad, Infraestructura y DevOps
+Ese capítulo cubrirá temas como:
+autenticación avanzada, 
+autorización, 
+protección contra ataques, 
+backups, 
+CI/CD, 
+despliegues, 
+Docker, 
+observabilidad, 
+monitoreo, 
+recuperación ante desastres, 
+escalabilidad horizontal, 
+alta disponibilidad, 
+gestión de secretos, 
+y toda la infraestructura necesaria para que OrigenRed funcione como una plataforma profesional desde el primer día. 
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN III
+Capítulo 4 — Seguridad, Infraestructura y DevOps
+
+Filosofía
+La infraestructura de OrigenRed debe cumplir cuatro objetivos:
+Alta disponibilidad. 
+Seguridad por defecto. 
+Escalabilidad horizontal. 
+Recuperación rápida ante fallos. 
+No se diseñará pensando en "si falla", sino en cuándo falle y cómo recuperarse.
+
+Ambientes
+Desde el primer día existirán tres ambientes completamente separados.
+Development
+
+↓
+
+Staging
+
+↓
+
+Production
+Development
+Uso exclusivo para desarrollo.
+Puede contener datos de prueba.
+Sin integraciones reales.
+
+Staging
+Será una copia lo más fiel posible de producción.
+Se utilizará para:
+probar nuevas funciones, 
+validar integraciones, 
+pruebas de carga, 
+QA. 
+Nunca se desarrollará directamente sobre producción.
+
+Production
+Únicamente usuarios reales.
+Configuraciones protegidas.
+Logs completos.
+Backups automáticos.
+
+Infraestructura
+La arquitectura inicial será:
+Usuario
+
+↓
+
+Cloudflare
+
+↓
+
+Reverse Proxy
+
+↓
+
+Node.js
+
+↓
+
+Redis
+
+↓
+
+MongoDB
+
+↓
+
+Cloudflare R2
+
+↓
+
+Meilisearch
+Cloudflare actuará como primera línea de defensa.
+
+Cloudflare
+Será responsable de:
+CDN. 
+Caché. 
+DNS. 
+Firewall. 
+Protección DDoS. 
+Rate Limiting adicional. 
+Certificados SSL. 
+Compresión. 
+Optimización de imágenes. 
+
+Docker
+Todo el proyecto será dockerizable.
+Servicios:
+Frontend
+Backend
+MongoDB
+Redis
+Meilisearch
+Workers
+Cada uno en su contenedor.
+
+Docker Compose
+Para desarrollo.
+Permitirá levantar toda la plataforma con un único comando.
+docker compose up
+
+Producción
+En producción no dependeremos de Docker Compose.
+La idea será dejar preparada la arquitectura para:
+Docker Swarm. 
+Kubernetes. 
+Coolify. 
+Railway. 
+Render. 
+VPS propios. 
+Sin modificar el código.
+
+Variables de Entorno
+Nunca existirá información sensible en el repositorio.
+Ejemplos:
+JWT_SECRET
+MONGO_URI
+REDIS_URL
+R2_ACCESS_KEY
+R2_SECRET_KEY
+MP_CLIENT_ID
+MP_CLIENT_SECRET
+
+SMTP_PASSWORD
+Todo mediante variables de entorno.
+
+Gestión de Secretos
+A futuro recomiendo utilizar un gestor de secretos.
+Ejemplos:
+HashiCorp Vault. 
+Doppler. 
+Infisical. 
+No es obligatorio al inicio.
+Pero la arquitectura quedará preparada.
+
+Autenticación
+Utilizaremos:
+Access Token.
+Refresh Token.
+Rotación automática.
+Revocación.
+Cookies HttpOnly para la web.
+Secure Store en la app móvil.
+
+Doble Factor
+Obligatorio para:
+Administradores.
+Opcional para vendedores.
+Opcional para compradores.
+Más adelante se podrá exigir según el nivel de riesgo.
+
+Protección contra Ataques
+Fuerza Bruta
+Límite de intentos.
+Bloqueo temporal.
+Registro del evento.
+
+Credential Stuffing
+Detección de múltiples intentos desde distintas IP.
+
+Rate Limiting
+Por:
+IP.
+Usuario.
+Ruta.
+Rol.
+
+CSRF
+Protección para operaciones sensibles en la versión web.
+
+XSS
+Sanitización de entradas.
+Escape automático.
+Content Security Policy.
+
+SQL Injection
+No aplica directamente por usar MongoDB.
+Pero sí protegeremos contra:
+NoSQL Injection. 
+Operadores maliciosos. 
+Payloads manipulados. 
+
+Helmet
+Configuración completa.
+Cabeceras HTTP seguras.
+
+CORS
+Lista blanca de dominios autorizados.
+Nunca permitir * en producción.
+
+Auditoría
+Todo acceso administrativo quedará registrado.
+Ejemplo:
+Usuario
+
+IP
+
+Dispositivo
+
+Acción
+
+Fecha
+
+Resultado
+
+Sesiones
+Cada inicio de sesión generará un registro.
+Desde el panel el usuario podrá:
+ver dispositivos conectados, 
+cerrar sesiones individuales, 
+cerrar todas las sesiones. 
+
+Backups
+Muy importante.
+MongoDB.
+Backups automáticos diarios.
+Backups semanales.
+Backups mensuales.
+Con retención configurable.
+
+Cloudflare R2
+Las imágenes también tendrán política de respaldo.
+Aunque R2 sea altamente confiable.
+
+Estrategia 3-2-1
+Mi recomendación.
+Siempre mantener:
+3 copias. 
+2 medios distintos. 
+1 fuera del servidor principal. 
+
+Recuperación ante Desastres
+Objetivo:
+Poder restaurar completamente la plataforma en pocas horas.
+El procedimiento deberá estar documentado.
+
+Observabilidad
+No basta con guardar logs.
+Necesitamos entender qué está ocurriendo.
+
+Logs
+Usaremos Pino.
+Con distintos niveles:
+Info. 
+Warn. 
+Error. 
+Fatal. 
+Debug (solo desarrollo). 
+
+Métricas
+Monitorearemos:
+CPU. 
+RAM. 
+Latencia. 
+Requests por segundo. 
+Tiempo de respuesta. 
+Errores. 
+Uso de Redis. 
+Uso de MongoDB. 
+Espacio disponible. 
+
+Dashboards
+Recomiendo preparar compatibilidad con:
+Grafana. 
+Prometheus. 
+Aunque inicialmente podamos utilizar soluciones más simples.
+
+Alertas
+Se enviarán alertas cuando ocurra:
+caída de la API, 
+caída de MongoDB, 
+Redis inaccesible, 
+fallo de Mercado Pago, 
+fallo de EnvíoPack, 
+almacenamiento crítico, 
+aumento anormal de errores, 
+uso excesivo de CPU. 
+Estas alertas pueden llegarte por email o, en el futuro, por una aplicación de monitoreo.
+
+Workers
+Todos los procesos pesados correrán por separado.
+Ejemplos:
+envío de emails, 
+generación de miniaturas, 
+indexación en Meilisearch, 
+envío de notificaciones, 
+sincronización con proveedores. 
+Si un worker falla, la API principal sigue funcionando.
+
+Escalabilidad Horizontal
+Cuando el tráfico crezca.
+No agregaremos más potencia a un único servidor.
+Agregaremos más instancias.
+Cloudflare
+
+↓
+
+Load Balancer
+
+↓
+
+API 1
+
+API 2
+
+API 3
+
+↓
+
+Redis
+
+↓
+
+MongoDB
+Esto permite soportar mucho mayor volumen.
+
+Cache
+Redis almacenará:
+sesiones, 
+productos populares, 
+categorías, 
+configuración, 
+búsquedas frecuentes, 
+resultados temporales. 
+Reduciendo la carga sobre MongoDB.
+
+CDN
+Las imágenes y videos nunca se servirán desde Node.js.
+Siempre desde Cloudflare.
+
+CI/CD
+Cada cambio seguirá este flujo:
+Git
+↓
+Pull Request
+↓
+Tests
+↓
+Build
+↓
+Deploy a Staging
+
+↓
+
+QA
+
+↓
+
+Deploy a Producción
+Nunca desplegar directamente desde la computadora del desarrollador.
+
+Testing Automático
+Tres niveles.
+Unitarios
+Funciones individuales.
+
+Integración
+Módulos completos.
+
+End-to-End
+Flujos reales.
+Registro.
+Compra.
+Pago.
+Chat.
+Devolución.
+Todo automatizado.
+
+Estrategia de Releases
+No hacer grandes lanzamientos.
+Prefiero lanzamientos pequeños y frecuentes.
+Reducen el riesgo y facilitan volver atrás si algo falla.
+
+Rollback
+Cada despliegue debe poder revertirse rápidamente.
+Si una versión presenta problemas.
+Debe ser posible volver a la anterior sin pérdida de datos.
+
+Feature Flags
+Como definimos antes.
+Las funciones nuevas podrán activarse solo para:
+administradores, 
+un grupo de prueba, 
+un porcentaje de usuarios. 
+Esto reduce muchísimo el riesgo.
+
+Dependencias
+Todas las dependencias deberán revisarse periódicamente.
+Actualizaciones de seguridad.
+Versiones obsoletas.
+Vulnerabilidades.
+
+Política de Contraseñas
+Longitud mínima.
+Validación de fortaleza.
+Nunca almacenar contraseñas en texto plano.
+Siempre utilizando algoritmos de hashing robustos.
+
+Protección de APIs
+Cada endpoint tendrá:
+autenticación cuando corresponda, 
+autorización por permisos, 
+validación de entrada, 
+límite de peticiones, 
+registro en logs. 
+
+Seguridad en React Native
+Los tokens nunca se almacenarán en AsyncStorage.
+Se utilizará almacenamiento seguro del dispositivo.
+Además, se preparará la aplicación para detectar dispositivos comprometidos (root o jailbreak) y decidir en el futuro si se restringen ciertas funciones.
+
+Política de Disponibilidad
+Objetivo inicial:
+Disponibilidad del 99,9%.
+Eso implica planificar mantenimientos y minimizar interrupciones.
+
+Documentación Operativa
+No solo habrá documentación de desarrollo.
+También existirá documentación para operar la plataforma:
+cómo desplegar, 
+cómo restaurar backups, 
+cómo agregar un servidor, 
+cómo rotar claves, 
+cómo responder a incidentes. 
+Esto permitirá que el proyecto no dependa exclusivamente de una sola persona.
+
+Mi propuesta más importante para este capítulo
+Quiero que OrigenRed se construya con la mentalidad de una empresa tecnológica desde el primer commit.
+Eso significa que cada decisión técnica debe considerar:
+seguridad, 
+mantenibilidad, 
+observabilidad, 
+recuperación, 
+escalabilidad. 
+No son características que se agregan al final.
+Forman parte del diseño desde el principio.
+
+Fin del Capítulo 4
+Con este capítulo queda definida la base de infraestructura y operaciones de OrigenRed.
+Ya no solo sabemos qué hace la plataforma y cómo está programada.
+Ahora también sabemos cómo se mantiene funcionando de forma segura y estable.
+
+Próximo capítulo: Sistema Inteligente de Búsqueda, Recomendaciones y OrigenRank
+En mi opinión, ese será uno de los capítulos más importantes de todo el proyecto.
+Ahí vamos a diseñar:
+el buscador avanzado, 
+filtros inteligentes, 
+autocompletado, 
+recomendaciones personalizadas, 
+productos relacionados, 
+tendencias, 
+sistema de descubrimiento, 
+algoritmo OrigenRank (completamente parametrizable desde el panel de administración), 
+posicionamiento justo entre vendedores nuevos y consolidados, 
+y la lógica que hará que la experiencia de compra sea diferencial frente a otros marketplaces. Ese algoritmo será, probablemente, uno de los activos más valiosos de OrigenRed. 
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN III
+Capítulo 5 — OrigenRank, Búsqueda Inteligente y Recomendaciones
+
+Filosofía
+Hay una regla que quiero dejar escrita desde el primer día.
+OrigenRed no venderá posiciones.
+No existirán publicaciones destacadas pagas.
+No existirá el concepto de "el que más paga aparece primero".
+Quiero que la plataforma sea reconocida por la calidad de sus resultados.
+Eso genera confianza.
+Y la confianza hace crecer el marketplace.
+
+¿Qué es OrigenRank?
+OrigenRank será el algoritmo que decidirá el orden en que aparecen los productos.
+Pero quiero aclarar algo importante.
+No será un único número.
+Será la combinación de decenas de variables.
+
+Variables iniciales
+Cada producto tendrá un puntaje compuesto.
+Ejemplo:
+Ventas recientes
+
+Calidad de publicación
+
+Reputación del vendedor
+
+Tiempo de respuesta
+
+Conversión
+
+Favoritos
+
+CTR
+
+Stock
+
+Precio competitivo
+
+Ubicación
+
+Tiempo desde publicación
+
+Novedad
+
+Calidad de imágenes
+
+Video
+
+Tasa de devolución
+
+Denuncias
+
+Disponibilidad
+
+Entrega rápida
+
+Popularidad
+Cada variable tendrá un peso configurable.
+
+Todo editable
+Desde el Panel Admin.
+Vos vas a poder cambiar.
+Por ejemplo.
+Ventas recientes
+
+35%
+
+------------
+
+CTR
+
+15%
+
+------------
+
+Favoritos
+
+8%
+
+------------
+
+Ubicación
+
+10%
+
+------------
+
+Conversión
+
+20%
+
+------------
+
+Novedad
+
+12%
+Sin tocar código.
+
+El problema de todos los Marketplaces
+Si un producto vende.
+Se muestra más.
+↓
+Vende todavía más.
+↓
+Se muestra aún más.
+↓
+Los nuevos jamás aparecen.
+Eso destruye la competencia.
+
+Solución
+Quiero crear un algoritmo híbrido.
+Con cuatro motores.
+
+Motor 1
+Calidad
+Evalúa.
+Título.
+Descripción.
+Fotos.
+Video.
+Categoría.
+Datos completos.
+Peso.
+Medidas.
+Marca.
+Todo suma.
+
+Ejemplo.
+Producto A
+
+98 puntos
+vs.
+Producto B
+
+45 puntos
+El A tiene ventaja.
+
+Motor 2
+Rendimiento
+Mide.
+Ventas.
+CTR.
+Conversión.
+Tiempo en carrito.
+Favoritos.
+Recompras.
+Cancelaciones.
+
+No mide únicamente ventas.
+Mide eficiencia.
+
+Motor 3
+Descubrimiento
+Este motor me parece revolucionario.
+Va a reservar.
+Una parte.
+De la Home.
+Para mostrar productos.
+Que normalmente no aparecerían.
+Ejemplo.
+15%.
+Siempre.
+
+Así.
+Los vendedores nuevos.
+Siempre tienen oportunidades.
+
+Motor 4
+Proximidad
+Este es uno de los diferenciales de OrigenRed.
+Cada usuario.
+Al ingresar.
+Tendrá un Código Postal.
+
+El sistema calculará.
+Distancia aproximada.
+Entre comprador.
+Y vendedor.
+
+Entonces.
+Si dos productos.
+Son prácticamente iguales.
+Aparecerá primero.
+El más cercano.
+
+¿Por qué?
+Porque normalmente.
+Tiene.
+Menor costo de envío.
+Menor tiempo.
+Mayor probabilidad de compra.
+
+Distancia
+No quiero usar kilómetros exactos.
+Usaremos.
+Zonas.
+Ejemplo.
+Muy cerca
+
+---------
+
+Cerca
+
+---------
+
+Media distancia
+
+---------
+
+Lejos
+Más fácil de entender.
+
+Etiquetas
+Podrían aparecer.
+Entrega rápida
+
+---------
+
+Vendedor cercano
+
+---------
+
+Retiro disponible
+
+---------
+
+Envío gratis
+Todo ayuda a decidir.
+
+OrigenRank Final
+El algoritmo.
+No será.
+Una fórmula fija.
+Sino.
+Algo parecido.
+Ranking Final
+
+=
+
+Calidad
+
++
+
+Rendimiento
+
++
+
+Ubicación
+
++
+
+Descubrimiento
++
+Experiencia
++
+Popularidad
++
+Disponibilidad
+
+Ajuste Dinámico
+Otra idea.
+Muy importante.
+No recalcular.
+Todo.
+En tiempo real.
+
+Cada cierto tiempo.
+Workers.
+Actualizan.
+OrigenRank.
+Y lo guardan.
+Así.
+Las búsquedas.
+Son rapidísimas.
+
+Búsqueda Inteligente
+Acá entra.
+Meilisearch.
+
+Cuando alguien escribe.
+notbok
+Debe encontrar.
+Notebook.
+
+Cuando escribe.
+zapatiya
+Debe encontrar.
+Zapatillas.
+
+Cuando escribe.
+iphone
+Debe encontrar.
+iPhone.
+Aunque haya errores.
+
+Sinónimos
+Quiero.
+Una tabla.
+Editable.
+Desde Admin.
+Ejemplo.
+Celular
+
+↓
+
+Teléfono
+
+↓
+
+Smartphone
+
+↓
+
+Móvil
+Todos.
+Son lo mismo.
+
+Autocomplete
+Mientras escribe.
+Van apareciendo.
+Productos.
+Categorías.
+Marcas.
+Búsquedas frecuentes.
+
+Historial
+Cada usuario.
+Tiene.
+Su historial.
+
+Para.
+Sugerir.
+Más rápido.
+
+Tendencias
+Otra sección.
+Lo más buscado
+Actualizada.
+En tiempo real.
+
+Productos Relacionados
+No quiero mostrar.
+Productos aleatorios.
+
+Quiero usar.
+Similitud.
+Por.
+Categoría.
+Marca.
+Precio.
+Comportamiento.
+Compras conjuntas.
+
+Ejemplo.
+Compró.
+Mouse.
+↓
+Mostrar.
+Mouse Pad.
+Teclado.
+Notebook.
+
+Comprados Juntos
+Esta idea.
+Vale oro.
+El sistema aprende.
+Qué suelen comprar juntos.
+
+Ejemplo.
+Auriculares
+
++
+
+Micrófono
+
++
+
+Soporte
+Y los recomienda.
+
+Recomendaciones Personales
+Cada usuario.
+Va construyendo.
+Su perfil.
+
+Ejemplo.
+Compra.
+Pesca.
+↓
+Le mostramos.
+Más pesca.
+
+Compra.
+Computación.
+↓
+Le mostramos.
+Hardware.
+
+Todo.
+Sin invadir privacidad.
+Solo utilizando comportamiento dentro de OrigenRed.
+
+Home Inteligente
+La Home.
+No será igual.
+Para todos.
+
+Usuario A.
+Ve.
+Tecnología.
+
+Usuario B.
+Ve.
+Mascotas.
+
+Usuario C.
+Ve.
+Herramientas.
+
+Todo personalizado.
+
+Productos Nuevos
+No quiero.
+Que desaparezcan.
+
+Los productos nuevos.
+Reciben.
+Un pequeño impulso inicial.
+Durante un tiempo configurable.
+Ejemplo.
+7 días.
+15 días.
+30 días.
+
+Después.
+Compiten normalmente.
+
+Penalizaciones
+También existen.
+
+Muchísimas cancelaciones.
+↓
+Pierde posiciones.
+
+Muchísimas devoluciones.
+↓
+Pierde posiciones.
+
+Muchas denuncias.
+↓
+Pierde posiciones.
+
+Sin stock.
+↓
+Desaparece.
+
+Calidad de Imágenes
+Otra idea.
+Cada imagen.
+Recibe.
+Un puntaje.
+
+Resolución.
+Nitidez.
+Fondo.
+Cantidad.
+Relación aspecto.
+
+No por IA.
+Sino.
+Reglas.
+Simples.
+
+Calidad del Título
+Ejemplo.
+Zapatillas Nike Air Max Hombre Running Original
+Puntaje alto.
+
+zapa
+Puntaje bajo.
+
+Calidad de la Descripción
+Mientras más completa.
+Mayor puntaje.
+
+No obligatoriamente más larga.
+Sino.
+Más útil.
+
+Anti Monopolio
+Esta idea me gusta muchísimo.
+Supongamos.
+Un vendedor.
+Tiene.
+1000 productos.
+
+Y otro.
+Tiene.
+
+
+No quiero.
+Que el primero.
+Ocupe.
+Toda la Home.
+
+Entonces.
+El algoritmo.
+Puede limitar.
+La cantidad máxima.
+De productos consecutivos.
+Del mismo vendedor.
+Ejemplo.
+Máximo
+
+2
+
+seguidos
+Así.
+Siempre hay variedad.
+
+Diversidad de Categorías
+También.
+Evitar.
+Que toda la Home.
+Sea.
+Celulares.
+
+Mezclar.
+Categorías.
+Hace.
+Mucho más interesante.
+La navegación.
+
+Recomendaciones por Horario
+Nueva idea.
+
+A la mañana.
+Priorizar.
+Productos laborales.
+
+A la noche.
+Entretenimiento.
+Hogar.
+Gaming.
+
+No es obligatorio.
+Pero queda preparado.
+
+Recomendaciones Estacionales
+Ejemplo.
+Invierno.
+↓
+Camperas.
+Calefacción.
+
+Navidad.
+↓
+Regalos.
+
+Vuelta al colegio.
+↓
+Útiles.
+
+Todo configurable.
+
+Ranking por Provincia
+Otro diferencial.
+Cada provincia.
+Tiene.
+Sus tendencias.
+
+Buenos Aires.
+No compra igual.
+Que.
+Jujuy.
+
+Entonces.
+El algoritmo.
+Puede adaptarse.
+
+Panel de Control del Ranking
+Acá quiero algo espectacular.
+Vos.
+Como administrador.
+Vas a tener.
+Un panel.
+Donde veas.
+En tiempo real.
+Qué variables.
+Están afectando.
+El algoritmo.
+Y cuánto.
+
+Ejemplo.
+Ventas recientes
+
+32%
+
+CTR
+
+18%
+
+Ubicación
+
+12%
+
+Conversión
+
+16%
+
+Calidad
+
+9%
+
+Descubrimiento
+
+13%
+Y podrás modificarlas.
+Con sliders.
+Sin reiniciar la plataforma.
+
+Simulador de Ranking (Mi propuesta favorita)
+Esta función no la vi implementada de esta manera en muchos marketplaces y creo que puede darte una ventaja enorme como administrador.
+En el panel tendrás un Simulador de OrigenRank.
+Seleccionás un producto y el sistema te muestra:
+Puntaje total: 84,7
+
+Desglose:
+
+Calidad: +18
+Ventas recientes: +22
+Conversión: +16
+Ubicación: +8
+Favoritos: +6
+Novedad: +5
+CTR: +11
+Penalización por devoluciones: -1
+Penalización por cancelaciones: -0,3
+Y además te dirá:
+"Si este producto mejorara sus imágenes y aumentara su tasa de conversión un 5%, subiría aproximadamente 14 posiciones."
+Eso te permite entender el algoritmo, depurarlo y explicar internamente por qué un producto aparece donde aparece.
+
+Mi recomendación más importante de todo el proyecto
+No copies el algoritmo de Mercado Libre.
+Construí uno mejor para el tipo de marketplace que querés.
+Tu ventaja no será tener más vendedores.
+Será que los vendedores sientan que tienen oportunidades reales de vender, aunque recién empiecen.
+Y que los compradores perciban que siempre encuentran productos relevantes, variados y cercanos.
+Ese equilibrio entre descubrimiento, calidad y rendimiento puede convertirse en uno de los activos más importantes de OrigenRed.
+
+Fin del Capítulo 5
+Con este capítulo queda definido uno de los componentes más estratégicos de toda la plataforma.
+Ya no estamos construyendo solamente un marketplace.
+Estamos diseñando un sistema capaz de aprender del comportamiento de los usuarios y mostrar el contenido adecuado sin depender de promociones pagas.
+
+Próximo capítulo: Motor Comercial, Marketing, SEO y Crecimiento Orgánico
+Ahí vamos a diseñar todo lo relacionado con:
+SEO técnico y dinámico. 
+Páginas optimizadas para Google. 
+Rich Snippets y datos estructurados. 
+Google Search Console. 
+Google Analytics. 
+Meta Pixel. 
+Conversion API. 
+Sistema de cupones (aunque inicialmente esté desactivado). 
+Campañas y banners administrables. 
+Landing pages. 
+Programa de referidos preparado. 
+Blog optimizado para posicionamiento. 
+Estrategias para convertir OrigenRed en una marca con crecimiento orgánico sostenible. 
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN III
+Capítulo 6 — Motor Comercial, SEO y Marketing
+
+Filosofía
+Cada producto publicado.
+Debe convertirse automáticamente en una oportunidad para atraer nuevos usuarios.
+No quiero depender únicamente de Meta Ads o Google Ads.
+Quiero que Google encuentre millones de páginas útiles.
+Cada producto.
+Cada categoría.
+Cada vendedor.
+Cada artículo del blog.
+Debe poder posicionarse.
+
+Arquitectura SEO
+Todo debe generarse dinámicamente.
+
+URLs
+Nunca utilizar.
+/product/654654654654
+Siempre.
+/productos/zapatillas-nike-air-max-hombre
+
+Categorías.
+/categoria/electronica
+
+/categoria/hogar
+
+/categoria/deportes
+
+Vendedores.
+/vendedor/deportes-central
+
+Servicios.
+/servicios/diseno-web
+
+/servicios/meta-ads
+
+Blog.
+/blog/como-vender-mas-en-origenred
+
+Slugs
+Cada slug.
+Será único.
+Nunca cambiará automáticamente una vez publicado, salvo intervención manual.
+Si un vendedor modifica el título, el slug original podrá mantenerse para evitar perder posicionamiento.
+
+Sitemap Inteligente
+No un único sitemap.
+Quiero múltiples.
+sitemap-products.xml
+
+sitemap-categories.xml
+
+sitemap-blog.xml
+
+sitemap-pages.xml
+
+sitemap-vendors.xml
+Y un índice general.
+Esto facilita la indexación.
+
+Robots.txt
+Generado dinámicamente.
+Podrás activar.
+Modo mantenimiento.
+Sin perder posicionamiento.
+
+Meta Tags
+Cada página.
+Generará automáticamente.
+Title
+Description
+Canonical
+Robots
+Keywords
+Open Graph
+Twitter Cards
+Todo dinámico.
+
+Open Graph
+Cuando alguien comparte un producto.
+Debe verse.
+Imagen.
+Precio.
+Título.
+Marca.
+Nombre del vendedor.
+Logo de OrigenRed.
+Esto aumenta muchísimo la tasa de clics.
+
+Rich Snippets
+Cada producto.
+Generará automáticamente.
+Datos estructurados.
+Ejemplo.
+Producto
+
+Precio
+
+Disponibilidad
+
+Marca
+
+Categoría
+
+Moneda
+
+URL
+
+Imagen
+Google puede mostrar información enriquecida en los resultados.
+
+Breadcrumbs
+Todas las páginas.
+Tendrán navegación.
+Ejemplo.
+Inicio
+
+↓
+
+Deportes
+
+↓
+
+Calzado
+
+↓
+
+Zapatillas Nike Air Max
+Favorece la experiencia y el SEO.
+
+Canonical
+Si existen varias URLs que muestran el mismo contenido.
+Siempre habrá una URL canónica.
+Evitamos contenido duplicado.
+
+Paginación
+Preparada para SEO.
+No infinitas páginas indexadas sin control.
+
+Categorías Dinámicas
+Como definimos.
+Solo aparecerán categorías que tengan productos publicados.
+Eso evita páginas vacías.
+
+Landing Pages
+Nueva propuesta.
+Crear páginas especiales.
+Ejemplo.
+Los productos más vendidos.
+
+Ofertas.
+
+Nuevos ingresos.
+
+Productos cerca de vos.
+
+Emprendedores argentinos.
+
+Tiendas verificadas.
+Todo indexable.
+
+Landing por Provincia
+Otra propuesta.
+Productos en Córdoba.
+
+Productos en Mendoza.
+
+Productos en Rosario.
+
+Productos en Tucumán.
+Sin revelar direcciones exactas.
+Solo zonas generales.
+Esto genera muchísimo tráfico local.
+
+Landing por Temporada
+Ejemplo.
+Regalos para Navidad.
+
+Regreso a clases.
+
+Día del Padre.
+
+Día de la Madre.
+
+Invierno.
+
+Verano.
+Generadas automáticamente.
+
+SEO para Vendedores
+Aunque no tengan una tienda propia.
+Cada vendedor tendrá una página pública.
+Con:
+logo, 
+descripción, 
+productos, 
+enlace a su sitio web (si contrató el servicio), 
+redes sociales (si decidís agregarlas en el futuro), 
+estado de verificación. 
+Eso también posiciona.
+
+Blog
+Muy importante.
+No quiero un blog decorativo.
+Quiero un blog pensado para atraer usuarios.
+Ejemplos.
+Cómo vender por internet.
+Cómo calcular envíos.
+Cómo sacar mejores fotos.
+Cómo elegir zapatillas.
+Cómo vender más.
+Cómo usar Meta Ads.
+Cómo mejorar tu ecommerce.
+Cómo posicionar en Google.
+Todo relacionado con el ecosistema de OrigenRed.
+
+CMS
+No escribir artículos en código.
+Crear un pequeño administrador.
+Con:
+Título.
+Contenido.
+Imágenes.
+SEO.
+Autor.
+Categoría.
+Fecha de publicación.
+Estado.
+Borrador o publicado.
+
+Google Search Console
+Toda la plataforma preparada.
+Con:
+verificación, 
+sitemaps automáticos, 
+monitoreo de indexación. 
+
+Google Analytics
+Integración nativa.
+Cada vendedor podrá colocar su propio ID de Google Analytics únicamente en el sitio web que vos le desarrolles como servicio. En el marketplace, la analítica principal será de OrigenRed.
+Desde el panel de administración tendrás métricas globales como:
+visitas, 
+sesiones, 
+conversiones, 
+tasa de rebote, 
+embudos de compra, 
+rendimiento por categoría. 
+
+Meta Pixel
+Preparado.
+Pero administrado desde el panel.
+Si algún día querés cambiar el Pixel.
+No habrá que tocar código.
+
+Conversion API
+También preparada.
+Mucho más confiable que depender únicamente del navegador.
+
+Campañas
+Quiero dejar preparado un módulo.
+Aunque inicialmente no lo uses.
+Ejemplo.
+Banner Home
+
+↓
+
+Campaña Día del Padre
+
+↓
+
+Activa
+
+↓
+
+Fecha inicio
+
+↓
+
+Fecha fin
+Todo administrable.
+
+Banners Inteligentes
+No quiero banners fijos.
+Quiero reglas.
+Ejemplo.
+Mostrar.
+Solo.
+Usuarios nuevos.
+
+O.
+Solo.
+Provincia Buenos Aires.
+
+O.
+Solo.
+Compradores.
+
+Todo configurable.
+
+Cupones
+Aunque inicialmente estén desactivados.
+La arquitectura los soportará.
+Ejemplos.
+Porcentaje.
+Monto fijo.
+Envío gratis.
+Primer compra.
+Fecha límite.
+Cantidad máxima de usos.
+Vendedor específico o global.
+
+Gift Cards
+También dejaría preparada la estructura.
+No necesariamente habilitada.
+
+Programa de Referidos
+Como hablamos.
+Cada vendedor tendrá un enlace.
+Cada comprador también podrá tener uno en el futuro.
+Pero la lógica quedará desacoplada mediante Feature Flags.
+
+Emails Comerciales
+No enviar correos genéricos.
+Segmentar.
+Ejemplos.
+Usuarios que abandonaron carrito.
+Usuarios que no compran hace 60 días.
+Vendedores sin publicaciones recientes.
+Vendedores con perfil incompleto.
+Todo configurable.
+
+Notificaciones Push Inteligentes
+No abusar.
+Enviar únicamente cuando haya valor.
+Ejemplos.
+Volvió el stock.
+Bajó el precio.
+Se confirmó el envío.
+Nuevo mensaje.
+Producto favorito en oferta.
+
+Panel de Marketing
+Nuevo módulo para administración.
+Permitirá:
+gestionar banners, 
+campañas, 
+artículos del blog, 
+cupones, 
+landing pages, 
+promociones temporales, 
+eventos destacados. 
+Sin necesidad de modificar el código.
+
+Dashboard Comercial
+Además de estadísticas técnicas.
+Quiero un panel comercial.
+Ejemplo.
+Productos más vistos.
+Productos con mejor conversión.
+Búsquedas sin resultados.
+Categorías con mayor crecimiento.
+Abandono de carrito.
+CTR por banner.
+Campañas activas.
+
+SEO Automático para Productos
+Cada vez que un vendedor publique.
+El sistema generará automáticamente:
+título SEO, 
+descripción SEO, 
+URL amigable, 
+Open Graph, 
+datos estructurados, 
+imagen principal optimizada. 
+Sin que el vendedor tenga conocimientos técnicos.
+
+Optimización de Imágenes
+Al subir una imagen.
+Se generarán automáticamente distintas versiones.
+Miniatura.
+Mediana.
+Alta resolución.
+Formato moderno (WebP o AVIF cuando sea compatible).
+Todo servido desde Cloudflare.
+
+Performance
+Objetivos.
+Tiempo de carga inicial muy bajo.
+Lazy Loading.
+Code Splitting.
+Prefetch inteligente.
+Cache de navegación.
+Renderizado optimizado.
+
+PWA (Nueva propuesta)
+Aunque tendremos aplicación móvil.
+También convertiría la web en una Progressive Web App.
+Ventajas:
+instalación desde el navegador, 
+funcionamiento parcial sin conexión, 
+mayor velocidad, 
+notificaciones web, 
+experiencia cercana a una aplicación. 
+Esto amplía muchísimo el alcance.
+
+Internacionalización
+Aunque inicialmente opere solo en Argentina.
+Toda la plataforma se desarrollará preparada para:
+múltiples monedas, 
+múltiples idiomas, 
+múltiples países, 
+diferentes impuestos, 
+diferentes transportistas. 
+No activaremos esas funciones aún, pero evitaremos limitaciones futuras.
+
+Estrategia de Crecimiento Orgánico
+Quiero definir un ciclo continuo.
+Producto publicado
+
+↓
+
+Página indexada
+
+↓
+
+Google trae visitantes
+
+↓
+
+Nuevos compradores
+
+↓
+
+Más ventas
+
+↓
+
+Más vendedores
+
+↓
+
+Más productos
+
+↓
+
+Más páginas indexadas
+
+↓
+
+Más tráfico
+Ese círculo virtuoso es uno de los mayores activos de un marketplace.
+
+Mi propuesta más importante de este capítulo
+No pienses en OrigenRed únicamente como un marketplace.
+Pensalo también como un motor de contenido.
+Cada producto, categoría, artículo del blog y vendedor es una nueva puerta de entrada para usuarios que todavía no conocen la plataforma.
+Cuantas más puertas de entrada existan y mejor optimizadas estén, menor será tu dependencia de la publicidad paga.
+
+Fin del Capítulo 6
+Con este capítulo queda definido todo el ecosistema de marketing, posicionamiento y crecimiento orgánico.
+La plataforma no solo estará preparada para vender, sino también para atraer tráfico de forma constante y escalar su presencia digital.
+
+Próximo capítulo: Experiencia de Usuario (UX), Diseño Visual y Design System de OrigenRed
+Ese capítulo va a definir absolutamente toda la identidad visual del producto:
+sistema de colores, 
+tipografías, 
+espaciados, 
+iconografía, 
+componentes reutilizables, 
+animaciones, 
+microinteracciones, 
+accesibilidad, 
+modo oscuro, 
+responsive, 
+experiencia web y móvil, 
+panel de administración, 
+panel del vendedor, 
+y el Origen Design System, que garantizará que toda la plataforma mantenga una identidad consistente a medida que crezca. Ese documento será la base para que cualquier desarrollador o diseñador pueda construir nuevas funcionalidades sin romper la experiencia visual de OrigenRed. 
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN III
+Capítulo 7 — UX, UI y Origen Design System
+
+Filosofía
+Antes de elegir un color quiero definir una regla.
+La interfaz nunca debe llamar más la atención que el producto.
+El protagonista siempre es:
+el producto, 
+el vendedor, 
+la compra. 
+Nunca la interfaz.
+La UI debe ayudar.
+No competir.
+
+Personalidad de OrigenRed
+Quiero una personalidad.
+Premium.
+Moderna.
+Minimalista.
+Tecnológica.
+Con mucha confianza.
+Pero.
+A la vez.
+Cálida.
+
+No quiero copiar.
+Mercado Libre.
+Amazon.
+Tiendanube.
+Shopify.
+Quiero que cuando alguien vea un screenshot.
+Sepa.
+Que es OrigenRed.
+
+Paleta de Colores
+No definiría solamente un color.
+Definiría un sistema.
+
+Color Principal
+Azul profundo.
+Representa.
+Tecnología.
+Seguridad.
+Confianza.
+
+Color Secundario
+Turquesa.
+Representa.
+Innovación.
+
+Color de Éxito
+Verde.
+
+Advertencia
+Amarillo.
+
+Error
+Rojo.
+
+Información
+Celeste.
+
+Todos.
+Con variantes.
+50
+100
+200
+300
+400
+500
+600
+700
+800
+900
+Como hace Tailwind.
+
+Variables
+Nunca.
+Colores hardcodeados.
+Siempre.
+Tokens.
+Ejemplo.
+primary-500
+primary-600
+surface
+background
+border
+danger
+success
+
+Tipografía
+Quiero.
+Una sola.
+Con muchas variantes.
+
+Títulos.
+SemiBold.
+
+Texto.
+Regular.
+
+Botones.
+Medium.
+
+Nunca.
+Cinco fuentes distintas.
+
+Escala Tipográfica
+12
+14
+16
+18
+20
+24
+30
+36
+48
+60
+Nada inventado.
+
+Espaciados
+Sistema.
+De.
+4px.
+4
+
+8
+
+12
+
+16
+
+20
+
+24
+
+32
+
+40
+
+48
+
+64
+Toda la plataforma.
+Respeta.
+La misma escala.
+
+Bordes
+No quiero.
+Todo cuadrado.
+
+Radio.
+Pequeño.
+Inputs.
+
+Mediano.
+Cards.
+
+Grande.
+Modales.
+
+Extra.
+Botones principales.
+
+Sombras
+Muy suaves.
+No quiero.
+Efecto.
+Windows XP.
+
+Solo.
+Tres niveles.
+Pequeña.
+Media.
+Grande.
+
+Elevaciones
+Solo donde realmente aporten jerarquía.
+
+Animaciones
+Muy importantes.
+Pero.
+Rápidas.
+
+No quiero.
+Animaciones.
+De.
+Dos segundos.
+
+Duración.
+100ms
+200ms
+300ms
+Máximo.
+
+Microinteracciones
+Esto hace.
+La diferencia.
+
+Agregar favorito.
+↓
+Pequeña animación.
+
+Agregar carrito.
+↓
+Feedback inmediato.
+
+Compra realizada.
+↓
+Celebración elegante.
+
+No exagerada.
+
+Skeleton Loaders
+Nunca.
+Mostrar.
+Pantallas blancas.
+
+Siempre.
+Skeletons.
+
+Así.
+La percepción.
+Es muchísimo mejor.
+
+Responsive
+No adaptar.
+Diseñar.
+Desde cero.
+
+Desktop.
+Tablet.
+Mobile.
+
+Cada uno.
+Pensado.
+Individualmente.
+
+Mobile First
+La mayoría.
+Comprará.
+Desde el celular.
+
+Toda decisión.
+Debe comenzar.
+Por Mobile.
+
+App React Native
+Debe sentirse.
+Igual.
+Que la web.
+
+Mismos colores.
+Mismos componentes.
+Mismos iconos.
+Mismos espacios.
+
+Design Tokens
+Todo.
+Centralizado.
+Ejemplo.
+spacing
+radius
+colors
+typography
+icons
+shadow
+animation
+z-index
+
+Componentes
+No crear.
+Botones.
+Cada vez.
+
+Existirá.
+Un único botón.
+Con variantes.
+
+Ejemplo.
+Primary
+Secondary
+Ghost
+Danger
+Success
+Link
+
+Lo mismo.
+Inputs.
+Cards.
+Badges.
+Chips.
+Dropdowns.
+Checkbox.
+Switch.
+Tabs.
+Todo.
+
+Cards de Producto
+Creo que acá podemos diferenciarnos muchísimo.
+Cada Card.
+Debe mostrar.
+Foto.
+Título.
+Precio.
+Cuotas.
+Envío.
+Distancia.
+Nombre vendedor.
+Verificado.
+Favorito.
+Stock.
+Todo.
+Sin sentirse cargada.
+
+Hover
+Desktop.
+Muy elegante.
+
+Imagen.
+Zoom.
+Muy pequeño.
+
+Botón favorito.
+Aparece.
+
+Botón.
+Agregar carrito.
+Aparece.
+
+Nunca exagerado.
+
+Home
+La Home.
+Debe respirar.
+
+Mucho espacio.
+Grandes imágenes.
+Buenas categorías.
+Productos.
+Muy limpios.
+
+No quiero.
+Cincuenta banners.
+
+Búsqueda
+Siempre visible.
+
+Muy grande.
+
+Con.
+Autocomplete.
+Historial.
+Sugerencias.
+
+Filtros
+No esconderlos.
+
+Desktop.
+Lateral.
+
+Mobile.
+Bottom Sheet.
+
+Checkout
+Quiero.
+Un checkout.
+En.
+Una sola página.
+
+No.
+Cinco pantallas.
+
+Todo.
+Muy claro.
+
+Indicadores
+Siempre.
+Mostrar.
+En qué paso.
+Está.
+El usuario.
+
+Estados
+Todo componente.
+Debe tener.
+Estado.
+Normal.
+Hover.
+Focus.
+Disabled.
+Loading.
+Error.
+Success.
+
+Nunca.
+Estados.
+Inconsistentes.
+
+Accesibilidad
+Muy importante.
+
+Contraste.
+Correcto.
+
+Teclado.
+Completo.
+
+ARIA.
+Donde corresponda.
+
+Lectores.
+De pantalla.
+Compatibles.
+
+Iconografía
+Una sola librería.
+
+Nunca.
+Mezclar.
+Cinco estilos.
+
+Ilustraciones
+Muy pocas.
+Solo.
+Donde aporten.
+
+Empty States
+Cuando.
+No haya productos.
+No mostrar.
+Pantalla vacía.
+
+Mostrar.
+Mensaje.
+Ilustración.
+Y acciones.
+
+Ejemplo.
+Todavía no hay productos.
+
+Explorá otras categorías.
+
+Errores
+Nunca.
+500
+Mostrar.
+Qué pasó.
+Y cómo continuar.
+
+Confirmaciones
+Toda acción importante.
+Debe confirmarse visualmente.
+
+Notificaciones
+No abusar.
+Toast.
+Solo.
+Cuando aporta.
+
+Panel Admin
+Muy distinto.
+De la tienda.
+
+Más información.
+Menos decoración.
+
+Muchísimas tablas.
+
+Muchos filtros.
+
+Muchos gráficos.
+
+Todo.
+Muy rápido.
+
+Panel Vendedor
+Debe sentirse.
+Como un ERP moderno.
+
+Productos.
+Ventas.
+Estadísticas.
+Chat.
+Servicios.
+Todo.
+En un Dashboard.
+
+Dashboard
+Widgets.
+Movibles.
+Configurables.
+
+Cada vendedor.
+Puede.
+Ordenarlo.
+Como quiera.
+
+Tema Oscuro
+Acá quiero hacer una recomendación importante.
+Implementar soporte técnico para modo oscuro desde el inicio, pero lanzar inicialmente con un único tema cuidadosamente diseñado.
+¿Por qué?
+Porque mantener dos temas duplica el trabajo de diseño, pruebas y mantenimiento.
+Si en el futuro la comunidad lo pide, ya estará preparado.
+
+Motion
+No quiero.
+Pantallas.
+Estáticas.
+
+Las transiciones.
+Entre vistas.
+Serán.
+Muy suaves.
+
+Framer Motion.
+Perfecto.
+
+Sistema de Feedback
+Cada acción.
+Debe responder.
+Inmediatamente.
+
+Guardar.
+↓
+Spinner.
+↓
+Confirmación.
+
+Eliminar.
+↓
+Animación.
+↓
+Mensaje.
+
+Nunca.
+Silencio.
+
+Vacíos Inteligentes
+Ejemplo.
+Usuario.
+Sin ventas.
+En vez de decir.
+0 ventas
+Mostrar.
+Todavía no realizaste tu primera venta.
+
+Publicá más productos para aumentar tus posibilidades.
+Eso cambia completamente la experiencia.
+
+Dashboard Personalizable (Nueva propuesta)
+Tanto el administrador como los vendedores podrán elegir qué widgets ver primero.
+Ejemplos:
+ventas del día, 
+productos con bajo stock, 
+pedidos pendientes, 
+conversaciones sin responder, 
+rendimiento semanal. 
+Cada usuario organiza su espacio de trabajo.
+
+Atajos de Teclado
+Para el panel administrativo y el panel del vendedor.
+Ejemplos:
+Buscar usuario. 
+Crear producto. 
+Abrir pedidos. 
+Ir al chat. 
+Esto aumenta mucho la productividad.
+
+Sistema de Comandos (Nueva propuesta)
+Inspirado en herramientas modernas.
+Con un atajo (por ejemplo, Ctrl + K) se abre un buscador global.
+Desde ahí podrás escribir:
+"Crear producto". 
+"Buscar vendedor". 
+"Ir a pedidos". 
+"Abrir configuración". 
+Y navegar por toda la plataforma sin recorrer menús.
+
+Mi propuesta más importante de todo el Design System
+No diseñemos pantallas.
+Diseñemos reglas.
+Si el sistema tiene reglas claras para colores, componentes, espaciados, tipografía, iconografía y comportamiento, cualquier nueva funcionalidad que agregues dentro de tres años se verá como si hubiera existido desde el primer día.
+Eso hace que la plataforma mantenga una identidad sólida a medida que crece.
+
+Fin del Capítulo 7
+Con este capítulo queda definida la experiencia visual y de interacción de OrigenRed.
+Ya no solo sabemos cómo funciona el sistema.
+Sabemos cómo debe sentirse al usarlo.
+Y eso es una diferencia enorme.
+
+Mi propuesta para el próximo capítulo
+Ahora quiero diseñar algo que pocas veces se documenta al inicio y que después suele traer muchos problemas:
+Capítulo 8 — Arquitectura Financiera, Comisiones y Conciliación
+Ahí definiremos en detalle:
+cómo se registra el 5% de comisión, 
+conciliación con Mercado Pago, 
+estados financieros internos, 
+devoluciones parciales y totales, 
+reembolsos, 
+manejo de contracargos, 
+comisiones negativas, 
+cierres diarios, 
+reportes financieros, 
+auditoría contable interna, 
+y cómo garantizar que OrigenRed siempre pueda explicar con precisión cada peso que ingresó o salió de la plataforma. 
+En un marketplace, esa trazabilidad financiera es tan importante como el código mismo.
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN III
+Capítulo 8 — Arquitectura Financiera, Comisiones y Conciliación
+
+Filosofía
+Quiero dejar una regla que va a definir todo este capítulo.
+OrigenRed nunca debe "calcular" dinero sobre la marcha. Debe registrar cada movimiento financiero como un hecho inmutable.
+Es decir.
+Cada movimiento.
+Cada comisión.
+Cada devolución.
+Cada reembolso.
+Cada ajuste.
+Debe quedar registrado.
+Nunca sobrescrito.
+
+Ledger Financiero
+En vez de modificar saldos.
+Crearemos un Libro Mayor (Ledger).
+Cada operación genera movimientos.
+Nunca se eliminan.
+Ejemplo.
+Compra #84521
+
+↓
+
+Pago aprobado
+
+↓
+
+Movimiento +$100.000
+
+↓
+
+Comisión OrigenRed +$5.000
+
+↓
+
+Ingreso vendedor +$95.000
+Si luego hay devolución.
+No se modifica.
+Se agregan nuevos movimientos.
+Reembolso
+
+↓
+
+-95.000 vendedor
+
+↓
+
+-5.000 comisión
+
+↓
+
+-100.000 comprador
+Todo queda auditado.
+
+Estados de una Orden
+Una orden nunca estará simplemente "Pagada".
+Quiero un flujo completo.
+Pendiente
+
+↓
+
+Esperando pago
+
+↓
+
+Pago aprobado
+
+↓
+
+Pago acreditado
+
+↓
+
+Preparando pedido
+
+↓
+
+Despachado
+
+↓
+
+En tránsito
+
+↓
+
+Entregado
+
+↓
+
+Finalizado
+Y estados alternativos.
+Cancelado
+
+Reembolsado
+
+Parcialmente reembolsado
+
+En disputa
+
+Devuelto
+
+Estados del Dinero
+Diferenciar el pedido del dinero.
+Ejemplo.
+Pago recibido
+
+↓
+
+Pendiente conciliación
+
+↓
+
+Conciliado
+↓
+Comisión registrada
+↓
+Liquidado
+
+Comisión
+Regla absoluta.
+La comisión siempre será.
+5%
+
+del subtotal
+
+SIN incluir envío.
+Ejemplo.
+Producto.
+$120.000
+Envío.
+$8.000
+Comisión.
+5%
+
+sobre
+
+120.000
+
+=
+6.000
+Nunca sobre.
+128.000
+
+Envíos
+El dinero del envío.
+No pertenece a OrigenRed.
+Solo es un concepto aparte.
+Si el vendedor cobra envío.
+Ese importe viaja íntegramente según la configuración logística.
+Si ofrece envío gratis.
+El costo lo absorbe el vendedor.
+
+Compras Multivendedor
+Supongamos.
+Vendedor A
+
+$20.000
+
+------------
+
+Vendedor B
+
+$50.000
+
+------------
+
+Vendedor C
+
+$80.000
+Internamente.
+Se generan.
+Tres liquidaciones.
+Tres comisiones.
+Tres órdenes.
+Aunque.
+El comprador.
+Haya realizado.
+Un solo pago.
+
+Tabla de Comisiones
+Cada comisión tendrá su registro.
+Ejemplo.
+Venta
+
+Subtotal
+
+Porcentaje
+
+Importe
+
+Estado
+
+Fecha
+
+Referencia MP
+
+Orden
+
+Vendedor
+Nunca depender del cálculo dinámico.
+
+Conciliación
+Todos los días.
+Un proceso automático.
+Consultará Mercado Pago.
+Y verificará.
+Que todas las operaciones coincidan.
+Si encuentra diferencias.
+Generará una alerta.
+
+Descuadres
+Ejemplo.
+Mercado Pago.
+Indica.
+Pago aprobado.
+Pero.
+La orden.
+Figura pendiente.
+↓
+Alerta.
+↓
+Administrador.
+↓
+Resolver.
+
+Dashboard Financiero
+Quiero un panel exclusivo.
+Con.
+Ventas del día.
+Comisiones del día.
+Ventas por vendedor.
+Comisiones pendientes.
+Reembolsos.
+Disputas.
+Errores.
+Todo.
+En tiempo real.
+
+Historial Financiero
+Cada vendedor.
+Podrá ver.
+Solo.
+Sus operaciones.
+Nunca.
+Las de otros.
+
+Comisión Editable
+Como definimos.
+El porcentaje.
+Será editable.
+Desde.
+Panel Admin.
+Ejemplo.
+5%
+
+↓
+
+7%
+
+↓
+
+3%
+Afectará únicamente.
+Las ventas futuras.
+Nunca.
+Las ya realizadas.
+
+Cambios Históricos
+Toda modificación.
+Queda registrada.
+Ejemplo.
+Administrador
+
+↓
+
+Cambió comisión
+
+↓
+
+5%
+
+↓
+
+6%
+
+↓
+
+Fecha
+
+↓
+
+Motivo
+
+Reembolsos
+Si un pedido.
+Se devuelve.
+Mercado Pago.
+Realiza el reembolso.
+↓
+Webhook.
+↓
+OrigenRed.
+Actualiza.
+Estados.
+↓
+Ledger.
+↓
+Notificaciones.
+
+Reembolso Parcial
+También soportado.
+Ejemplo.
+Compra.
+Tres productos.
+Se devuelve uno.
+Solo ese.
+Genera movimientos financieros.
+
+Contracargos
+Muy importante.
+Si Mercado Pago.
+Informa.
+Un contracargo.
+La orden.
+Pasa automáticamente.
+A.
+En disputa
+Y se notifica.
+Al administrador.
+
+Congelamiento
+Mientras exista disputa.
+No podrá modificarse.
+La orden.
+
+Caja Diaria
+Todos los días.
+Se genera.
+Un resumen.
+Ejemplo.
+Ventas
+
+Comisiones
+
+Reembolsos
+
+Contracargos
+
+Pedidos
+
+Promedio
+
+Ticket medio
+
+Reportes
+Exportables.
+CSV.
+Excel.
+PDF.
+
+Auditoría
+Toda acción financiera.
+Debe indicar.
+Quién.
+Qué.
+Cuándo.
+Desde dónde.
+
+Redondeos
+Otra regla importante.
+Todos los cálculos monetarios utilizarán precisión decimal adecuada para evitar errores acumulativos.
+Nunca trabajar con números de punto flotante para operaciones financieras.
+
+Moneda
+Aunque inicialmente será Argentina.
+La arquitectura soportará múltiples monedas.
+Cada movimiento financiero almacenará:
+moneda, 
+tipo de cambio (cuando corresponda), 
+importe original. 
+
+Impuestos
+Como definiste.
+OrigenRed no realizará facturación automática mediante ARCA.
+Cada vendedor será responsable de sus obligaciones fiscales.
+La plataforma únicamente registrará información comercial y financiera necesaria para operar el marketplace.
+
+Estadísticas Financieras
+Panel para administrador.
+Ejemplos:
+comisión promedio, 
+crecimiento mensual, 
+ticket promedio, 
+categorías más rentables, 
+vendedores con mayor facturación, 
+ingresos acumulados. 
+
+Alertas Inteligentes
+Quiero que existan reglas configurables.
+Ejemplos.
+Comisiones anormalmente bajas.
+Muchas devoluciones de un vendedor.
+Aumento repentino de contracargos.
+Caída brusca de ventas.
+Pedidos sin conciliación después de cierto tiempo.
+
+Exportación Contable
+Aunque inicialmente no se integre con sistemas externos.
+La información podrá exportarse fácilmente para ser utilizada por un contador o importada en otras herramientas.
+
+Integridad Financiera
+Una orden nunca podrá quedar en un estado imposible.
+Ejemplo.
+No puede estar.
+Entregada
+
+↓
+
+Pago pendiente
+El sistema validará automáticamente las transiciones de estado.
+
+Simulador de Comisiones
+En el panel de administración podrás probar distintos porcentajes.
+Ejemplo.
+Si la comisión fuera:
+3%
+5%
+7%
+10%
+El sistema mostrará cuánto hubiera ingresado OrigenRed durante el último mes.
+Esto ayuda muchísimo para tomar decisiones comerciales.
+
+Panel Ejecutivo
+Además del dashboard operativo.
+Quiero un panel pensado para vos como dueño del negocio.
+Indicadores como:
+ingresos de OrigenRed, 
+crecimiento mensual, 
+cantidad de vendedores activos, 
+nuevos registros, 
+tasa de conversión, 
+ingresos por categoría, 
+ingresos proyectados, 
+vendedores más destacados, 
+evolución del marketplace. 
+Será el tablero principal desde donde podrás entender el estado de la empresa en pocos minutos.
+
+Mi propuesta más importante de este capítulo
+Nunca diseñemos la parte financiera pensando únicamente en el presente.
+Hoy puede haber 100 ventas por mes.
+Pero si dentro de unos años hay 300.000 ventas mensuales, el modelo financiero debe seguir siendo exactamente igual de confiable.
+La escalabilidad financiera es tan importante como la escalabilidad técnica.
+
+Fin del Capítulo 8
+Con este capítulo queda completamente definida la arquitectura financiera de OrigenRed.
+Ya sabemos cómo registrar, distribuir, auditar y conciliar cada peso que pase por la plataforma.
+Eso genera confianza tanto para los vendedores como para la administración del marketplace.
+
+Próximo capítulo: Sistema de Analítica, Inteligencia de Negocio (BI) y Métricas Avanzadas
+En ese capítulo vamos a diseñar uno de los mayores diferenciales para la toma de decisiones:
+métricas en tiempo real, 
+dashboards ejecutivos, 
+embudos de conversión, 
+cohortes, 
+análisis por categorías, 
+comportamiento de compradores, 
+rendimiento de vendedores, 
+mapas de calor comerciales, 
+predicciones, 
+KPIs, 
+alertas inteligentes, 
+y un centro de inteligencia que convierta los datos de OrigenRed en decisiones estratégicas.
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN III
+Capítulo 9 — Business Intelligence (BI), Analítica y Centro de Inteligencia
+
+Filosofía
+Quiero establecer un principio para todo este módulo.
+Todo lo que ocurra dentro de OrigenRed debe poder medirse.
+No importa si hablamos de:
+una búsqueda, 
+un clic, 
+una compra, 
+un chat, 
+una devolución, 
+un abandono de carrito. 
+Todo genera información.
+Y esa información genera decisiones.
+
+Arquitectura de Eventos
+En lugar de consultar constantemente la base de datos, toda acción importante emitirá un evento.
+Ejemplos.
+ProductViewed
+SearchPerformed
+ProductFavorited
+CartCreated
+CheckoutStarted
+PaymentApproved
+OrderDelivered
+RefundProcessed
+VendorCreated
+VendorSuspended
+MessageSent
+Cada evento alimentará el sistema de analítica.
+
+Data Warehouse Interno
+La base operativa seguirá siendo MongoDB.
+Pero la analítica trabajará sobre un modelo optimizado para consultas agregadas.
+No queremos que las estadísticas ralenticen la plataforma principal.
+
+Dashboard Ejecutivo
+Este será el primer panel que verás al ingresar como administrador.
+Indicadores principales:
+Ventas del día
+
+Ventas del mes
+
+Ingresos de OrigenRed
+
+Cantidad de pedidos
+
+Cantidad de compradores activos
+
+Cantidad de vendedores activos
+
+Productos publicados
+
+Conversión general
+
+Ticket promedio
+
+Valor bruto comercializado (GMV)
+
+Comisión acumulada
+Todo actualizado en tiempo real o casi en tiempo real.
+
+KPIs Principales
+Quiero definir desde el inicio los indicadores más importantes.
+Marketplace
+GMV (Gross Merchandise Value). 
+Total vendido. 
+Comisión generada. 
+Pedidos. 
+Usuarios activos. 
+Vendedores activos. 
+Nuevos registros. 
+
+Compradores
+Primera compra. 
+Compras repetidas. 
+Frecuencia. 
+Tiempo entre compras. 
+Categorías favoritas. 
+Valor promedio. 
+
+Vendedores
+Cada vendedor tendrá un Score.
+Ejemplo.
+Ventas
+
+Conversión
+
+Tiempo respuesta
+
+Cancelaciones
+
+Devoluciones
+
+Calidad publicaciones
+
+Nivel de actividad
+
+Reputación
+Todo visible únicamente para vos y parcialmente para el propio vendedor.
+
+Embudo de Conversión
+Uno de los gráficos más importantes.
+Ejemplo.
+100.000 visitas
+
+↓
+
+35.000 productos abiertos
+
+↓
+
+11.000 agregados al carrito
+
+↓
+
+5.800 checkouts
+
+↓
+
+4.900 pagos
+
+↓
+
+4.720 entregas
+Con esto podrás detectar rápidamente dónde se pierden compradores.
+
+Embudos por Categoría
+No solo generales.
+También.
+Electrónica.
+Moda.
+Hogar.
+Mascotas.
+Herramientas.
+Cada una con su propio rendimiento.
+
+Embudos por Vendedor
+También quiero poder responder preguntas como:
+¿Qué vendedor tiene muchas visitas pero pocas ventas?
+Eso generalmente indica:
+precios altos, 
+malas imágenes, 
+mala descripción, 
+poca confianza. 
+
+Dashboard de Búsquedas
+Uno de los paneles más valiosos.
+Mostrará.
+Búsquedas más realizadas
+
+Búsquedas sin resultados
+
+Errores de escritura frecuentes
+
+Productos más clickeados
+
+Conversión por búsqueda
+Esto sirve para mejorar tanto el algoritmo como las categorías.
+
+Mapa Comercial
+Quiero un mapa de Argentina.
+Con información como:
+provincias con más ventas, 
+provincias con más compradores, 
+provincias con más vendedores, 
+crecimiento mensual por región. 
+Sin mostrar direcciones exactas.
+Solo análisis.
+
+Análisis por Código Postal
+Como el sistema utilizará código postal para logística.
+Podremos detectar.
+Zonas con:
+muchas compras, 
+pocos vendedores. 
+Ahí tenés una oportunidad comercial enorme.
+Podrás salir a buscar vendedores específicamente para esas regiones.
+
+Productos Estrella
+Panel con:
+productos más vendidos, 
+mayor crecimiento, 
+mayor conversión, 
+más compartidos, 
+más agregados a favoritos. 
+
+Productos con Problemas
+También quiero el panel contrario.
+Productos con:
+muchas visitas, 
+pocas ventas. 
+Muchos carritos.
+Pocas compras.
+Muchas devoluciones.
+Muchas denuncias.
+Todo eso requiere intervención.
+
+Análisis de Carritos Abandonados
+Estadísticas como:
+porcentaje de abandono, 
+productos más abandonados, 
+categorías, 
+horario. 
+En el futuro incluso podremos automatizar recordatorios.
+
+Dashboard de Envíos
+Métricas.
+Tiempo promedio de despacho.
+Tiempo promedio de entrega.
+Costo promedio.
+Transportistas más utilizados.
+Envíos gratis.
+Retrasos.
+
+Dashboard de Atención
+Para medir:
+Tiempo promedio de respuesta.
+Conversaciones abiertas.
+Conversaciones cerradas.
+Satisfacción futura (si implementamos valoraciones).
+
+Dashboard Técnico
+También quiero un panel exclusivamente técnico.
+Indicadores como:
+tiempo de respuesta de la API, 
+errores por minuto, 
+uso de CPU, 
+uso de memoria, 
+uso de Redis, 
+uso de MongoDB, 
+almacenamiento en Cloudflare R2, 
+tiempo de indexación de Meilisearch. 
+Así no necesitás salir de la plataforma para ver la salud del sistema.
+
+Cohortes
+Preparado para el futuro.
+Ejemplo.
+Usuarios registrados en enero.
+¿Cuántos siguen comprando en febrero?
+Marzo.
+Abril.
+Eso permite medir retención.
+
+Lifetime Value (LTV)
+Cada comprador tendrá un valor acumulado.
+No para mostrarlo públicamente.
+Sino para entender cuánto aporta cada cliente a lo largo del tiempo.
+
+CAC
+Cuando implementemos campañas de marketing.
+Podremos calcular.
+Costo de adquisición.
+Y compararlo con el LTV.
+
+Predicciones (Nueva propuesta)
+No quiero IA compleja.
+Quiero modelos simples.
+Ejemplos.
+El sistema podrá advertir:
+"Esta categoría está creciendo un 18% mensual." 
+"Las ventas suelen aumentar los viernes." 
+"Este vendedor probablemente se quede sin stock en tres días." 
+No son predicciones mágicas.
+Son tendencias estadísticas.
+
+Alertas Inteligentes
+El sistema podrá avisarte automáticamente cuando detecte anomalías.
+Ejemplos.
+caída brusca de conversiones, 
+aumento de devoluciones, 
+categoría sin publicaciones nuevas, 
+vendedor inactivo hace mucho tiempo, 
+crecimiento inusual de una búsqueda. 
+
+Comparativas
+Todos los dashboards podrán compararse.
+Hoy.
+Vs.
+Ayer.
+Semana pasada.
+Mes pasado.
+Año pasado.
+Y períodos personalizados.
+
+Exportaciones
+Todos los gráficos y tablas podrán exportarse.
+CSV.
+Excel.
+PDF.
+Ideal para reuniones o análisis externos.
+
+Widgets Personalizables
+Como definimos anteriormente.
+Cada administrador podrá organizar su panel.
+Mostrar primero:
+ventas, 
+comisiones, 
+rendimiento técnico, 
+logística, 
+usuarios. 
+
+Centro de Inteligencia
+Mi idea favorita para este módulo.
+No quiero diez dashboards separados.
+Quiero un "Centro de Inteligencia".
+Donde el sistema destaque automáticamente lo más importante.
+Ejemplo.
+📈 Las ventas crecieron 12% esta semana.
+
+⚠️ Aumentaron las devoluciones en la categoría Calzado.
+
+📦 Hay 34 pedidos demorados.
+
+⭐ Cinco vendedores mejoraron su conversión.
+
+🔎 La búsqueda "impresora 3D" creció un 40%.
+Vos entrás al panel y entendés inmediatamente qué está pasando.
+
+Reportes Programados
+Podrás configurar envíos automáticos.
+Ejemplos.
+Resumen diario.
+Resumen semanal.
+Resumen mensual.
+En PDF o Excel.
+Para revisar el negocio sin entrar a la plataforma.
+
+API de Analítica
+Toda la información del módulo estará disponible mediante una API interna.
+Esto permitirá, en el futuro, crear aplicaciones móviles de administración, pantallas ejecutivas o integraciones externas sin duplicar lógica.
+
+Privacidad
+Toda la analítica respetará la privacidad de los usuarios.
+No almacenaremos información innecesaria.
+Los datos se utilizarán únicamente para mejorar la plataforma y tomar decisiones comerciales.
+
+Mi propuesta más importante de este capítulo
+No conviertas la analítica en un conjunto de gráficos bonitos.
+Convertí los datos en acciones concretas.
+Si un panel muestra un problema, debería sugerir qué hacer.
+Si detecta una oportunidad, debería ayudarte a aprovecharla.
+La mejor analítica no es la que informa.
+Es la que guía decisiones.
+
+Fin del Capítulo 9
+Con este capítulo queda diseñado el sistema de inteligencia de negocio de OrigenRed.
+La plataforma no solo registrará lo que ocurre.
+Será capaz de interpretar tendencias, detectar oportunidades y ayudarte a dirigir el crecimiento del marketplace con información confiable.
+
+Próximo capítulo: Roadmap de Evolución, Versionado y Expansión de OrigenRed
+Ese capítulo definirá el futuro del proyecto:
+fases de desarrollo, 
+MVP, 
+versión 1.0, 
+funcionalidades futuras, 
+expansión internacional, 
+arquitectura preparada para millones de usuarios, 
+marketplace de servicios, 
+publicidad interna, 
+suscripciones, 
+API pública, 
+ecosistema para desarrolladores, 
+y una visión a cinco años para que OrigenRed evolucione sin perder coherencia técnica ni de negocio. 
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN III
+Capítulo 10 — Roadmap Estratégico y Evolución de OrigenRed
+
+Filosofía
+Una plataforma como OrigenRed no debe desarrollarse agregando funcionalidades al azar.
+Cada nueva característica debe responder una pregunta:
+¿Hace crecer el ecosistema sin aumentar innecesariamente la complejidad?
+Quiero que OrigenRed pueda evolucionar durante los próximos diez años sin necesidad de rehacer el sistema desde cero.
+Por eso definimos un roadmap claro desde el primer día.
+
+Etapa 0 — Fundación
+Objetivo:
+Construir una base sólida.
+Incluye:
+arquitectura modular, 
+autenticación, 
+roles, 
+panel administrador, 
+panel vendedor, 
+gestión de productos, 
+categorías, 
+stock, 
+imágenes, 
+Cloudflare R2, 
+Marketplace, 
+Mercado Pago, 
+algoritmo OrigenRank, 
+búsqueda avanzada, 
+SEO, 
+aplicación web, 
+aplicación Android, 
+aplicación iPhone, 
+infraestructura escalable. 
+Esta etapa es la que estamos diseñando ahora.
+
+Etapa 1 — Lanzamiento Público
+Objetivo.
+Abrir OrigenRed al mercado argentino.
+Características.
+Marketplace completo.
+Registro de compradores.
+Alta manual de vendedores.
+Publicación de productos.
+Checkout.
+Mercado Pago.
+Comisión automática.
+Chat postventa.
+Sistema de denuncias.
+Favoritos.
+Búsqueda avanzada.
+Categorías dinámicas.
+Panel administrativo.
+Panel vendedor.
+Aplicaciones móviles.
+
+Objetivo Comercial
+Conseguir los primeros:
+100 vendedores.
+Sin invertir grandes presupuestos en publicidad.
+El foco estará en la calidad.
+No en la cantidad.
+
+Etapa 2 — Crecimiento
+Cuando existan aproximadamente:
+500 vendedores activos.
+Se habilitarán nuevas funciones.
+
+Programa de Referidos
+Cada vendedor tendrá un enlace único.
+Si otro vendedor se registra y es aprobado utilizando ese enlace.
+Quedará registrado.
+Inicialmente solo para estadísticas.
+Más adelante podrá utilizarse para beneficios comerciales.
+
+Cupones
+Se habilitarán:
+descuentos, 
+promociones, 
+envío gratis, 
+campañas especiales. 
+
+Campañas Comerciales
+Administrador.
+Podrá crear:
+Hot Sale.
+Cyber Monday.
+Navidad.
+Black Friday.
+Semana del Emprendedor.
+Etc.
+
+Push Inteligentes
+Comenzarán campañas automáticas.
+Ejemplos.
+Producto favorito bajó de precio.
+Volvió el stock.
+Nueva categoría.
+Nuevo vendedor cerca tuyo.
+
+Etapa 3 — Escalabilidad
+Cuando OrigenRed supere aproximadamente:
+5.000 vendedores.
+Comenzarán optimizaciones.
+
+Separación de Workers.
+
+Separación del motor de búsqueda.
+
+Separación del sistema de analítica.
+
+CDN optimizada.
+
+Mayor infraestructura.
+
+Escalado horizontal.
+
+Etapa 4 — Marketplace de Servicios
+Acá entra una idea que ya definimos parcialmente.
+Los servicios no serán iguales que los productos.
+Ejemplos.
+Diseño gráfico.
+Programación.
+Marketing.
+Fotografía.
+Cursos.
+Consultoría.
+Cada servicio tendrá una ficha distinta.
+No llevará stock.
+No llevará peso.
+No llevará logística.
+Tendrá:
+duración, 
+modalidad, 
+agenda (futuro), 
+descripción profesional. 
+
+Suscripción para Servicios
+Como definimos.
+Los servicios.
+No pagarán comisión.
+Tendrán una suscripción mensual configurable.
+Desde el panel de administración.
+
+Etapa 5 — Ecosistema OrigenRed
+Acá empieza la verdadera expansión.
+
+OrigenWeb
+Servicio premium.
+Vos desarrollás el sitio web del vendedor.
+Dentro del perfil del vendedor aparecerá.
+"Visitar sitio oficial"
+Con enlace a su dominio.
+
+OrigenAds
+Servicio profesional.
+Configuración de:
+Meta Ads.
+Google Ads.
+Google Analytics.
+Google Search Console.
+Pixel.
+SEO.
+Landing Pages.
+Todo ofrecido por vos como agencia.
+No automatizado.
+El contacto se realiza directamente con vos.
+
+OrigenCloud
+En el futuro.
+Podrías ofrecer hosting administrado para las webs de tus clientes.
+Todo centralizado.
+
+OrigenMail
+Cuentas de correo corporativo.
+Ejemplo.
+ventas@mitienda.com
+info@mitienda.com
+También como servicio adicional.
+
+Etapa 6 — Internacionalización
+Inicialmente.
+Argentina.
+Luego.
+Uruguay.
+Chile.
+Paraguay.
+Y posteriormente otros países.
+Como la arquitectura ya fue preparada.
+El cambio consistirá principalmente en configurar:
+moneda, 
+impuestos, 
+logística, 
+métodos de pago. 
+
+Etapa 7 — API Pública
+Cuando el ecosistema madure.
+OrigenRed ofrecerá una API pública.
+Los desarrolladores podrán:
+publicar productos, 
+consultar pedidos, 
+administrar stock, 
+sincronizar ERP, 
+integrar sistemas externos. 
+Con autenticación mediante OAuth y API Keys.
+
+Etapa 8 — Aplicaciones Complementarias
+Además de la aplicación principal.
+Podrán existir.
+OrigenAdmin.
+Aplicación exclusiva para administradores.
+OrigenSeller.
+Aplicación exclusiva para vendedores.
+OrigenDelivery.
+Si algún día decidís tener logística propia.
+Toda la arquitectura ya estará preparada.
+
+Etapa 9 — Inteligencia Artificial
+No para reemplazar personas.
+Sino para asistirlas.
+Ejemplos.
+Sugerir mejores títulos.
+Optimizar descripciones.
+Detectar publicaciones duplicadas.
+Detectar fraude.
+Recomendar categorías.
+Responder preguntas frecuentes.
+Ayudar a completar fichas de productos.
+Todo como asistencia.
+Nunca obligatorio.
+
+Etapa 10 — OrigenRed Platform
+Mi visión más ambiciosa.
+Que OrigenRed deje de ser solamente un marketplace.
+Y se convierta en una plataforma para emprendedores argentinos.
+Donde un negocio pueda gestionar desde un solo lugar:
+ventas, 
+stock, 
+marketplace, 
+ecommerce propio, 
+marketing, 
+analítica, 
+publicidad, 
+logística, 
+clientes, 
+reportes. 
+Sin tener que contratar cinco plataformas distintas.
+
+Principio de Evolución
+Quiero dejar escrita una regla para todo el proyecto.
+Toda nueva funcionalidad debe construirse como un módulo independiente, capaz de integrarse al ecosistema sin romper lo existente.
+Así evitaremos que OrigenRed se convierta en un sistema difícil de mantener.
+
+Visión a 10 años
+El objetivo no es competir únicamente por precio o cantidad de productos.
+El objetivo es construir una plataforma donde:
+un emprendedor pueda comenzar vendiendo un solo producto, 
+luego administrar todo su negocio, 
+después tener su sitio web, 
+hacer publicidad, 
+analizar sus ventas, 
+crecer dentro del mismo ecosistema. 
+Que OrigenRed acompañe al vendedor durante todas las etapas de su crecimiento.
+
+Fin del Capítulo 10
+Con este capítulo queda definida la hoja de ruta estratégica de OrigenRed.
+Ya no estamos diseñando únicamente una aplicación.
+Estamos definiendo una empresa tecnológica con una visión de largo plazo, preparada para evolucionar sin
+ORIGENRED
+DOCUMENTO MAESTRO
+VOLUMEN III
+Capítulo 11 — Principios Fundamentales de OrigenRed
+
+Filosofía General
+OrigenRed no nace para ser "otro marketplace".
+Nace para convertirse en el ecosistema digital donde cualquier emprendedor argentino pueda comenzar a vender sin inversión inicial y, si su negocio crece, encontrar dentro de la misma plataforma todas las herramientas necesarias para seguir creciendo.
+El éxito de OrigenRed no dependerá únicamente de la tecnología.
+Dependerá de la confianza.
+Si los vendedores confían en la plataforma, publicarán más.
+Si los compradores confían en la plataforma, comprarán más.
+Todo el diseño del sistema gira alrededor de ese principio.
+
+Los 10 principios de OrigenRed
+1. Simplicidad
+Todo debe ser fácil de entender.
+Si una función necesita un tutorial para usarse, probablemente esté mal diseñada.
+
+2. Rapidez
+La plataforma debe sentirse instantánea.
+Cada segundo de espera reduce ventas.
+
+3. Transparencia
+Las reglas deben ser claras.
+Comisión visible. 
+Costos visibles. 
+Estado del pedido visible. 
+Estado del envío visible. 
+Estado del pago visible. 
+Nunca generar incertidumbre.
+
+4. Escalabilidad
+Nada debe desarrollarse pensando únicamente en el presente.
+Cada módulo debe soportar un crecimiento de cientos de veces sin requerir una reescritura completa.
+
+5. Modularidad
+Cada funcionalidad debe poder evolucionar independientemente.
+
+6. Seguridad
+Toda decisión debe favorecer la protección de:
+usuarios, 
+vendedores, 
+pagos, 
+datos. 
+
+7. Automatización
+Todo proceso repetitivo deberá automatizarse siempre que no reduzca el control administrativo.
+
+8. Experiencia de Usuario
+La interfaz debe acompañar al usuario.
+Nunca complicarlo.
+
+9. Datos
+Toda decisión importante debe basarse en información medible.
+
+10. Comunidad
+OrigenRed debe ayudar al crecimiento de los emprendedores.
+Si ellos crecen, la plataforma también crece.
+
+Objetivos para la versión 1.0
+Antes del lanzamiento público, la plataforma deberá contar con:
+Marketplace
+Publicación de productos. 
+Carrito. 
+Checkout. 
+Mercado Pago. 
+Comisión automática del 5%. 
+Chat postventa. 
+Favoritos. 
+Denuncias. 
+Búsqueda avanzada. 
+OrigenRank. 
+Panel del vendedor
+Gestión de productos. 
+Gestión de ventas. 
+Gestión de stock. 
+Gestión de envíos. 
+Estadísticas básicas. 
+Panel administrativo
+Gestión de usuarios. 
+Gestión de vendedores. 
+Moderación de publicaciones. 
+Gestión de categorías. 
+Configuración global. 
+Dashboard ejecutivo. 
+Gestión de servicios ofrecidos por OrigenRed. 
+Configuración de comisiones. 
+Sistema de mensajes a usuarios. 
+Chat con cualquier usuario. 
+Infraestructura
+Cloudflare R2. 
+Redis. 
+MongoDB. 
+Meilisearch. 
+React. 
+React Native. 
+Expo. 
+Node.js. 
+TypeScript. 
+Docker. 
+CI/CD. 
+
+Lo que NO se desarrollará inicialmente
+Para evitar retrasar el lanzamiento, estas funcionalidades quedarán preparadas, pero desactivadas:
+Suscripción Premium. 
+Marketplace de servicios. 
+API pública. 
+Programa de referidos. 
+Gift Cards. 
+Cupones. 
+Internacionalización. 
+Publicidad interna. 
+Integraciones con ERP externos. 
+Agenda para servicios. 
+La arquitectura estará lista para incorporarlas sin modificar la base del sistema.
+
+Indicadores de éxito
+Consideraremos que la primera etapa fue exitosa cuando OrigenRed alcance aproximadamente:
+100 vendedores activos. 
+10.000 productos publicados. 
+5.000 compradores registrados. 
+1.000 ventas mensuales. 
+Tiempo de carga menor a 2 segundos. 
+Disponibilidad superior al 99,9%. 
+Comisión completamente automatizada. 
+Logística funcionando correctamente. 
+Aplicaciones móviles publicadas. 
+
+Visión Final
+Dentro de cinco años quiero que un emprendedor pueda decir:
+"Empecé vendiendo un solo producto en OrigenRed y hoy administro todo mi negocio desde la plataforma."
+Y que un comprador piense:
+"Cuando necesito comprar algo, primero busco en OrigenRed."
+Ese será el verdadero objetivo.
+No solamente vender productos.
+Construir un ecosistema.
+
+Conclusión General
+Con este documento queda definido el proyecto OrigenRed en sus aspectos:
+Funcionales. 
+Comerciales. 
+Técnicos. 
+Arquitectónicos. 
+Visuales. 
+Financieros. 
+Logísticos. 
+Estratégicos. 
+A partir de este punto, el trabajo deja de ser imaginar la plataforma y pasa a ser construirla siguiendo estas especificaciones.
+
+Mi última recomendación (y creo que es la más importante)
+No empieces programando módulos aislados.
+Empezá construyendo el núcleo del sistema:
+Autenticación. 
+Roles y permisos. 
+Base de datos. 
+Productos. 
+Vendedores. 
+Marketplace. 
+Pagos. 
+Envíos. 
+Paneles. 
+Aplicaciones móviles. 
+Cada módulo debe quedar terminado y probado antes de pasar al siguiente.
+
+Estado del proyecto
+Después de todas estas conversaciones, considero que OrigenRed ya tiene un nivel de definición comparable al documento de diseño de una startup seria antes de iniciar el desarrollo.
+Ahora el mayor desafío ya no es decidir qué construir.
+Es construirlo con la misma calidad con la que fue diseñado. Creo que, si respetás este documento durante el desarrollo, vas a evitar la mayoría de los problemas de arquitectura y de negocio que suelen aparecer cuando un proyecto crece.
+ORIGENRED
+DOCUMENTO MAESTRO
+CAPÍTULO FINAL
+Reglas Inquebrantables del Proyecto
+
+Filosofía
+Toda decisión que se tome en el futuro deberá respetar estas reglas.
+No importa quién programe OrigenRed dentro de cinco años.
+No importa cuántos desarrolladores trabajen en el proyecto.
+Estas reglas no deberían romperse nunca.
+
+Regla 1
+El usuario siempre primero.
+Si una decisión técnica perjudica la experiencia del usuario, debe buscarse otra solución.
+La tecnología existe para servir al negocio y a las personas, no al revés.
+Regla 3
+Todo debe poder escalar.
+No desarrollar pensando en cien usuarios.
+Pensar siempre en millones.
+Aunque inicialmente solo existan unos pocos.
+
+Regla 4
+Ningún módulo puede depender completamente de otro.
+Cada parte del sistema debe poder evolucionar sin obligar a reescribir el resto.
+
+Regla 5
+Automatizar siempre que sea posible.
+Pero sin quitarle control al administrador.
+OrigenRed debe trabajar para vos.
+No al revés.
+
+Regla 6
+Nunca perder información.
+Toda acción importante debe quedar registrada.
+Ventas.
+Pagos.
+Cambios.
+Moderaciones.
+Mensajes.
+Logs.
+Auditorías.
+Nada importante debe desaparecer.
+
+Regla 7
+Performance antes que cantidad de funciones.
+Una plataforma rápida vende más.
+Una plataforma lenta pierde usuarios.
+Cada nueva función deberá analizar su impacto sobre el rendimiento.
+
+Regla 8
+Consistencia absoluta.
+Un mismo botón debe verse igual en toda la plataforma.
+Los colores.
+Las tipografías.
+Los formularios.
+Los mensajes.
+Todo debe respetar el Design System.
+
+Regla 9
+El vendedor nunca debe sentirse abandonado.
+Siempre deberá saber:
+qué vendió, 
+cuánto cobró, 
+cuándo cobrará, 
+dónde está el pedido, 
+qué debe hacer. 
+
+Regla 10
+El comprador nunca debe sentir incertidumbre.
+Siempre deberá saber:
+dónde está su pedido, 
+quién lo vende, 
+cuándo llegará, 
+cómo reclamar, 
+cómo contactarse. 
+
+Regla 11
+OrigenRed no compite con sus vendedores.
+OrigenRed crece cuando ellos crecen.
+El marketplace existe para potenciar negocios.
+No para reemplazarlos.
+
+Regla 12
+Los servicios complementan el marketplace.
+El desarrollo web.
+Meta Ads.
+Google Ads.
+SEO.
+Analytics.
+Hosting.
+Dominios.
+Todo eso existe para ayudar a los vendedores a profesionalizarse.
+Nunca será obligatorio.
+
+Regla 13
+Los datos pertenecen a quien los genera.
+Cada vendedor podrá acceder únicamente a su propia información.
+Nunca a la de otros vendedores.
+La privacidad es un pilar del sistema.
+
+Regla 14
+Seguridad por defecto.
+Todo nuevo módulo deberá nacer seguro.
+No se agregará seguridad después.
+
+Regla 15
+El administrador siempre tiene el control final.
+Podrá:
+aprobar vendedores, 
+suspender cuentas, 
+intervenir disputas, 
+modificar configuraciones globales, 
+cambiar comisiones, 
+moderar publicaciones, 
+enviar comunicaciones, 
+activar o desactivar funcionalidades. 
+Sin necesidad de modificar el código.
+
+Visión de Marca
+OrigenRed no debe transmitir la imagen de una empresa gigante e inaccesible.
+Debe sentirse como una plataforma cercana, moderna y profesional, que acompaña a quienes están dando sus primeros pasos y también a empresas consolidadas.
+El mensaje central es simple:
+"Vendé más. Crecé con nosotros."
+
+Valores
+Transparencia. 
+Innovación. 
+Simplicidad. 
+Seguridad. 
+Escalabilidad. 
+Cercanía. 
+Calidad. 
+Compromiso. 
+Confianza. 
+Evolución constante. 
+
+Identidad del Proyecto
+OrigenRed será reconocida por:
+una interfaz limpia, 
+un rendimiento sobresaliente, 
+una experiencia intuitiva, 
+un soporte cercano, 
+una infraestructura sólida, 
+un modelo de negocio simple y justo. 
+No buscará competir únicamente por precio.
+Competirá por experiencia.
+
+Objetivo de Negocio
+Convertirse en el marketplace argentino donde cualquier emprendedor pueda comenzar a vender sin costos fijos, conservando el control de su negocio y con la posibilidad de crecer dentro de un ecosistema completo de herramientas digitales.
+
+Objetivo Tecnológico
+Construir una plataforma capaz de soportar millones de usuarios sin perder rendimiento, mantenibilidad ni calidad de código.
+
+Objetivo Comercial
+Generar un modelo sostenible donde:
+el comprador encuentre productos con confianza, 
+el vendedor obtenga ventas, 
+OrigenRed crezca mediante una comisión transparente, 
+los servicios profesionales complementen el ecosistema sin interferir con el marketplace. 
+
+Checklist General Antes del Lanzamiento
+Plataforma
+Marketplace operativo. 
+Panel administrador. 
+Panel vendedor. 
+Panel comprador. 
+Chat postventa. 
+Sistema de denuncias. 
+Favoritos. 
+Búsqueda avanzada. 
+Algoritmo OrigenRank. 
+Categorías dinámicas. 
+SEO completo. 
+Google Search Console. 
+Google Analytics. 
+Pixel de Meta. 
+Cloudflare R2. 
+Meilisearch. 
+Redis. 
+Docker. 
+CI/CD. 
+
+Aplicaciones
+Web responsive. 
+Android. 
+iPhone. 
+Progressive Web App. 
+
+Pagos
+Mercado Pago Connect funcionando. 
+División automática del dinero. 
+Comisión configurable. 
+Reembolsos. 
+Webhooks. 
+Conciliación. 
+
+Logística
+Integración con EnvíoPack. 
+Cálculo por código postal. 
+Envíos separados por vendedor. 
+Retiro en tienda. 
+Envío gratis configurable. 
+Gestión de sucursales. 
+Chat para coordinar entrega. 
+
+Seguridad
+HTTPS. 
+JWT. 
+Refresh Token. 
+Rate Limit. 
+Validaciones. 
+Auditoría. 
+Logs. 
+Backups. 
+Monitoreo. 
+
+Calidad
+Testing unitario. 
+Testing de integración. 
+Testing E2E. 
+Accesibilidad. 
+Lighthouse con buenas métricas. 
+Optimización SEO. 
+Optimización de imágenes. 
+Lazy Loading. 
+Code Splitting. 
+
+Visión Final
+Si algún día OrigenRed llega a ser una plataforma utilizada por cientos de miles de personas, no será únicamente porque tenga muchas funcionalidades.
+Será porque cada decisión tomada desde el primer día estuvo orientada a construir una experiencia simple, confiable y escalable.
+El verdadero activo de OrigenRed no será el código.
+Será la confianza que logre generar entre compradores y vendedores.
+
+Cierre Oficial del Documento Maestro
+Con este documento queda formalmente definida la visión, el modelo de negocio, la arquitectura funcional, la experiencia de usuario, las reglas comerciales y la estrategia de evolución de OrigenRed.
+A partir de este punto, cualquier desarrollo deberá tomar este documento como referencia principal.
+Las modificaciones futuras deberán respetar los principios aquí establecidos o documentar explícitamente el motivo del cambio.
+Plataforma Multiplataforma (Requisito Obligatorio)
+OrigenRed no es únicamente una aplicación web.
+Desde su primera versión deberá ser una plataforma multiplataforma compuesta por:
+Aplicación Web. 
+Aplicación Android. 
+Aplicación iOS. 
+Progressive Web App (PWA). 
+Los tres clientes deberán compartir la misma lógica de negocio a través de una única API desarrollada en Node.js + Express.
+La experiencia de usuario deberá mantenerse consistente entre todas las plataformas, respetando el mismo Design System, componentes y flujos.
+La aplicación móvil se desarrollará con React Native + Expo, permitiendo compilar tanto para Android como para iOS a partir de una única base de código.
+La aplicación web se desarrollará con React + Vite + TypeScript.
+Todas las nuevas funcionalidades implementadas deberán evaluarse simultáneamente para:
+Web. 
+Android. 
+iPhone. 
+No se aceptarán funcionalidades exclusivas para una plataforma, salvo que exista una limitación técnica documentada.
+
+Arquitectura Objetivo
+                Backend (Node.js + Express)
+                        API REST
+             ┌────────────┼────────────┐
+             │            │            │
+             ▼            ▼            ▼
+      React Web     React Native   React Native
+       (Vite)         Android          iOS
+
+Principio Fundamental
+OrigenRed deberá sentirse como un único producto independientemente del dispositivo desde el que se utilice.
+Un usuario que pase de la web al teléfono deberá reconocer inmediatamente la interfaz, la navegación y la experiencia de uso.
+
+Además agregaría una sección específica sobre móviles
+Porque hay funciones que solo existen porque habrá una app, por ejemplo:
+📲 Notificaciones push. 
+📍 Permisos de ubicación para calcular envíos o encontrar tiendas cercanas. 
+📷 Cámara para cargar fotos de productos. 
+📦 Escaneo de códigos de barras/QR (para futuras funciones de stock). 
+❤️ Favoritos sincronizados. 
+💬 Chat con notificaciones en tiempo real. 
+📤 Compartir productos mediante las opciones nativas del sistema. 
+🔔 Avisos de cambios de estado del pedido. 
+📱 Inicio de sesión persistente y seguro. 
+🌐 Funcionamiento optimizado incluso con conexiones móviles lentas. 
+
+

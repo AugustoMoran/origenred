@@ -39,12 +39,18 @@ export const StoreAuthRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const isMarketplaceSeller = (roles: string[]) =>
+  roles.some((r) => r.toLowerCase() === 'vendedor_marketplace');
+
 export const LoginRedirectRoute = ({ children }: { children: React.ReactNode }) => {
   const { user } = useSelector((state: RootState) => state.auth);
 
   if (user) {
     if (isStaffRole(user.roles)) {
       return <Navigate to="/dashboard" replace />;
+    }
+    if (isMarketplaceSeller(user.roles)) {
+      return <Navigate to="/vendedor" replace />;
     }
     return <Navigate to="/" replace />;
   }

@@ -11,6 +11,10 @@ export default {
         display: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
+        'or-navy': '#0F1B3C',
+        'or-blue': '#1E3A8A',
+        'or-red': '#DC2626',
+        'or-green': '#16A34A',
         surface: {
           0: '#030712',
           1: '#060D1F',
