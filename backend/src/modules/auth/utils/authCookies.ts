@@ -1,4 +1,4 @@
-import { Response } from 'express';
+import { Request, Response } from 'express';
 import { IUser } from '../models/User';
 
 const ACCESS_COOKIE_MAX_AGE_MS = 60 * 60 * 1000;
@@ -39,4 +39,21 @@ export const setAuthCookies = (res: Response, accessToken: string, refreshToken:
 export const clearAuthCookies = (res: Response) => {
   res.clearCookie('accessToken', buildAccessCookieOptions());
   res.clearCookie('refreshToken', buildRefreshCookieOptions());
+};
+
+export const isMobileClient = (req: Request) =>
+  req.headers['x-origenred-client'] === 'mobile' || req.body?.client === 'mobile';
+
+export const buildAuthPayload = (
+  user: IUser | any,
+  accessToken: string,
+  refreshToken: string,
+  mobile: boolean
+) => {
+  const payload: Record<string, unknown> = { user: serializeAuthUser(user) };
+  if (mobile) {
+    payload.accessToken = accessToken;
+    payload.refreshToken = refreshToken;
+  }
+  return payload;
 };

@@ -7,6 +7,8 @@ import {
   clearAuthCookies,
   serializeAuthUser,
   setAuthCookies,
+  isMobileClient,
+  buildAuthPayload,
 } from '../utils/authCookies';
 
 export async function registerController(req: Request, res: Response) {
@@ -147,7 +149,7 @@ export async function loginController(req: Request, res: Response) {
   await user.save({ validateBeforeSave: false });
 
   setAuthCookies(res, access, refresh);
-  res.json({ user: serializeAuthUser(user) });
+  res.json(buildAuthPayload(user, access, refresh, isMobileClient(req)));
 }
 
 export async function getMeController(req: Request, res: Response) {
@@ -157,7 +159,7 @@ export async function getMeController(req: Request, res: Response) {
 }
 
 export async function refreshController(req: Request, res: Response) {
-  const rt = req.cookies?.refreshToken;
+  const rt = req.cookies?.refreshToken || req.body?.refreshToken;
   if (!rt) return res.status(401).json({ message: 'No refresh token' });
 
   try {
@@ -178,14 +180,14 @@ export async function refreshController(req: Request, res: Response) {
 
     const access = tokenService.signAccessToken(user as any);
     setAuthCookies(res, access, newRefresh);
-    res.json({ user: serializeAuthUser(user) });
+    res.json(buildAuthPayload(user, access, newRefresh, isMobileClient(req)));
   } catch (err) {
     return res.status(401).json({ message: 'Invalid refresh token' });
   }
 }
 
 export async function logoutController(req: Request, res: Response) {
-  const rt = req.cookies?.refreshToken;
+  const rt = req.cookies?.refreshToken || req.body?.refreshToken;
   if (rt) {
     try {
       const payload: any = tokenService.verifyRefreshToken(rt);

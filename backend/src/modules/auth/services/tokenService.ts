@@ -19,6 +19,14 @@ export function verifyRefreshToken(token: string) {
   return jwt.verify(token, JWT_REFRESH_TOKEN_SECRET) as { sub: string; iat: number; exp: number };
 }
 
+export function verifyAccessToken(token: string) {
+  return jwt.verify(token, JWT_ACCESS_TOKEN_SECRET) as {
+    sub: string;
+    roles: string[];
+    permissions?: Record<string, boolean>;
+  };
+}
+
 export async function rotateRefreshToken(userId: string, oldToken: string) {
   const user = await User.findById(userId);
   if (!user) throw new Error('User not found');

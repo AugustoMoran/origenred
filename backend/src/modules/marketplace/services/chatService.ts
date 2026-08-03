@@ -119,6 +119,19 @@ export const getConversationByOrder = async (orderNumber: string, userId: string
   return getConversationMessages(String(conversation._id), userId);
 };
 
+export const canAccessConversation = async (conversationId: string, userId: string) => {
+  const conversation = await Conversation.findById(conversationId).populate('seller', 'user');
+  if (!conversation) return false;
+
+  const seller = conversation.seller as any;
+  const isBuyer = String(conversation.buyer) === userId;
+  const isSeller = seller?.user && String(seller.user) === userId;
+  if (!isBuyer && !isSeller) return false;
+
+  const order = await MarketplaceOrder.findById(conversation.order);
+  return Boolean(order?.chatEnabled);
+};
+
 export const getSellerOrders = async (userId: string) => {
   const profile = await SellerProfile.findOne({ user: userId });
   if (!profile) return [];
