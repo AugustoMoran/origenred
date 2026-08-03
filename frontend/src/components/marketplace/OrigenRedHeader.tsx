@@ -76,9 +76,14 @@ export const OrigenRedHeader: React.FC = () => {
                 </Link>
               </>
             ) : (
-              <Link to="/cuenta/compras" className="px-3 py-2 text-xs text-slate-500 truncate max-w-[100px] hidden sm:block hover:text-or-navy">
-                Mis compras
-              </Link>
+              <div className="hidden sm:flex items-center gap-1">
+                <Link to="/cuenta/favoritos" className="px-3 py-2 text-xs text-slate-500 hover:text-or-navy">
+                  Favoritos
+                </Link>
+                <Link to="/cuenta/compras" className="px-3 py-2 text-xs text-slate-500 hover:text-or-navy">
+                  Mis compras
+                </Link>
+              </div>
             )}
 
             <button

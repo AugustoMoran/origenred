@@ -125,8 +125,6 @@ export const marketplaceApi = createApi({
       query: () => '/favorites',
       providesTags: ['Favorites'],
     }),
-
-    // Vendedor
     getMySellerProfile: builder.query<SellerProfile, void>({
       query: () => '/seller/me',
       providesTags: ['Seller'],

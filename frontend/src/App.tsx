@@ -24,7 +24,7 @@ import { SellerListingsPage } from './pages/marketplace/seller/SellerListingsPag
 import { SellerListingFormPage } from './pages/marketplace/seller/SellerListingFormPage';
 import { MarketplaceCheckoutPage } from './pages/marketplace/MarketplaceCheckoutPage';
 import { MarketplaceOrderConfirmation } from './pages/marketplace/MarketplaceOrderConfirmation';
-import { MyOrdersPage } from './pages/marketplace/MyOrdersPage';
+import { MyFavoritesPage } from './pages/marketplace/MyFavoritesPage';
 import { OrderChatPage } from './pages/marketplace/OrderChatPage';
 import { SellerOrdersPage } from './pages/marketplace/seller/SellerOrdersPage';
 import { SellerMercadoPagoPage } from './pages/marketplace/seller/SellerMercadoPagoPage';
@@ -60,6 +60,7 @@ const router = createBrowserRouter([
       { path: '/compras/exito', element: <MarketplaceOrderConfirmation /> },
       { path: '/compras/pendiente', element: <MarketplaceOrderConfirmation /> },
       { path: '/cuenta/compras', element: <StoreAuthRoute><MyOrdersPage /></StoreAuthRoute> },
+      { path: '/cuenta/favoritos', element: <StoreAuthRoute><MyFavoritesPage /></StoreAuthRoute> },
       { path: '/cuenta/chat/:orderNumber', element: <StoreAuthRoute><OrderChatPage /></StoreAuthRoute> },
       { path: '/products', element: <StoreProducts /> },
       { path: '/products/:id', element: <StoreProductDetail /> },

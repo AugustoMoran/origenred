@@ -1,6 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MarketplaceListing } from '../../services/marketplaceApi';
+import { useSelector } from 'react-redux';
+import { MarketplaceListing, useGetFavoritesQuery, useToggleFavoriteMutation } from '../../services/marketplaceApi';
+import { RootState } from '../../store';
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(price);
@@ -10,8 +12,20 @@ interface Props {
 }
 
 export const MarketplaceListingCard: React.FC<Props> = ({ listing }) => {
+  const { user } = useSelector((state: RootState) => state.auth);
+  const { data: favorites = [] } = useGetFavoritesQuery(undefined, { skip: !user });
+  const [toggleFavorite] = useToggleFavoriteMutation();
+
+  const isFavorited = favorites.some((f) => f.listing?._id === listing._id);
   const imageUrl = listing.images?.[0]?.url || '/origenred-logo.png';
   const hasDiscount = listing.compareAtPrice && listing.compareAtPrice > listing.price;
+
+  const handleFavorite = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!user) return;
+    toggleFavorite(listing._id);
+  };
 
   return (
     <Link
@@ -25,12 +39,21 @@ export const MarketplaceListingCard: React.FC<Props> = ({ listing }) => {
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
         />
+        {user && (
+          <button
+            onClick={handleFavorite}
+            className="absolute top-2 right-2 w-8 h-8 rounded-full bg-white/90 flex items-center justify-center shadow-sm hover:scale-110 transition-transform"
+            aria-label="Favorito"
+          >
+            <span className={isFavorited ? 'text-or-red' : 'text-slate-400'}>{isFavorited ? '♥' : '♡'}</span>
+          </button>
+        )}
         {listing.freeShipping && (
           <span className="absolute top-2 left-2 bg-or-green text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
             Envío gratis
           </span>
         )}
-        {hasDiscount && (
+        {hasDiscount && !user && (
           <span className="absolute top-2 right-2 bg-or-red text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
             Oferta
           </span>
