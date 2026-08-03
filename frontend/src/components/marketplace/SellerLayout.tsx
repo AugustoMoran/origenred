@@ -10,6 +10,7 @@ const NAV = [
   { to: '/vendedor', label: 'Resumen', exact: true },
   { to: '/vendedor/productos', label: 'Mis productos' },
   { to: '/vendedor/productos/nuevo', label: 'Nueva publicación' },
+  { to: '/vendedor/ventas', label: 'Mis ventas' },
   { to: '/vendedor/mercadopago', label: 'Mercado Pago' },
 ];
 

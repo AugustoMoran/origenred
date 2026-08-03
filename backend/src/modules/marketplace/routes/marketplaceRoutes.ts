@@ -30,6 +30,11 @@ import {
   marketplaceWebhookController,
   getOrderController,
   getMyOrdersController,
+  getMyConversationsController,
+  getConversationMessagesController,
+  sendMessageController,
+  getChatByOrderController,
+  getSellerOrdersController,
 } from '../controllers/marketplaceController';
 
 const router = Router();
@@ -58,6 +63,17 @@ router.get('/seller/mercadopago/connect', authenticate, requireSeller, getMercad
 // actually my orders list uses GET /orders and single uses GET /orders/:orderNumber
 router.get('/orders', authenticate, getMyOrdersController);
 router.get('/orders/:orderNumber', getOrderController);
+
+// Chat post-compra
+router.get('/chat/conversations', authenticate, getMyConversationsController);
+router.get('/chat/conversations/:id/messages', authenticate, getConversationMessagesController);
+router.post('/chat/conversations/:id/messages', authenticate, sendMessageController);
+router.get('/chat/order/:orderNumber', authenticate, getChatByOrderController);
+
+// Vendedor — ventas
+router.get('/seller/orders', authenticate, requireSeller, getSellerOrdersController);
+
+// Checkout
 router.post('/checkout/preview', optionalAuthenticate, previewCheckoutController);
 router.post('/checkout', optionalAuthenticate, createCheckoutController);
 router.post('/checkout/webhook', marketplaceWebhookController);

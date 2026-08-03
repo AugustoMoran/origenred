@@ -72,7 +72,7 @@ export interface HomeData {
 export const marketplaceApi = createApi({
   reducerPath: 'marketplaceApi',
   baseQuery: createReauthBaseQuery(`${API_BASE}/marketplace`),
-  tagTypes: ['Home', 'Listings', 'Listing', 'Favorites', 'Seller', 'MyListings'],
+  tagTypes: ['Home', 'Listings', 'Listing', 'Favorites', 'Seller', 'MyListings', 'Orders'],
   endpoints: (builder) => ({
     getHomeData: builder.query<HomeData, void>({
       query: () => '/home',
@@ -242,6 +242,37 @@ export const marketplaceApi = createApi({
     }),
     getMyOrders: builder.query<unknown[], void>({
       query: () => '/orders',
+      providesTags: ['Orders'],
+    }),
+
+    // Chat
+    getMyConversations: builder.query<unknown[], void>({
+      query: () => '/chat/conversations',
+    }),
+    getConversationMessages: builder.query<
+      { conversation: any; messages: any[] },
+      string
+    >({
+      query: (id) => `/chat/conversations/${id}/messages`,
+    }),
+    getChatByOrder: builder.query<
+      { conversation: any; messages: any[] },
+      string
+    >({
+      query: (orderNumber) => `/chat/order/${orderNumber}`,
+    }),
+    sendMessage: builder.mutation<
+      any,
+      { conversationId: string; body: string }
+    >({
+      query: ({ conversationId, body }) => ({
+        url: `/chat/conversations/${conversationId}/messages`,
+        method: 'POST',
+        body: { body },
+      }),
+    }),
+    getSellerOrders: builder.query<unknown[], void>({
+      query: () => '/seller/orders',
     }),
   }),
 });
@@ -269,4 +300,9 @@ export const {
   useCreateCheckoutMutation,
   useGetOrderQuery,
   useGetMyOrdersQuery,
+  useGetMyConversationsQuery,
+  useGetConversationMessagesQuery,
+  useGetChatByOrderQuery,
+  useSendMessageMutation,
+  useGetSellerOrdersQuery,
 } = marketplaceApi;

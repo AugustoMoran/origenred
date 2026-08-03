@@ -76,8 +76,8 @@ export const OrigenRedHeader: React.FC = () => {
                 </Link>
               </>
             ) : (
-              <Link to="/cuenta" className="px-3 py-2 text-xs text-slate-500 truncate max-w-[100px] hidden sm:block">
-                {user.name || user.email}
+              <Link to="/cuenta/compras" className="px-3 py-2 text-xs text-slate-500 truncate max-w-[100px] hidden sm:block hover:text-or-navy">
+                Mis compras
               </Link>
             )}
 

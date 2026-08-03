@@ -30,6 +30,14 @@ import {
   getOrderByNumber,
   getBuyerOrders,
 } from '../services/marketplaceCheckoutService';
+import {
+  getBuyerConversations,
+  getSellerConversations,
+  getConversationMessages,
+  sendMessage,
+  getConversationByOrder,
+  getSellerOrders,
+} from '../services/chatService';
 
 // ── Público ──────────────────────────────────────────────
 
@@ -319,5 +327,55 @@ export async function getOrderController(req: Request, res: Response) {
 export async function getMyOrdersController(req: Request, res: Response) {
   const userId = String((req as any).user._id);
   const orders = await getBuyerOrders(userId);
+  res.json(orders);
+}
+
+// ── Chat post-compra ───────────────────────────────────────
+
+export async function getMyConversationsController(req: Request, res: Response) {
+  const userId = String((req as any).user._id);
+  const user = (req as any).user;
+  const isSeller = user.roles?.includes('vendedor_marketplace');
+
+  const conversations = isSeller
+    ? await getSellerConversations(userId)
+    : await getBuyerConversations(userId);
+
+  res.json(conversations);
+}
+
+export async function getConversationMessagesController(req: Request, res: Response) {
+  try {
+    const userId = String((req as any).user._id);
+    const result = await getConversationMessages(String(req.params.id), userId);
+    res.json(result);
+  } catch (error: any) {
+    res.status(error.message === 'Acceso denegado' ? 403 : 400).json({ message: error.message });
+  }
+}
+
+export async function sendMessageController(req: Request, res: Response) {
+  try {
+    const userId = String((req as any).user._id);
+    const message = await sendMessage(String(req.params.id), userId, req.body.body);
+    res.status(201).json(message);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
+export async function getChatByOrderController(req: Request, res: Response) {
+  try {
+    const userId = String((req as any).user._id);
+    const result = await getConversationByOrder(String(req.params.orderNumber), userId);
+    res.json(result);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
+export async function getSellerOrdersController(req: Request, res: Response) {
+  const userId = String((req as any).user._id);
+  const orders = await getSellerOrders(userId);
   res.json(orders);
 }
