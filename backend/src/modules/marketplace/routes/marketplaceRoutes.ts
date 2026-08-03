@@ -22,6 +22,7 @@ import {
   approveSellerController,
   createCategoryController,
   listReportsController,
+  resolveReportController,
   toggleFavoriteController,
   getMyFavoritesController,
   createReportController,
@@ -89,5 +90,6 @@ router.get('/admin/sellers/pending', authenticate, requireAdmin, listPendingSell
 router.patch('/admin/sellers/:id/status', authenticate, requireAdmin, approveSellerController);
 router.post('/admin/categories', authenticate, requireAdmin, createCategoryController);
 router.get('/admin/reports', authenticate, requireAdmin, listReportsController);
+router.patch('/admin/reports/:id', authenticate, requireAdmin, resolveReportController);
 
 export default router;

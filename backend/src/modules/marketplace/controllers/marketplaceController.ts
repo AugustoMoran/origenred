@@ -18,7 +18,6 @@ import {
 import { parseListingBody } from '../utils/parseListingBody';
 import { MarketplaceCategory } from '../models/MarketplaceCategory';
 import { Favorite } from '../models/Favorite';
-import { Report } from '../models/Report';
 import { getMercadoPagoPublicConfig, getMercadoPagoConnectUrl } from '../services/marketplacePaymentService';
 import { quoteShippingByPostalCode, getEnvioPackConfig } from '../services/marketplaceShippingService';
 import { processUploadedImages, marketplaceUpload } from '../middleware/marketplaceUpload';
@@ -38,6 +37,13 @@ import {
   getConversationByOrder,
   getSellerOrders,
 } from '../services/chatService';
+import {
+  createReport,
+  listPendingReports,
+  listAllReports,
+  updateReportStatus,
+  REPORT_REASON_LABELS,
+} from '../services/reportService';
 
 // ── Público ──────────────────────────────────────────────
 
@@ -235,12 +241,27 @@ export async function createCategoryController(req: Request, res: Response) {
   res.status(201).json(category);
 }
 
-export async function listReportsController(_req: Request, res: Response) {
-  const reports = await Report.find({ status: 'pending' })
-    .populate('reporter', 'name email')
-    .populate('listing', 'title slug')
-    .sort({ createdAt: -1 });
-  res.json(reports);
+export async function listReportsController(req: Request, res: Response) {
+  const status = req.query.status as string | undefined;
+  const reports = status
+    ? await listAllReports(status)
+    : await listPendingReports();
+  res.json({ reports, reasonLabels: REPORT_REASON_LABELS });
+}
+
+export async function resolveReportController(req: Request, res: Response) {
+  try {
+    const adminId = String((req as any).user._id);
+    const report = await updateReportStatus(
+      String(req.params.id),
+      req.body.status || 'resolved',
+      adminId,
+      req.body.resolution
+    );
+    res.json(report);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
 }
 
 // ── Comprador ──────────────────────────────────────────────
@@ -273,9 +294,20 @@ export async function getMyFavoritesController(req: Request, res: Response) {
 }
 
 export async function createReportController(req: Request, res: Response) {
-  const userId = String((req as any).user._id);
-  const report = await Report.create({ ...req.body, reporter: userId });
-  res.status(201).json(report);
+  try {
+    const userId = String((req as any).user._id);
+    const report = await createReport({
+      reporterId: userId,
+      listingId: req.body.listingId,
+      sellerId: req.body.sellerId,
+      orderId: req.body.orderId,
+      reason: req.body.reason,
+      description: req.body.description,
+    });
+    res.status(201).json({ message: 'Denuncia enviada. Un administrador la revisará.', report });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
 }
 
 // ── Checkout ───────────────────────────────────────────────

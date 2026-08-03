@@ -125,6 +125,12 @@ export const marketplaceApi = createApi({
       query: () => '/favorites',
       providesTags: ['Favorites'],
     }),
+    createReport: builder.mutation<
+      { message: string },
+      { listingId?: string; sellerId?: string; orderId?: string; reason: string; description?: string }
+    >({
+      query: (body) => ({ url: '/reports', method: 'POST', body }),
+    }),
     getMySellerProfile: builder.query<SellerProfile, void>({
       query: () => '/seller/me',
       providesTags: ['Seller'],
@@ -171,6 +177,22 @@ export const marketplaceApi = createApi({
         body: { status, rejectionReason },
       }),
       invalidatesTags: ['Seller'],
+    }),
+    getReports: builder.query<
+      { reports: unknown[]; reasonLabels: Record<string, string> },
+      { status?: string } | void
+    >({
+      query: (params) => ({ url: '/admin/reports', params: params?.status ? { status: params.status } : undefined }),
+    }),
+    resolveReport: builder.mutation<
+      unknown,
+      { id: string; status: string; resolution?: string }
+    >({
+      query: ({ id, status, resolution }) => ({
+        url: `/admin/reports/${id}`,
+        method: 'PATCH',
+        body: { status, resolution },
+      }),
     }),
 
     // Checkout
@@ -285,6 +307,7 @@ export const {
   useRegisterSellerMutation,
   useToggleFavoriteMutation,
   useGetFavoritesQuery,
+  useCreateReportMutation,
   useGetMySellerProfileQuery,
   useGetMySellerListingsQuery,
   useCreateSellerListingMutation,
@@ -294,6 +317,8 @@ export const {
   useGetPendingSellersQuery,
   useGetAllSellersQuery,
   useUpdateSellerStatusMutation,
+  useGetReportsQuery,
+  useResolveReportMutation,
   usePreviewCheckoutMutation,
   useCreateCheckoutMutation,
   useGetOrderQuery,

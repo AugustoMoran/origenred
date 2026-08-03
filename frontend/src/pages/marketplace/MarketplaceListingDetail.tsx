@@ -5,6 +5,7 @@ import { SEO } from '../../components/ecommerce/SEO';
 import { useGetListingBySlugQuery, useToggleFavoriteMutation } from '../../services/marketplaceApi';
 import { RootState } from '../../store';
 import { addMarketplaceItem, setMarketplaceCartOpen } from '../../store/marketplaceCartSlice';
+import { ReportListingModal } from '../../components/marketplace/ReportListingModal';
 
 const formatPrice = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
@@ -16,6 +17,7 @@ export const MarketplaceListingDetail: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const [toggleFavorite] = useToggleFavoriteMutation();
   const [added, setAdded] = React.useState(false);
+  const [showReport, setShowReport] = React.useState(false);
 
   const handleAddToCart = () => {
     if (!listing || listing.stock <= 0) return;
@@ -116,8 +118,24 @@ export const MarketplaceListingDetail: React.FC = () => {
           <p className="text-xs text-slate-400">
             OrigenRank™ {listing.origenRankScore} · {listing.salesCount} ventas
           </p>
+          {user && (
+            <button
+              onClick={() => setShowReport(true)}
+              className="text-xs text-slate-400 hover:text-or-red underline"
+            >
+              Denunciar este producto
+            </button>
+          )}
         </div>
       </div>
+
+      {showReport && (
+        <ReportListingModal
+          listingId={listing._id}
+          listingTitle={listing.title}
+          onClose={() => setShowReport(false)}
+        />
+      )}
     </div>
   );
 };
