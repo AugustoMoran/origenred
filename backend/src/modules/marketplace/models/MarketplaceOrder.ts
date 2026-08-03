@@ -42,6 +42,9 @@ export interface IMarketplaceOrder extends Document {
     seller: mongoose.Types.ObjectId;
     sellerName: string;
     shippingCost: number;
+    status?: 'processing' | 'shipped' | 'delivered';
+    trackingCode?: string;
+    shippedAt?: Date;
   }>;
   envioPackShipmentId?: string;
   trackingCode?: string;
@@ -101,6 +104,9 @@ const MarketplaceOrderSchema = new Schema<IMarketplaceOrder>(
         seller: { type: Schema.Types.ObjectId, ref: 'SellerProfile' },
         sellerName: String,
         shippingCost: { type: Number, default: 0 },
+        status: { type: String, enum: ['processing', 'shipped', 'delivered'], default: 'processing' },
+        trackingCode: String,
+        shippedAt: Date,
       },
     ],
     envioPackShipmentId: { type: String },

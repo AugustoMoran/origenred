@@ -37,6 +37,7 @@ import {
   sendMessageController,
   getChatByOrderController,
   getSellerOrdersController,
+  updateSellerOrderController,
 } from '../controllers/marketplaceController';
 
 const router = Router();
@@ -74,6 +75,7 @@ router.get('/chat/order/:orderNumber', authenticate, getChatByOrderController);
 
 // Vendedor — ventas
 router.get('/seller/orders', authenticate, requireSeller, getSellerOrdersController);
+router.patch('/seller/orders/:orderNumber', authenticate, requireSeller, updateSellerOrderController);
 
 // Checkout
 router.post('/checkout/preview', optionalAuthenticate, previewCheckoutController);

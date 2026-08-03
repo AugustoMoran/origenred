@@ -61,6 +61,12 @@ export const MyOrdersPage: React.FC = () => {
                 ))}
               </div>
 
+              {order.trackingCode && (
+                <p className="text-xs text-slate-500">
+                  Seguimiento: <span className="font-mono">{order.trackingCode}</span>
+                </p>
+              )}
+
               <div className="flex gap-3 pt-1">
                 <Link
                   to={`/compras/confirmacion/${order.orderNumber}`}
@@ -77,8 +83,7 @@ export const MyOrdersPage: React.FC = () => {
                   </Link>
                 )}
               </div>
-            </div>
-          ))}
+            </div>          ))}
         </div>
       )}
     </div>

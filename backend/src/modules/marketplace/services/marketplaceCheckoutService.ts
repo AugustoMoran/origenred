@@ -2,6 +2,7 @@ import { Listing } from '../models/Listing';
 import { SellerProfile } from '../models/SellerProfile';
 import { MarketplaceOrder } from '../models/MarketplaceOrder';
 import { Conversation } from '../models/Chat';
+import { initOrderFulfillmentOnPayment } from './marketplaceOrderService';
 import { marketplaceConfig } from '../../../config/features';
 import { PUBLIC_LISTING_FILTER } from './listingService';
 import { quoteShippingByPostalCode } from './marketplaceShippingService';
@@ -274,6 +275,7 @@ export const fulfillMarketplaceOrder = async (orderId: string, paymentId?: strin
   order.paymentId = paymentId;
   order.paymentStatus = paymentStatus || 'approved';
   order.chatEnabled = true;
+  initOrderFulfillmentOnPayment(order);
   await order.save();
 
   // Crear conversación post-compra (una por orden)

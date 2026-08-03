@@ -293,6 +293,18 @@ export const marketplaceApi = createApi({
     }),
     getSellerOrders: builder.query<unknown[], void>({
       query: () => '/seller/orders',
+      providesTags: ['Orders'],
+    }),
+    updateSellerOrder: builder.mutation<
+      unknown,
+      { orderNumber: string; status: 'shipped' | 'delivered'; trackingCode?: string }
+    >({
+      query: ({ orderNumber, status, trackingCode }) => ({
+        url: `/seller/orders/${orderNumber}`,
+        method: 'PATCH',
+        body: { status, trackingCode },
+      }),
+      invalidatesTags: ['Orders'],
     }),
   }),
 });
@@ -328,4 +340,5 @@ export const {
   useGetChatByOrderQuery,
   useSendMessageMutation,
   useGetSellerOrdersQuery,
+  useUpdateSellerOrderMutation,
 } = marketplaceApi;

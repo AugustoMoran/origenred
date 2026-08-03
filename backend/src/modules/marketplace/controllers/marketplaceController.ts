@@ -45,6 +45,9 @@ import {
   REPORT_REASON_LABELS,
 } from '../services/reportService';
 import { reindexAllListings } from '../services/meilisearchService';
+import { updateSellerOrderFulfillment } from '../services/marketplaceOrderService';
+import { io } from '../../../app';
+import { emitChatMessage } from '../../../socket/marketplaceChatSocket';
 
 // ── Público ──────────────────────────────────────────────
 
@@ -407,7 +410,9 @@ export async function getConversationMessagesController(req: Request, res: Respo
 export async function sendMessageController(req: Request, res: Response) {
   try {
     const userId = String((req as any).user._id);
-    const message = await sendMessage(String(req.params.id), userId, req.body.body);
+    const conversationId = String(req.params.id);
+    const message = await sendMessage(conversationId, userId, req.body.body);
+    emitChatMessage(io, conversationId, message);
     res.status(201).json(message);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
@@ -428,4 +433,21 @@ export async function getSellerOrdersController(req: Request, res: Response) {
   const userId = String((req as any).user._id);
   const orders = await getSellerOrders(userId);
   res.json(orders);
+}
+
+export async function updateSellerOrderController(req: Request, res: Response) {
+  try {
+    const userId = String((req as any).user._id);
+    const order = await updateSellerOrderFulfillment(
+      userId,
+      String(req.params.orderNumber),
+      {
+        status: req.body.status,
+        trackingCode: req.body.trackingCode,
+      }
+    );
+    res.json(order);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
 }
