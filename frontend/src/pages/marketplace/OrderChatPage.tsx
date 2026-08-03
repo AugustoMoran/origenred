@@ -8,11 +8,13 @@ import {
   useGetConversationMessagesQuery,
   useSendMessageMutation,
 } from '../../services/marketplaceApi';
+import { connectSocket, joinChatRoom, leaveChatRoom } from '../../services/socket';
 
 export const OrderChatPage: React.FC = () => {
   const { conversationId, orderNumber } = useParams();
   const { user } = useSelector((state: RootState) => state.auth);
   const [message, setMessage] = useState('');
+  const [liveMessages, setLiveMessages] = useState<any[]>([]);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const byOrder = useGetChatByOrderQuery(orderNumber || '', { skip: !orderNumber });
@@ -24,16 +26,36 @@ export const OrderChatPage: React.FC = () => {
   const [sendMessage, { isLoading: sending }] = useSendMessageMutation();
 
   const convId = data?.conversation?._id || conversationId;
+  const messages = liveMessages.length ? liveMessages : data?.messages || [];
+
+  useEffect(() => {
+    if (data?.messages) setLiveMessages(data.messages);
+  }, [data?.messages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [data?.messages]);
+  }, [messages]);
 
-  // Poll cada 5s para nuevos mensajes
   useEffect(() => {
-    const interval = setInterval(() => refetch(), 5000);
-    return () => clearInterval(interval);
-  }, [refetch]);
+    if (!convId) return;
+
+    const socket = connectSocket();
+    joinChatRoom(convId);
+
+    const onMessage = (msg: any) => {
+      setLiveMessages((prev) => {
+        if (prev.some((m) => m._id === msg._id)) return prev;
+        return [...prev, msg];
+      });
+    };
+
+    socket.on('chat:message', onMessage);
+
+    return () => {
+      socket.off('chat:message', onMessage);
+      leaveChatRoom(convId);
+    };
+  }, [convId]);
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,17 +79,17 @@ export const OrderChatPage: React.FC = () => {
           <p className="font-semibold text-or-navy text-sm">
             Pedido {order?.orderNumber || orderNumber}
           </p>
-          <p className="text-xs text-slate-400">Chat post-compra</p>
+          <p className="text-xs text-slate-400">Chat en tiempo real</p>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto bg-slate-50 border-x border-slate-100 px-4 py-4 space-y-3">
-        {!data?.messages?.length && (
+        {!messages.length && (
           <p className="text-center text-slate-400 text-sm py-8">
             Iniciá la conversación con el vendedor
           </p>
         )}
-        {data?.messages?.map((msg: any) => {
+        {messages.map((msg: any) => {
           const isMine = String(msg.sender?._id || msg.sender) === String(user?._id);
           return (
             <div

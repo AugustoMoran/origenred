@@ -10,6 +10,7 @@ import mongoose from 'mongoose';
 import morgan from 'morgan';
 import path from 'path';
 import { ensureListingsIndex, isMeilisearchEnabled } from './modules/marketplace/services/meilisearchService';
+import { registerMarketplaceChatSocket } from './socket/marketplaceChatSocket';
 
 dotenv.config();
 
@@ -195,11 +196,7 @@ export async function start() {
       console.log('AFIP Billing Worker disabled (set ENABLE_AFIP_QUEUE=true to enable)');
     }
 
-    // socket events placeholder
-    io.on('connection', (socket: any) => {
-      console.log('socket connected', socket.id);
-      socket.on('ping', () => socket.emit('pong'));
-    });
+    registerMarketplaceChatSocket(io);
   } catch (err) {
     console.error(err);
     process.exit(1);
