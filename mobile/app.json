@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "OrigenRed",
+    "slug": "origenred",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "origenred",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#1e3a5f"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.origenred.app"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1e3a5f"
+      },
+      "package": "com.origenred.app"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

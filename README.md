@@ -4,6 +4,7 @@ Plataforma marketplace multi-vendedor con panel admin propio (AFIP/POS/inventari
 
 ## Stack
 - **Frontend:** React + Vite + TypeScript + Tailwind
+- **Mobile:** React Native + Expo (misma API)
 - **Backend:** Node.js + Express + TypeScript + Mongoose
 - **DB:** MongoDB Atlas
 - **Storage:** Cloudflare R2
@@ -23,6 +24,7 @@ frontend/src/
   pages/marketplace/   ← Home, búsqueda, registro vendedor
   pages/admin/         ← Panel admin (incluye gestión marketplace)
   pages/dashboard/     ← POS, inventario propio
+mobile/                ← App Expo (iOS + Android)
 ```
 
 ## Setup local
@@ -31,6 +33,7 @@ frontend/src/
 3. `cd backend && npm install && npm run seed` (crea admin + categorías)
 4. `cd backend && npm run dev`
 5. `cd frontend && npm install && npm run dev`
+6. `cd mobile && cp .env.example .env && npm install && npx expo start` (opcional)
 
 ### Admin seed
 - Email: `admin@origenred.com.ar`
