@@ -16,6 +16,7 @@ export default function SellerLayout() {
       <Stack.Screen name="orders" options={{ title: 'Mis ventas' }} />
       <Stack.Screen name="new-listing" options={{ title: 'Nueva publicación' }} />
       <Stack.Screen name="edit/[id]" options={{ title: 'Editar publicación' }} />
+      <Stack.Screen name="mercadopago" options={{ title: 'Mercado Pago' }} />
     </Stack>
   );
 }

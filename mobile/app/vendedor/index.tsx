@@ -79,6 +79,9 @@ export default function SellerDashboardScreen() {
       <Pressable style={styles.navBtn} onPress={() => router.push('/vendedor/orders')}>
         <Text style={styles.navBtnText}>Ver mis ventas →</Text>
       </Pressable>
+      <Pressable style={styles.navBtn} onPress={() => router.push('/vendedor/mercadopago')}>
+        <Text style={styles.navBtnText}>Mercado Pago →</Text>
+      </Pressable>
     </ScrollView>
   );
 }

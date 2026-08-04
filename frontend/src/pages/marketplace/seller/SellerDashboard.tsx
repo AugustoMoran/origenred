@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useOutletContext } from 'react-router-dom';
-import { useGetMySellerListingsQuery } from '../../services/marketplaceApi';
+import { useGetMySellerListingsQuery } from '../../../services/marketplaceApi';
 
 interface SellerContext {
   profile?: {

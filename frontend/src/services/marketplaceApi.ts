@@ -161,7 +161,7 @@ export const marketplaceApi = createApi({
     }),
     updateSellerListing: builder.mutation<
       MarketplaceListing,
-      { id: string; body: Record<string, unknown> }
+      { id: string; body: Record<string, unknown> | FormData }
     >({
       query: ({ id, body }) => ({ url: `/seller/listings/${id}`, method: 'PATCH', body }),
       invalidatesTags: ['MyListings', 'Home', 'Listings'],
@@ -170,8 +170,23 @@ export const marketplaceApi = createApi({
       query: (id) => ({ url: `/seller/listings/${id}`, method: 'DELETE' }),
       invalidatesTags: ['MyListings', 'Home', 'Listings'],
     }),
-    getMercadoPagoConnect: builder.query<{ url: string | null; enabled: boolean }, void>({
+    getMercadoPagoConnect: builder.query<
+      { url: string | null; enabled: boolean; mercadoPagoConnected?: boolean },
+      void
+    >({
       query: () => '/seller/mercadopago/connect',
+      providesTags: ['Seller'],
+    }),
+    completeMercadoPagoConnect: builder.mutation<
+      { mercadoPagoConnected: boolean },
+      { code: string; state?: string }
+    >({
+      query: (body) => ({
+        url: '/seller/mercadopago/callback',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['Seller'],
     }),
 
     // Admin marketplace
@@ -193,6 +208,9 @@ export const marketplaceApi = createApi({
         body: { status, rejectionReason },
       }),
       invalidatesTags: ['Seller'],
+    }),
+    reindexMarketplaceListings: builder.mutation<{ indexed: number }, void>({
+      query: () => ({ url: '/admin/search/reindex', method: 'POST' }),
     }),
     getReports: builder.query<
       { reports: unknown[]; reasonLabels: Record<string, string> },
@@ -343,6 +361,8 @@ export const {
   useUpdateSellerListingMutation,
   useDeleteSellerListingMutation,
   useGetMercadoPagoConnectQuery,
+  useCompleteMercadoPagoConnectMutation,
+  useReindexMarketplaceListingsMutation,
   useGetPendingSellersQuery,
   useGetAllSellersQuery,
   useUpdateSellerStatusMutation,

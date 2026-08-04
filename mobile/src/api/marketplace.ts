@@ -228,6 +228,29 @@ export const updateSellerListing = (
     mobile: false,
   });
 
+export const updateSellerListingFormData = async (id: string, formData: FormData, token: string) => {
+  const API_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:4000/api';
+  const res = await fetch(`${API_URL}/marketplace/seller/listings/${id}`, {
+    method: 'PATCH',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'X-OrigenRed-Client': 'mobile',
+    },
+    body: formData,
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    throw new Error((data as { message?: string }).message || `Error ${res.status}`);
+  }
+  return data as Listing;
+};
+
+export const getMercadoPagoConnect = (token: string) =>
+  apiFetch<{ url: string | null; enabled: boolean; mercadoPagoConnected?: boolean }>(
+    '/marketplace/seller/mercadopago/connect',
+    { token, mobile: false }
+  );
+
 export const updateSellerOrder = (
   orderNumber: string,
   body: { status: 'shipped' | 'delivered'; trackingCode?: string },

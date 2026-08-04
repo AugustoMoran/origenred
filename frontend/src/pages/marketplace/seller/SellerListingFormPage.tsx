@@ -37,6 +37,7 @@ export const SellerListingFormPage: React.FC = () => {
 
   const [form, setForm] = useState(emptyForm);
   const [images, setImages] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<Array<{ url: string }>>([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -60,6 +61,7 @@ export const SellerListingFormPage: React.FC = () => {
           status: (existing as any).status || 'draft',
           weight: '',
         });
+        setExistingImages(existing.images || []);
       }
     }
   }, [isEdit, id, listings]);
@@ -88,7 +90,14 @@ export const SellerListingFormPage: React.FC = () => {
 
     try {
       if (isEdit && id) {
-        await updateListing({ id, body: form }).unwrap();
+        if (images.length > 0) {
+          const fd = new FormData();
+          Object.entries(form).forEach(([k, v]) => fd.append(k, String(v)));
+          images.forEach((file) => fd.append('images', file));
+          await updateListing({ id, body: fd }).unwrap();
+        } else {
+          await updateListing({ id, body: form }).unwrap();
+        }
       } else {
         const fd = new FormData();
         Object.entries(form).forEach(([k, v]) => fd.append(k, String(v)));
@@ -180,6 +189,34 @@ export const SellerListingFormPage: React.FC = () => {
             />
             {images.length > 0 && (
               <p className="text-xs text-slate-400 mt-1">{images.length} imagen(es) seleccionada(s)</p>
+            )}
+          </div>
+        )}
+
+        {isEdit && (
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-or-navy">Imágenes</label>
+            {existingImages.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {existingImages.map((img) => (
+                  <img
+                    key={img.url}
+                    src={img.url}
+                    alt=""
+                    className="w-16 h-16 rounded-lg object-cover border border-slate-200"
+                  />
+                ))}
+              </div>
+            )}
+            <input
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              multiple
+              onChange={(e) => setImages(Array.from(e.target.files || []))}
+              className="text-sm text-slate-500"
+            />
+            {images.length > 0 && (
+              <p className="text-xs text-slate-400">{images.length} nueva(s) imagen(es) a agregar</p>
             )}
           </div>
         )}

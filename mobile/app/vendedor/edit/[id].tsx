@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Image,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -8,11 +9,13 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { router, useLocalSearchParams } from 'expo-router';
 import {
   getCategories,
   getSellerListings,
   updateSellerListing,
+  updateSellerListingFormData,
 } from '../../../src/api/marketplace';
 import { useAuth } from '../../../src/context/AuthContext';
 import { colors } from '../../../src/theme/colors';
@@ -24,6 +27,8 @@ export default function EditListingScreen() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [existingImages, setExistingImages] = useState<Array<{ url: string }>>([]);
+  const [newImages, setNewImages] = useState<Array<{ uri: string }>>([]);
 
   const [form, setForm] = useState({
     title: '',
@@ -62,6 +67,7 @@ export default function EditListingScreen() {
           brand: listing.brand || '',
           status: listing.status || 'active',
         });
+        setExistingImages(listing.images || []);
       } catch (e: any) {
         setError(e.message || 'Error al cargar el producto');
       } finally {
@@ -69,6 +75,18 @@ export default function EditListingScreen() {
       }
     })();
   }, [accessToken, id]);
+
+  const pickImages = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsMultipleSelection: true,
+      quality: 0.85,
+      selectionLimit: 5,
+    });
+    if (!result.canceled) {
+      setNewImages(result.assets.map((a) => ({ uri: a.uri })));
+    }
+  };
 
   const handleSubmit = async () => {
     if (!accessToken || !id) return;
@@ -81,19 +99,38 @@ export default function EditListingScreen() {
 
     setSubmitting(true);
     try {
-      await updateSellerListing(
-        id,
-        {
-          title: form.title.trim(),
-          description: form.description.trim(),
-          price: Number(form.price),
-          stock: Number(form.stock) || 0,
-          category: form.category,
-          brand: form.brand.trim(),
-          status: form.status,
-        },
-        accessToken
-      );
+      if (newImages.length > 0) {
+        const fd = new FormData();
+        fd.append('title', form.title.trim());
+        fd.append('description', form.description.trim());
+        fd.append('price', String(Number(form.price)));
+        fd.append('stock', String(Number(form.stock) || 0));
+        fd.append('category', form.category);
+        fd.append('brand', form.brand.trim());
+        fd.append('status', form.status);
+        newImages.forEach((img, i) => {
+          fd.append('images', {
+            uri: img.uri,
+            name: `photo-${i}.jpg`,
+            type: 'image/jpeg',
+          } as unknown as Blob);
+        });
+        await updateSellerListingFormData(id, fd, accessToken);
+      } else {
+        await updateSellerListing(
+          id,
+          {
+            title: form.title.trim(),
+            description: form.description.trim(),
+            price: Number(form.price),
+            stock: Number(form.stock) || 0,
+            category: form.category,
+            brand: form.brand.trim(),
+            status: form.status,
+          },
+          accessToken
+        );
+      }
       router.replace('/vendedor/listings');
     } catch (e: any) {
       setError(e.message || 'Error al guardar');
@@ -191,6 +228,19 @@ export default function EditListingScreen() {
         ))}
       </View>
 
+      {existingImages.length > 0 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catRow}>
+          {existingImages.map((img) => (
+            <Image key={img.url} source={{ uri: img.url }} style={styles.thumb} />
+          ))}
+        </ScrollView>
+      )}
+      <Pressable style={styles.imageBtn} onPress={pickImages}>
+        <Text style={styles.imageBtnText}>
+          {newImages.length > 0 ? `${newImages.length} nueva(s) imagen(es)` : 'Agregar imágenes'}
+        </Text>
+      </Pressable>
+
       <Pressable style={styles.submit} onPress={handleSubmit} disabled={submitting}>
         {submitting ? (
           <ActivityIndicator color={colors.white} />
@@ -251,4 +301,14 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   submitText: { color: colors.white, fontWeight: '700', fontSize: 16 },
+  thumb: { width: 64, height: 64, borderRadius: 8, marginRight: 8 },
+  imageBtn: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    alignItems: 'center',
+  },
+  imageBtnText: { color: colors.blue, fontWeight: '600' },
 });

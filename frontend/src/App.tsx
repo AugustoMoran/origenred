@@ -32,6 +32,8 @@ import { MyFavoritesPage } from './pages/marketplace/MyFavoritesPage';
 import { OrderChatPage } from './pages/marketplace/OrderChatPage';
 import { SellerOrdersPage } from './pages/marketplace/seller/SellerOrdersPage';
 import { SellerMercadoPagoPage } from './pages/marketplace/seller/SellerMercadoPagoPage';
+import { SellerMercadoPagoCallbackPage } from './pages/marketplace/seller/SellerMercadoPagoCallbackPage';
+import { MarketplacePaymentReturnPage } from './pages/marketplace/MarketplacePaymentReturnPage';
 import { StoreAuthRoute } from './components/ecommerce/RouteGuards';
 import { StoreProducts } from './pages/store/StoreProducts';
 import { StoreProductDetail } from './pages/store/StoreProductDetail';
@@ -64,8 +66,9 @@ const router = createBrowserRouter([
       { path: '/vender', element: <SellerRegisterPage /> },
       { path: '/comprar', element: <MarketplaceCheckoutPage /> },
       { path: '/compras/confirmacion/:orderNumber', element: <MarketplaceOrderConfirmation /> },
-      { path: '/compras/exito', element: <MarketplaceOrderConfirmation /> },
-      { path: '/compras/pendiente', element: <MarketplaceOrderConfirmation /> },
+      { path: '/compras/exito', element: <MarketplacePaymentReturnPage kind="success" /> },
+      { path: '/compras/error', element: <MarketplacePaymentReturnPage kind="failure" /> },
+      { path: '/compras/pendiente', element: <MarketplacePaymentReturnPage kind="pending" /> },
       { path: '/cuenta/compras', element: <StoreAuthRoute><MyOrdersPage /></StoreAuthRoute> },
       { path: '/cuenta/compras/:orderNumber', element: <StoreAuthRoute><MarketplaceOrderDetailPage /></StoreAuthRoute> },
       { path: '/cuenta/favoritos', element: <StoreAuthRoute><MyFavoritesPage /></StoreAuthRoute> },
@@ -125,6 +128,7 @@ const router = createBrowserRouter([
       { path: 'productos/:id/editar', element: <SellerListingFormPage /> },
       { path: 'ventas', element: <SellerOrdersPage /> },
       { path: 'mercadopago', element: <SellerMercadoPagoPage /> },
+      { path: 'mercadopago/callback', element: <SellerMercadoPagoCallbackPage /> },
     ],
   },
   {

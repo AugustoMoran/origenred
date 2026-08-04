@@ -7,7 +7,7 @@ import { notifyUserPush } from '../../notifications/chatPushService';
 import { marketplaceConfig } from '../../../config/features';
 import { PUBLIC_LISTING_FILTER } from './listingService';
 import { quoteShippingByPostalCode } from './marketplaceShippingService';
-import { createMarketplacePreference, verifyMercadoPagoPayment, isMercadoPagoEnabled } from './marketplacePaymentService';
+import { createMarketplacePreference, verifyMercadoPagoPayment, isMercadoPagoEnabled, isMercadoPagoConnectEnabled } from './marketplacePaymentService';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -219,6 +219,24 @@ export const createMarketplaceCheckout = async (input: {
 
   let payment = null;
   if (isMercadoPagoEnabled()) {
+    const sellerIds = [...new Set(preview.items.map((i) => i.seller))];
+    let collectorId: string | undefined;
+
+    if (isMercadoPagoConnectEnabled()) {
+      const sellerProfiles = await SellerProfile.find({ _id: { $in: sellerIds } });
+      for (const sp of sellerProfiles) {
+        if (!sp.mercadoPagoConnected || !sp.mercadoPagoUserId) {
+          throw new Error(
+            `El vendedor "${sp.businessName}" debe vincular Mercado Pago antes de vender`
+          );
+        }
+      }
+      if (sellerIds.length === 1) {
+        const single = sellerProfiles.find((sp) => String(sp._id) === sellerIds[0]);
+        collectorId = single?.mercadoPagoUserId;
+      }
+    }
+
     const mpItems = [
       ...preview.items.map((i) => ({
         title: i.title,
@@ -240,6 +258,7 @@ export const createMarketplaceCheckout = async (input: {
       items: mpItems,
       payerEmail: input.guestEmail,
       marketplaceFee: preview.commissionTotal,
+      collectorId,
       returnClient: input.returnClient,
     });
 

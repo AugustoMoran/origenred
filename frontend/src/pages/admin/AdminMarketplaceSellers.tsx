@@ -3,6 +3,7 @@ import {
   useGetPendingSellersQuery,
   useGetAllSellersQuery,
   useUpdateSellerStatusMutation,
+  useReindexMarketplaceListingsMutation,
 } from '../../services/marketplaceApi';
 
 export const AdminMarketplaceSellers: React.FC = () => {
@@ -10,6 +11,8 @@ export const AdminMarketplaceSellers: React.FC = () => {
   const { data: pending = [], refetch: refetchPending } = useGetPendingSellersQuery();
   const { data: all = [], refetch: refetchAll } = useGetAllSellersQuery(undefined, { skip: tab !== 'all' });
   const [updateStatus, { isLoading }] = useUpdateSellerStatusMutation();
+  const [reindex, { isLoading: reindexing }] = useReindexMarketplaceListingsMutation();
+  const [reindexMsg, setReindexMsg] = useState('');
 
   const sellers = tab === 'pending' ? pending : all;
 
@@ -26,7 +29,23 @@ export const AdminMarketplaceSellers: React.FC = () => {
           <h1 className="text-2xl font-bold text-white">Vendedores Marketplace</h1>
           <p className="text-sm text-slate-500 mt-1">Aprobación manual de vendedores terceros</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
+          <button
+            type="button"
+            disabled={reindexing}
+            onClick={async () => {
+              setReindexMsg('');
+              try {
+                const result = await reindex().unwrap();
+                setReindexMsg(`Reindexados: ${result.indexed ?? 0} productos`);
+              } catch {
+                setReindexMsg('Error al reindexar búsqueda');
+              }
+            }}
+            className="px-4 py-2 text-sm rounded-xl font-medium bg-white/5 text-slate-300 hover:text-white disabled:opacity-50"
+          >
+            {reindexing ? 'Reindexando...' : 'Reindexar búsqueda'}
+          </button>
           <button
             onClick={() => setTab('pending')}
             className={`px-4 py-2 text-sm rounded-xl font-medium transition-colors ${
@@ -45,6 +64,10 @@ export const AdminMarketplaceSellers: React.FC = () => {
           </button>
         </div>
       </div>
+
+      {reindexMsg && (
+        <p className="text-sm text-slate-400">{reindexMsg}</p>
+      )}
 
       {sellers.length === 0 ? (
         <div className="card p-8 text-center text-slate-500">

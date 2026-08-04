@@ -33,6 +33,7 @@
   }
 }
 
+@layer components {
   /* ── Surfaces ─────────────────────────────── */
   .surface {
     @apply bg-[#0A1428] border border-white/[0.06] shadow-inner-top;

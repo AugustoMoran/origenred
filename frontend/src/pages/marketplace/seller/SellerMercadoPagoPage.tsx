@@ -1,10 +1,13 @@
 import React from 'react';
-import { useGetMercadoPagoConnectQuery } from '../../../services/marketplaceApi';
+import { useGetMercadoPagoConnectQuery, useGetMySellerProfileQuery } from '../../../services/marketplaceApi';
 
 export const SellerMercadoPagoPage: React.FC = () => {
+  const { data: profile } = useGetMySellerProfileQuery();
   const { data, isLoading } = useGetMercadoPagoConnectQuery();
 
   if (isLoading) return <p className="text-slate-400">Cargando...</p>;
+
+  const connected = profile?.mercadoPagoConnected || data?.mercadoPagoConnected;
 
   return (
     <div className="max-w-lg space-y-6">
@@ -15,7 +18,11 @@ export const SellerMercadoPagoPage: React.FC = () => {
           OrigenRed retiene el 5% de comisión sobre el producto (sin incluir envío).
         </p>
 
-        {data?.enabled && data.url ? (
+        {connected ? (
+          <div className="bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm px-4 py-3 rounded-xl">
+            ✓ Cuenta de Mercado Pago vinculada. Ya podés recibir pagos de tus ventas.
+          </div>
+        ) : data?.enabled && data.url ? (
           <a
             href={data.url}
             className="inline-flex items-center px-6 py-3 bg-[#009EE3] text-white font-semibold rounded-xl hover:opacity-90 transition-opacity"

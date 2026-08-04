@@ -2,6 +2,7 @@ import { SellerProfile, ISellerProfile } from '../models/SellerProfile';
 import { User } from '../../auth/models/User';
 import { MARKETPLACE_ROLES } from '../constants/roles';
 import { register } from '../../auth/services/authService';
+import { exchangeMercadoPagoConnectCode } from './marketplacePaymentService';
 
 const slugify = (value: string) =>
   value
@@ -106,3 +107,22 @@ export const getSellerPublicProfile = (slug: string) =>
   SellerProfile.findOne({ slug, status: 'approved' }).select(
     '-mercadoPagoUserId -approvedBy -rejectionReason'
   );
+
+export const connectMercadoPagoForSeller = async (
+  sellerProfileId: string,
+  userId: string,
+  code: string,
+  state?: string
+) => {
+  const profile = await SellerProfile.findOne({ _id: sellerProfileId, user: userId });
+  if (!profile) throw new Error('Perfil de vendedor no encontrado');
+  if (state && state !== String(profile._id)) {
+    throw new Error('La vinculación no coincide con tu cuenta de vendedor');
+  }
+
+  const { userId: mpUserId } = await exchangeMercadoPagoConnectCode(code);
+  profile.mercadoPagoUserId = mpUserId;
+  profile.mercadoPagoConnected = true;
+  await profile.save();
+  return profile;
+};

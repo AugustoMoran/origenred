@@ -6,6 +6,7 @@ import {
   listAllSellers,
   updateSellerStatus,
   getSellerPublicProfile,
+  connectMercadoPagoForSeller,
 } from '../services/sellerService';
 import {
   createListing,
@@ -16,6 +17,7 @@ import {
   deleteListing,
 } from '../services/listingService';
 import { parseListingBody } from '../utils/parseListingBody';
+import { Listing } from '../models/Listing';
 import { MarketplaceCategory } from '../models/MarketplaceCategory';
 import { Favorite } from '../models/Favorite';
 import { getMercadoPagoPublicConfig, getMercadoPagoConnectUrl } from '../services/marketplacePaymentService';
@@ -188,7 +190,19 @@ export async function updateListingController(req: Request, res: Response) {
     if (!profile) return res.status(404).json({ message: 'Perfil de vendedor no encontrado' });
 
     const parsed = parseListingBody(req.body);
-    const listing = await updateListing(String(req.params.id), String(profile._id), parsed as any);
+    const existing = await Listing.findOne({ _id: req.params.id, seller: profile._id });
+    if (!existing) return res.status(404).json({ message: 'Publicación no encontrada' });
+
+    let images = parsed.images ?? [...existing.images];
+    if (req.files && Array.isArray(req.files) && req.files.length) {
+      const uploaded = await processUploadedImages(req.files as Express.Multer.File[]);
+      images = [...images, ...uploaded.map((u) => ({ url: u.url, key: u.key }))];
+    }
+
+    const listing = await updateListing(String(req.params.id), String(profile._id), {
+      ...parsed,
+      images,
+    } as any);
     res.json(listing);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
@@ -223,7 +237,36 @@ export async function getMercadoPagoConnectController(req: Request, res: Respons
   if (!profile) return res.status(404).json({ message: 'Perfil de vendedor no encontrado' });
 
   const url = getMercadoPagoConnectUrl(String(profile._id));
-  res.json({ url, enabled: Boolean(url) });
+  res.json({
+    url,
+    enabled: Boolean(url),
+    mercadoPagoConnected: profile.mercadoPagoConnected,
+  });
+}
+
+export async function mercadoPagoCallbackController(req: Request, res: Response) {
+  try {
+    const userId = String((req as any).user._id);
+    const profile = await getSellerByUserId(userId);
+    if (!profile) return res.status(404).json({ message: 'Perfil de vendedor no encontrado' });
+
+    const code = String(req.body?.code || '');
+    if (!code) return res.status(400).json({ message: 'Código OAuth requerido' });
+
+    const updated = await connectMercadoPagoForSeller(
+      String(profile._id),
+      userId,
+      code,
+      req.body?.state ? String(req.body.state) : undefined
+    );
+
+    res.json({
+      mercadoPagoConnected: updated.mercadoPagoConnected,
+      mercadoPagoUserId: updated.mercadoPagoUserId,
+    });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
 }
 
 // ── Admin marketplace ──────────────────────────────────────

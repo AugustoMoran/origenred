@@ -54,6 +54,11 @@ export default defineConfig({
         target: 'http://localhost:4000',
         changeOrigin: true,
       },
+      '/sitemap.xml': {
+        target: 'http://localhost:4000',
+        changeOrigin: true,
+        rewrite: () => '/api/marketplace/sitemap.xml',
+      },
     },
   },
 });

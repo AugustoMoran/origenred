@@ -17,6 +17,7 @@ import {
   getMyListingsController,
   deleteListingController,
   getMercadoPagoConnectController,
+  mercadoPagoCallbackController,
   listSellersAdminController,
   listPendingSellersController,
   approveSellerController,
@@ -60,9 +61,10 @@ router.post('/sellers/register', registerSellerController);
 router.get('/seller/me', authenticate, requireSeller, getMySellerProfileController);
 router.get('/seller/listings', authenticate, requireSeller, getMyListingsController);
 router.post('/seller/listings', authenticate, requireSeller, uploadListingImagesMiddleware, createListingController);
-router.patch('/seller/listings/:id', authenticate, requireSeller, updateListingController);
+router.patch('/seller/listings/:id', authenticate, requireSeller, uploadListingImagesMiddleware, updateListingController);
 router.delete('/seller/listings/:id', authenticate, requireSeller, deleteListingController);
 router.get('/seller/mercadopago/connect', authenticate, requireSeller, getMercadoPagoConnectController);
+router.post('/seller/mercadopago/callback', authenticate, requireSeller, mercadoPagoCallbackController);
 
 // Checkout — /orders debe ir ANTES de /orders/:orderNumber en el router de express... 
 // actually my orders list uses GET /orders and single uses GET /orders/:orderNumber

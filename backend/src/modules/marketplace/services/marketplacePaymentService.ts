@@ -13,21 +13,55 @@ export const getMercadoPagoPublicConfig = () => ({
   commissionPercent: marketplaceConfig.commissionPercent,
 });
 
+const getMercadoPagoRedirectUri = () =>
+  `${process.env.FRONTEND_URL || 'http://localhost:5173'}/vendedor/mercadopago/callback`;
+
 /** OAuth Connect — URL de vinculación (requiere MERCADOPAGO_CLIENT_ID) */
 export const getMercadoPagoConnectUrl = (sellerId: string) => {
   const clientId = process.env.MERCADOPAGO_CLIENT_ID;
-  const redirectUri = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/vendedor/mercadopago/callback`;
+  const redirectUri = getMercadoPagoRedirectUri();
   if (!clientId) return null;
 
   return `https://auth.mercadopago.com.ar/authorization?client_id=${clientId}&response_type=code&platform_id=mp&state=${sellerId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
 };
 
+/** Intercambia el código OAuth por credenciales del vendedor en MP */
+export const exchangeMercadoPagoConnectCode = async (code: string) => {
+  const clientId = process.env.MERCADOPAGO_CLIENT_ID;
+  const clientSecret = process.env.MERCADOPAGO_CLIENT_SECRET;
+  const redirectUri = getMercadoPagoRedirectUri();
+
+  if (!clientId || !clientSecret) {
+    throw new Error('Mercado Pago Connect no configurado en el servidor');
+  }
+
+  const response = await axios.post(
+    `${MP_API_BASE}/oauth/token`,
+    {
+      client_id: clientId,
+      client_secret: clientSecret,
+      grant_type: 'authorization_code',
+      code,
+      redirect_uri: redirectUri,
+    },
+    { headers: { 'Content-Type': 'application/json' } }
+  );
+
+  const mpUserId = response.data?.user_id;
+  if (!mpUserId) {
+    throw new Error('Mercado Pago no devolvió el ID del vendedor');
+  }
+
+  return { userId: String(mpUserId) };
+};
+
 export const createMarketplacePreference = async (input: {
   orderId: string;
   orderNumber: string;
-  items: Array<{ title: string; quantity: number; unit_price: number; seller_mp_user_id?: string }>;
+  items: Array<{ title: string; quantity: number; unit_price: number }>;
   payerEmail?: string;
   marketplaceFee?: number;
+  collectorId?: string;
   returnClient?: 'mobile' | 'web';
 }) => {
   const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
@@ -70,6 +104,9 @@ export const createMarketplacePreference = async (input: {
   // Split / marketplace fee cuando Connect esté activo
   if (features.mercadoPagoConnect && input.marketplaceFee) {
     payload.marketplace_fee = input.marketplaceFee;
+  }
+  if (features.mercadoPagoConnect && input.collectorId) {
+    payload.collector_id = Number(input.collectorId);
   }
 
   const response = await axios.post(`${MP_API_BASE}/checkout/preferences`, payload, {

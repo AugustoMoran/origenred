@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import {
   useGetSellerOrdersQuery,
   useUpdateSellerOrderMutation,
-} from '../../services/marketplaceApi';
+} from '../../../services/marketplaceApi';
 
 const STATUS_LABELS: Record<string, string> = {
   paid: 'Pagado',

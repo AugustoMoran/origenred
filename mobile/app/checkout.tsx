@@ -38,6 +38,7 @@ export default function CheckoutScreen() {
   const [preview, setPreview] = useState<Awaited<ReturnType<typeof previewCheckout>> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [shippingMethod, setShippingMethod] = useState<'delivery' | 'pickup'>('delivery');
 
   useEffect(() => {
     if (items.length === 0) {
@@ -46,25 +47,44 @@ export default function CheckoutScreen() {
   }, [items.length]);
 
   useEffect(() => {
-    if (form.postalCode.length < 4 || items.length === 0) return;
+    if (shippingMethod === 'pickup' || form.postalCode.length < 4 || items.length === 0) {
+      if (shippingMethod === 'pickup' && items.length > 0) {
+        previewCheckout(
+          {
+            items: items.map((i) => ({ listingId: i.listingId, quantity: i.quantity })),
+            shippingMethod: 'pickup',
+          },
+          accessToken
+        )
+          .then(setPreview)
+          .catch(() => setPreview(null));
+      }
+      return;
+    }
     previewCheckout(
       {
         items: items.map((i) => ({ listingId: i.listingId, quantity: i.quantity })),
         postalCode: form.postalCode,
         province: form.province,
-        shippingMethod: 'delivery',
+        shippingMethod,
       },
       accessToken
     )
       .then(setPreview)
       .catch(() => setPreview(null));
-  }, [form.postalCode, form.province, items, accessToken]);
+  }, [form.postalCode, form.province, shippingMethod, items, accessToken]);
 
   const handleSubmit = async () => {
     setError('');
-    if (!form.fullName || !form.phone || !form.street || !form.city || !form.province || !form.postalCode) {
-      setError('Completá todos los datos de envío');
+    if (!form.fullName || !form.phone) {
+      setError('Completá nombre y teléfono');
       return;
+    }
+    if (shippingMethod === 'delivery') {
+      if (!form.street || !form.city || !form.province || !form.postalCode) {
+        setError('Completá todos los datos de envío');
+        return;
+      }
     }
     if (!user && !form.email) {
       setError('Ingresá tu email o iniciá sesión');
@@ -82,13 +102,13 @@ export default function CheckoutScreen() {
           shippingAddress: {
             fullName: form.fullName,
             phone: form.phone,
-            street: form.street,
-            city: form.city,
-            province: form.province,
-            postalCode: form.postalCode,
+            street: shippingMethod === 'pickup' ? 'Retiro en persona' : form.street,
+            city: shippingMethod === 'pickup' ? form.city || 'Retiro' : form.city,
+            province: shippingMethod === 'pickup' ? form.province || '—' : form.province,
+            postalCode: shippingMethod === 'pickup' ? form.postalCode || '0000' : form.postalCode,
             notes: form.notes,
           },
-          shippingMethod: 'delivery',
+          shippingMethod,
         },
         accessToken
       );
@@ -180,6 +200,25 @@ export default function CheckoutScreen() {
           onChangeText={(v) => setForm((f) => ({ ...f, postalCode: v }))}
         />
 
+        <View style={styles.methodRow}>
+          <Pressable
+            style={[styles.methodBtn, shippingMethod === 'delivery' && styles.methodBtnActive]}
+            onPress={() => setShippingMethod('delivery')}
+          >
+            <Text style={[styles.methodText, shippingMethod === 'delivery' && styles.methodTextActive]}>
+              Envío
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.methodBtn, shippingMethod === 'pickup' && styles.methodBtnActive]}
+            onPress={() => setShippingMethod('pickup')}
+          >
+            <Text style={[styles.methodText, shippingMethod === 'pickup' && styles.methodTextActive]}>
+              Retiro
+            </Text>
+          </Pressable>
+        </View>
+
         <View style={styles.summary}>
           <Text style={styles.summaryRow}>
             Subtotal: {format(preview?.subtotal ?? subtotal)}
@@ -243,4 +282,17 @@ const styles = StyleSheet.create({
     marginBottom: 24,
   },
   buttonText: { color: colors.white, fontWeight: '700', fontSize: 16 },
+  methodRow: { flexDirection: 'row', gap: 8, marginTop: 4 },
+  methodBtn: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    alignItems: 'center',
+    backgroundColor: colors.white,
+  },
+  methodBtnActive: { borderColor: colors.blue, backgroundColor: '#EFF6FF' },
+  methodText: { fontSize: 14, fontWeight: '600', color: colors.slate600 },
+  methodTextActive: { color: colors.blue },
 });
