@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from
 import { Link, useLocalSearchParams } from 'expo-router';
 import { getOrder, MarketplaceOrder } from '../../src/api/marketplace';
 import { useAuth } from '../../src/context/AuthContext';
+import { ReportModal } from '../../src/components/ReportModal';
 import { colors } from '../../src/theme/colors';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -26,10 +27,11 @@ const format = (n: number) =>
 
 export default function OrderDetailScreen() {
   const { orderNumber } = useLocalSearchParams<{ orderNumber: string }>();
-  const { accessToken } = useAuth();
+  const { accessToken, user } = useAuth();
   const [order, setOrder] = useState<MarketplaceOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     if (!orderNumber) return;
@@ -120,7 +122,20 @@ export default function OrderDetailScreen() {
             </Pressable>
           </Link>
         )}
+
+        {user && order.status !== 'pending_payment' && (
+          <Pressable onPress={() => setShowReport(true)}>
+            <Text style={styles.reportLink}>Denunciar este pedido</Text>
+          </Pressable>
+        )}
       </View>
+
+      <ReportModal
+        visible={showReport}
+        onClose={() => setShowReport(false)}
+        title={`Pedido ${order.orderNumber}`}
+        orderId={order._id}
+      />
     </ScrollView>
   );
 }
@@ -159,4 +174,5 @@ const styles = StyleSheet.create({
   fulfillmentRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   itemRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   chatLink: { fontSize: 14, color: colors.red, fontWeight: '600' },
+  reportLink: { fontSize: 13, color: colors.slate400, marginTop: 4 },
 });

@@ -1,16 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 import { getSellerBySlug, PublicSellerProfile, searchListings, Listing } from '../../src/api/marketplace';
 import { ListingCard } from '../../src/components/ListingCard';
+import { ReportModal } from '../../src/components/ReportModal';
+import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
 
 export default function StorefrontScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
+  const { user } = useAuth();
   const [seller, setSeller] = useState<PublicSellerProfile | null>(null);
   const [listings, setListings] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -45,36 +49,51 @@ export default function StorefrontScreen() {
   }
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.name}>{seller.businessName}</Text>
-        {seller.description ? (
-          <Text style={styles.description}>{seller.description}</Text>
-        ) : null}
-        <View style={styles.metaRow}>
-          {seller.city && seller.province && (
-            <Text style={styles.meta}>{seller.city}, {seller.province}</Text>
+    <View style={styles.flex}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.name}>{seller.businessName}</Text>
+          {seller.description ? (
+            <Text style={styles.description}>{seller.description}</Text>
+          ) : null}
+          <View style={styles.metaRow}>
+            {seller.city && seller.province && (
+              <Text style={styles.meta}>{seller.city}, {seller.province}</Text>
+            )}
+            <Text style={styles.meta}>Reputación {seller.reputationScore}/100</Text>
+            <Text style={styles.meta}>{seller.totalSales} ventas · {seller.listingCount} productos</Text>
+          </View>
+          {user && (
+            <Pressable onPress={() => setShowReport(true)}>
+              <Text style={styles.reportLink}>Denunciar vendedor</Text>
+            </Pressable>
           )}
-          <Text style={styles.meta}>Reputación {seller.reputationScore}/100</Text>
-          <Text style={styles.meta}>{seller.totalSales} ventas · {seller.listingCount} productos</Text>
         </View>
-      </View>
 
-      <Text style={styles.sectionTitle}>Productos</Text>
-      {listings.length === 0 ? (
-        <Text style={styles.muted}>Este vendedor no tiene productos activos</Text>
-      ) : (
-        <View style={styles.grid}>
-          {listings.map((listing) => (
-            <ListingCard key={listing._id} listing={listing} />
-          ))}
-        </View>
-      )}
-    </ScrollView>
+        <Text style={styles.sectionTitle}>Productos</Text>
+        {listings.length === 0 ? (
+          <Text style={styles.muted}>Este vendedor no tiene productos activos</Text>
+        ) : (
+          <View style={styles.grid}>
+            {listings.map((listing) => (
+              <ListingCard key={listing._id} listing={listing} />
+            ))}
+          </View>
+        )}
+      </ScrollView>
+
+      <ReportModal
+        visible={showReport}
+        onClose={() => setShowReport(false)}
+        title={seller.businessName}
+        sellerId={seller._id}
+      />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  flex: { flex: 1 },
   container: { padding: 16, gap: 12 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24 },
   muted: { color: colors.slate500, textAlign: 'center' },
@@ -92,4 +111,5 @@ const styles = StyleSheet.create({
   meta: { fontSize: 13, color: colors.slate500 },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.navy, marginTop: 4 },
   grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, justifyContent: 'space-between' },
+  reportLink: { fontSize: 13, color: colors.slate400, marginTop: 8 },
 });

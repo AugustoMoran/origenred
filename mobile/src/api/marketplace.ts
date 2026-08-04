@@ -250,3 +250,28 @@ export const toggleFavorite = (listingId: string, token: string) =>
     token,
     mobile: false,
   });
+
+export const REPORT_REASONS = [
+  { value: 'producto_falso', label: 'Producto falso o engañoso' },
+  { value: 'precio_incorrecto', label: 'Precio incorrecto' },
+  { value: 'contenido_inapropiado', label: 'Contenido inapropiado' },
+  { value: 'estafa', label: 'Posible estafa' },
+  { value: 'otro', label: 'Otro' },
+] as const;
+
+export const createReport = (
+  body: {
+    listingId?: string;
+    sellerId?: string;
+    orderId?: string;
+    reason: string;
+    description?: string;
+  },
+  token: string
+) =>
+  apiFetch<{ message: string }>('/marketplace/reports', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    token,
+    mobile: false,
+  });

@@ -13,6 +13,7 @@ import { getListing, Listing } from '../../src/api/marketplace';
 import { useCart } from '../../src/context/CartContext';
 import { useAuth } from '../../src/context/AuthContext';
 import { useFavorites } from '../../src/context/FavoritesContext';
+import { ReportModal } from '../../src/components/ReportModal';
 import { colors } from '../../src/theme/colors';
 
 const formatPrice = (n: number) =>
@@ -28,6 +29,7 @@ export default function ProductScreen() {
   const { user } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
   const [favBusy, setFavBusy] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -135,6 +137,19 @@ export default function ProductScreen() {
       <Pressable style={styles.cartLink} onPress={() => router.push('/cart')}>
         <Text style={styles.cartLinkText}>Ver carrito →</Text>
       </Pressable>
+
+      {user && (
+        <Pressable onPress={() => setShowReport(true)}>
+          <Text style={styles.reportLink}>Denunciar este producto</Text>
+        </Pressable>
+      )}
+
+      <ReportModal
+        visible={showReport}
+        onClose={() => setShowReport(false)}
+        title={listing.title}
+        listingId={listing._id}
+      />
     </ScrollView>
   );
 }
@@ -179,4 +194,10 @@ const styles = StyleSheet.create({
   buyBtnText: { color: colors.white, fontWeight: '700', fontSize: 16 },
   cartLink: { alignItems: 'center', paddingVertical: 8 },
   cartLinkText: { color: colors.blue, fontWeight: '600' },
+  reportLink: {
+    textAlign: 'center',
+    fontSize: 13,
+    color: colors.slate400,
+    paddingVertical: 8,
+  },
 });
