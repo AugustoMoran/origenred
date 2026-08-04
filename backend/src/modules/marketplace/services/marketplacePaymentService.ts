@@ -28,6 +28,7 @@ export const createMarketplacePreference = async (input: {
   items: Array<{ title: string; quantity: number; unit_price: number; seller_mp_user_id?: string }>;
   payerEmail?: string;
   marketplaceFee?: number;
+  returnClient?: 'mobile' | 'web';
 }) => {
   const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
   if (!accessToken) {
@@ -35,6 +36,22 @@ export const createMarketplacePreference = async (input: {
   }
 
   const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+  const mobileScheme = process.env.MOBILE_APP_SCHEME || 'origenred';
+  const mobileReturnBase = `${mobileScheme}://payment-return`;
+
+  const back_urls =
+    input.returnClient === 'mobile'
+      ? {
+          success: `${mobileReturnBase}?status=success&orderNumber=${encodeURIComponent(input.orderNumber)}`,
+          failure: `${mobileReturnBase}?status=failure&orderNumber=${encodeURIComponent(input.orderNumber)}`,
+          pending: `${mobileReturnBase}?status=pending&orderNumber=${encodeURIComponent(input.orderNumber)}`,
+        }
+      : {
+          success: `${frontendUrl}/compras/exito`,
+          failure: `${frontendUrl}/compras/error`,
+          pending: `${frontendUrl}/compras/pendiente`,
+        };
+
   const payload: Record<string, unknown> = {
     items: input.items.map((item) => ({
       title: item.title,
@@ -45,11 +62,7 @@ export const createMarketplacePreference = async (input: {
     payer: input.payerEmail ? { email: input.payerEmail } : undefined,
     external_reference: input.orderId,
     metadata: { order_number: input.orderNumber },
-    back_urls: {
-      success: `${frontendUrl}/compras/exito`,
-      failure: `${frontendUrl}/compras/error`,
-      pending: `${frontendUrl}/compras/pendiente`,
-    },
+    back_urls,
     auto_return: 'approved',
     notification_url: process.env.MERCADOPAGO_WEBHOOK_URL || undefined,
   };

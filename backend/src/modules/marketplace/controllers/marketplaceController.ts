@@ -346,9 +346,12 @@ export async function previewCheckoutController(req: Request, res: Response) {
 export async function createCheckoutController(req: Request, res: Response) {
   try {
     const user = (req as any).user;
+    const clientHeader = String(req.headers['x-origenred-client'] || '').toLowerCase();
+    const returnClient = clientHeader === 'mobile' ? 'mobile' : 'web';
     const result = await createMarketplaceCheckout({
       ...req.body,
       buyerId: user?._id ? String(user._id) : undefined,
+      returnClient,
     });
     res.status(201).json({
       order: result.order,

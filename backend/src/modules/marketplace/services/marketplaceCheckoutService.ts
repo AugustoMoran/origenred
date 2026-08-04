@@ -172,6 +172,7 @@ export const createMarketplaceCheckout = async (input: {
     notes?: string;
   };
   shippingMethod?: 'delivery' | 'pickup';
+  returnClient?: 'mobile' | 'web';
 }) => {
   if (!input.buyerId && !input.guestEmail) {
     throw new Error('Se requiere iniciar sesión o proporcionar un email');
@@ -239,6 +240,7 @@ export const createMarketplaceCheckout = async (input: {
       items: mpItems,
       payerEmail: input.guestEmail,
       marketplaceFee: preview.commissionTotal,
+      returnClient: input.returnClient,
     });
 
     order.mercadoPagoPreferenceId = payment.id;
