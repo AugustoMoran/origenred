@@ -83,7 +83,11 @@ export default function ProductScreen() {
       </Text>
 
       {listing.seller && (
-        <Text style={styles.seller}>Vendedor: {listing.seller.businessName}</Text>
+        <Pressable onPress={() => router.push(`/tienda/${listing.seller!.slug}`)}>
+          <Text style={styles.sellerLink}>
+            Vendedor: {listing.seller.businessName} →
+          </Text>
+        </Pressable>
       )}
 
       <Text style={styles.stock}>
@@ -122,7 +126,7 @@ const styles = StyleSheet.create({
   price: { fontSize: 26, fontWeight: '800', color: colors.navy },
   badge: { color: colors.blue, fontWeight: '600' },
   meta: { fontSize: 12, color: colors.slate400 },
-  seller: { fontSize: 14, color: colors.slate600 },
+  sellerLink: { fontSize: 14, color: colors.blue, fontWeight: '600' },
   stock: { fontSize: 14, color: colors.slate600 },
   buyBtn: {
     backgroundColor: colors.red,

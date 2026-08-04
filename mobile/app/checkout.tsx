@@ -101,12 +101,16 @@ export default function CheckoutScreen() {
         Alert.alert(
           'Pedido creado',
           `Pedido ${result.order.orderNumber}. Completa el pago en Mercado Pago.`,
-          [{ text: 'Ver compras', onPress: () => router.replace('/orders') }]
+          [
+            { text: 'Ver pedido', onPress: () => router.replace(`/order/${result.order.orderNumber}`) },
+            { text: 'Mis compras', onPress: () => router.replace('/orders') },
+          ]
         );
         return;
       }
 
       Alert.alert('Pedido confirmado', `Pedido ${result.order.orderNumber} registrado.`, [
+        { text: 'Ver pedido', onPress: () => router.replace(`/order/${result.order.orderNumber}`) },
         { text: 'OK', onPress: () => router.replace('/orders') },
       ]);
     } catch (e: any) {

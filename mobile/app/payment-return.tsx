@@ -9,7 +9,7 @@ export default function PaymentReturnScreen() {
   useEffect(() => {
     const timer = setTimeout(() => {
       if (orderNumber) {
-        router.replace('/orders');
+        router.replace(`/order/${orderNumber}`);
       } else {
         router.replace('/');
       }

@@ -65,7 +65,13 @@ export const getListing = (slug: string) =>
   apiFetch<Listing>(`/marketplace/listings/${slug}`, { mobile: false });
 
 export const getMyOrders = (token: string) =>
-  apiFetch<unknown[]>('/marketplace/orders', { token, mobile: false });
+  apiFetch<MarketplaceOrder[]>('/marketplace/orders', { token, mobile: false });
+
+export const getOrder = (orderNumber: string, token?: string) =>
+  apiFetch<MarketplaceOrder>(`/marketplace/orders/${orderNumber}`, { token, mobile: false });
+
+export const getSellerBySlug = (slug: string) =>
+  apiFetch<PublicSellerProfile>(`/marketplace/sellers/${slug}`, { mobile: false });
 
 export const previewCheckout = (
   body: {
@@ -130,6 +136,48 @@ export interface SellerProfile {
   reputationScore: number;
   mercadoPagoConnected: boolean;
   rejectionReason?: string;
+}
+
+export interface PublicSellerProfile {
+  _id: string;
+  businessName: string;
+  slug: string;
+  description?: string;
+  province?: string;
+  city?: string;
+  listingCount: number;
+  totalSales: number;
+  reputationScore: number;
+}
+
+export interface MarketplaceOrder {
+  _id: string;
+  orderNumber: string;
+  total: number;
+  status: string;
+  chatEnabled?: boolean;
+  trackingCode?: string;
+  createdAt?: string;
+  shippingAddress?: {
+    fullName: string;
+    phone: string;
+    street: string;
+    city: string;
+    province: string;
+    postalCode: string;
+  };
+  shippingBySeller?: Array<{
+    seller: string;
+    sellerName?: string;
+    status: string;
+    trackingCode?: string;
+  }>;
+  items?: Array<{
+    listing: string;
+    title: string;
+    quantity: number;
+    subtotal: number;
+  }>;
 }
 
 export const getSellerProfile = (token: string) =>

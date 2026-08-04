@@ -23,6 +23,8 @@ export default function RootLayout() {
           <Stack.Screen name="login" options={{ title: 'Iniciar sesión', presentation: 'modal' }} />
           <Stack.Screen name="register" options={{ title: 'Crear cuenta', presentation: 'modal' }} />
           <Stack.Screen name="product/[slug]" options={{ title: 'Producto' }} />
+          <Stack.Screen name="tienda/[slug]" options={{ title: 'Tienda' }} />
+          <Stack.Screen name="order/[orderNumber]" options={{ title: 'Pedido' }} />
           <Stack.Screen name="checkout" options={{ title: 'Checkout' }} />
           <Stack.Screen name="chat/[orderNumber]" options={{ title: 'Chat' }} />
           <Stack.Screen name="payment-return" options={{ title: 'Pago', headerShown: false }} />
