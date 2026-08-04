@@ -46,6 +46,7 @@ import {
 } from '../services/reportService';
 import { reindexAllListings } from '../services/meilisearchService';
 import { updateSellerOrderFulfillment, canViewFullOrder, toPublicOrderSummary } from '../services/marketplaceOrderService';
+import { buildMarketplaceSitemap } from '../services/sitemapService';
 import { io } from '../../../app';
 import { emitChatMessage } from '../../../socket/marketplaceChatSocket';
 import { notifyChatRecipient } from '../../../modules/notifications/chatPushService';
@@ -124,6 +125,17 @@ export async function getIntegrationsStatusController(_req: Request, res: Respon
     r2: { enabled: features.r2 },
     meilisearch: { enabled: features.meilisearch },
   });
+}
+
+export async function getSitemapController(_req: Request, res: Response) {
+  try {
+    const xml = await buildMarketplaceSitemap();
+    res.set('Content-Type', 'application/xml; charset=utf-8');
+    res.set('Cache-Control', 'public, max-age=3600');
+    res.send(xml);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || 'Error al generar sitemap' });
+  }
 }
 
 // ── Vendedor ─────────────────────────────────────────────

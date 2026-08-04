@@ -80,3 +80,5 @@ Para `back_urls` de Mercado Pago desde checkout mobile.
 - [ ] R2 bucket público / CDN configurado
 - [ ] Meilisearch (opcional) — host accesible desde Render
 - [ ] Probar login, checkout, webhook de pago
+- [ ] Verificar `GET /health` y `GET /api/marketplace/sitemap.xml`
+- [ ] En Vercel: reescribir `/sitemap.xml` al API o actualizar `robots.txt`

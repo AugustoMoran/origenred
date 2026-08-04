@@ -38,6 +38,7 @@ import {
   getChatByOrderController,
   getSellerOrdersController,
   updateSellerOrderController,
+  getSitemapController,
 } from '../controllers/marketplaceController';
 
 const router = Router();
@@ -50,6 +51,7 @@ router.get('/categories', listPublicCategoriesController);
 router.get('/sellers/:slug', getSellerPublicController);
 router.post('/shipping/quote', quoteShippingController);
 router.get('/integrations', getIntegrationsStatusController);
+router.get('/sitemap.xml', getSitemapController);
 
 // Registro vendedor (público)
 router.post('/sellers/register', registerSellerController);

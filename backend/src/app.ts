@@ -99,8 +99,18 @@ app.use(limiter);
 //   app.use(csurf({ cookie: { httpOnly: true, sameSite: 'strict' } }));
 // }
 
-// basic health
-app.get('/health', (req: any, res: any) => res.json({ ok: true }));
+// Health check (used by Render / uptime monitors)
+app.get('/health', (_req, res) => {
+  const mongoOk = mongoose.connection.readyState === 1;
+  const body = {
+    ok: mongoOk,
+    mongo: mongoOk ? 'connected' : 'disconnected',
+    meilisearch: isMeilisearchEnabled(),
+    uptime: Math.floor(process.uptime()),
+    version: process.env.npm_package_version || '0.1.0',
+  };
+  res.status(mongoOk ? 200 : 503).json(body);
+});
 
 // mount modules
 import authRoutes from './modules/auth/routes/authRoutes';

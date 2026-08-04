@@ -49,6 +49,8 @@ mobile/                ← App Expo (iOS + Android)
 
 ## API Marketplace
 - `GET /api/marketplace/home` — datos home
+- `GET /api/marketplace/sitemap.xml` — sitemap SEO (productos + tiendas)
+- `GET /health` — health check (Mongo, Meilisearch flag)
 - `GET /api/marketplace/listings` — catálogo público
 - `POST /api/marketplace/sellers/register` — registro vendedor
 - `GET /api/marketplace/admin/sellers/pending` — aprobar vendedores (admin)
