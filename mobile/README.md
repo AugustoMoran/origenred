@@ -17,7 +17,10 @@ App móvil React Native + Expo que consume la misma API que la web.
 
 - **Inicio** — productos destacados
 - **Buscar** — catálogo marketplace
-- **Compras** — pedidos del usuario (requiere login)
+- **Carrito** — agregar productos y ir al checkout
+- **Checkout** — envío + Mercado Pago (abre browser nativo)
+- **Compras** — pedidos del usuario + chat post-compra
+- **Chat** — mensajes en tiempo real (Socket.io + JWT)
 - **Perfil** — sesión con SecureStore + tokens Bearer
 
 ## Auth móvil
@@ -27,6 +30,6 @@ Los tokens se guardan en Expo Secure Store.
 
 ## Próximos pasos
 
-- Checkout nativo con Mercado Pago
-- Chat post-compra con Socket.io
 - Push notifications (Expo Notifications)
+- Panel vendedor en mobile
+- Deep link de retorno post-Mercado Pago

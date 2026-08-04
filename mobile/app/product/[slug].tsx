@@ -2,13 +2,15 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Image,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, router } from 'expo-router';
 import { getListing, Listing } from '../../src/api/marketplace';
+import { useCart } from '../../src/context/CartContext';
 import { colors } from '../../src/theme/colors';
 
 const formatPrice = (n: number) =>
@@ -19,6 +21,8 @@ export default function ProductScreen() {
   const [listing, setListing] = useState<Listing | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [added, setAdded] = useState(false);
+  const { addItem } = useCart();
 
   useEffect(() => {
     if (!slug) return;
@@ -27,6 +31,19 @@ export default function ProductScreen() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [slug]);
+
+  const handleAddToCart = () => {
+    if (!listing || listing.stock <= 0) return;
+    addItem({
+      listingId: listing._id,
+      slug: listing.slug,
+      title: listing.title,
+      price: listing.price,
+      imageUrl: listing.images?.[0]?.url,
+    });
+    setAdded(true);
+    setTimeout(() => setAdded(false), 2000);
+  };
 
   if (loading) {
     return (
@@ -73,12 +90,19 @@ export default function ProductScreen() {
         {listing.stock > 0 ? `${listing.stock} disponibles` : 'Sin stock'}
       </Text>
 
-      <View style={styles.note}>
-        <Text style={styles.noteText}>
-          Para comprar, visitá origenred.com.ar o usa la web desde el navegador del celular.
-          Checkout en la app llegará en una próxima versión.
+      <Pressable
+        style={[styles.buyBtn, listing.stock <= 0 && styles.buyBtnDisabled]}
+        onPress={handleAddToCart}
+        disabled={listing.stock <= 0}
+      >
+        <Text style={styles.buyBtnText}>
+          {listing.stock <= 0 ? 'Sin stock' : added ? '✓ Agregado al carrito' : 'Agregar al carrito'}
         </Text>
-      </View>
+      </Pressable>
+
+      <Pressable style={styles.cartLink} onPress={() => router.push('/cart')}>
+        <Text style={styles.cartLinkText}>Ver carrito →</Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -100,11 +124,15 @@ const styles = StyleSheet.create({
   meta: { fontSize: 12, color: colors.slate400 },
   seller: { fontSize: 14, color: colors.slate600 },
   stock: { fontSize: 14, color: colors.slate600 },
-  note: {
-    marginTop: 12,
-    backgroundColor: colors.slate100,
+  buyBtn: {
+    backgroundColor: colors.red,
     borderRadius: 12,
-    padding: 14,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 12,
   },
-  noteText: { fontSize: 13, color: colors.slate600, lineHeight: 20 },
+  buyBtnDisabled: { opacity: 0.5 },
+  buyBtnText: { color: colors.white, fontWeight: '700', fontSize: 16 },
+  cartLink: { alignItems: 'center', paddingVertical: 8 },
+  cartLinkText: { color: colors.blue, fontWeight: '600' },
 });

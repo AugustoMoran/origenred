@@ -21,6 +21,32 @@ export interface HomeData {
   categories: Array<{ _id: string; name: string; slug: string; icon?: string; listingCount: number }>;
 }
 
+export interface CheckoutPreview {
+  subtotal: number;
+  shippingTotal: number;
+  commissionTotal: number;
+  total: number;
+  mercadoPagoEnabled: boolean;
+}
+
+export interface CheckoutResult {
+  order: { orderNumber: string; total: number; status: string };
+  payment: { initPoint: string; sandboxInitPoint?: string } | null;
+  mercadoPagoEnabled: boolean;
+}
+
+export interface ChatMessage {
+  _id: string;
+  body: string;
+  createdAt: string;
+  sender?: { _id: string; name: string };
+}
+
+export interface ChatData {
+  conversation: { _id: string; order?: { orderNumber: string } };
+  messages: ChatMessage[];
+}
+
 export const getHome = () => apiFetch<HomeData>('/marketplace/home', { mobile: false });
 
 export const searchListings = (params: Record<string, string>) => {
@@ -36,3 +62,56 @@ export const getListing = (slug: string) =>
 
 export const getMyOrders = (token: string) =>
   apiFetch<unknown[]>('/marketplace/orders', { token, mobile: false });
+
+export const previewCheckout = (
+  body: {
+    items: Array<{ listingId: string; quantity: number }>;
+    postalCode?: string;
+    province?: string;
+    shippingMethod?: 'delivery' | 'pickup';
+  },
+  token?: string
+) =>
+  apiFetch<CheckoutPreview>('/marketplace/checkout/preview', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    token,
+    mobile: false,
+  });
+
+export const createCheckout = (
+  body: {
+    items: Array<{ listingId: string; quantity: number }>;
+    guestEmail?: string;
+    guestName?: string;
+    guestPhone?: string;
+    shippingAddress: {
+      fullName: string;
+      phone: string;
+      street: string;
+      city: string;
+      province: string;
+      postalCode: string;
+      notes?: string;
+    };
+    shippingMethod?: 'delivery' | 'pickup';
+  },
+  token?: string
+) =>
+  apiFetch<CheckoutResult>('/marketplace/checkout', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    token,
+    mobile: false,
+  });
+
+export const getChatByOrder = (orderNumber: string, token: string) =>
+  apiFetch<ChatData>(`/marketplace/chat/order/${orderNumber}`, { token, mobile: false });
+
+export const sendChatMessage = (conversationId: string, body: string, token: string) =>
+  apiFetch<ChatMessage>(`/marketplace/chat/conversations/${conversationId}/messages`, {
+    method: 'POST',
+    body: JSON.stringify({ body }),
+    token,
+    mobile: false,
+  });

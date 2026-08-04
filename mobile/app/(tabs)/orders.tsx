@@ -76,6 +76,13 @@ export default function OrdersScreen() {
             {order.trackingCode && (
               <Text style={styles.tracking}>Tracking: {order.trackingCode}</Text>
             )}
+            {order.chatEnabled && order.status !== 'pending_payment' && (
+              <Link href={`/chat/${order.orderNumber}`} asChild>
+                <Pressable>
+                  <Text style={styles.chatLink}>💬 Chatear con vendedor</Text>
+                </Pressable>
+              </Link>
+            )}
           </View>
         ))
       )}
@@ -107,4 +114,5 @@ const styles = StyleSheet.create({
   total: { fontWeight: '700', color: colors.navy },
   status: { fontSize: 13, color: colors.slate600 },
   tracking: { fontSize: 12, color: colors.slate500, fontFamily: 'monospace' },
+  chatLink: { fontSize: 13, color: colors.blue, fontWeight: '600', marginTop: 4 },
 });

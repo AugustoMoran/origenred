@@ -14,6 +14,7 @@ export default function TabsLayout() {
     >
       <Tabs.Screen name="index" options={{ title: 'Inicio', tabBarLabel: 'Inicio' }} />
       <Tabs.Screen name="search" options={{ title: 'Buscar', tabBarLabel: 'Buscar' }} />
+      <Tabs.Screen name="cart" options={{ title: 'Carrito', tabBarLabel: 'Carrito' }} />
       <Tabs.Screen name="orders" options={{ title: 'Compras', tabBarLabel: 'Compras' }} />
       <Tabs.Screen name="profile" options={{ title: 'Perfil', tabBarLabel: 'Perfil' }} />
     </Tabs>
