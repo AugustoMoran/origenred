@@ -5,17 +5,21 @@ export interface Listing {
   title: string;
   slug: string;
   description?: string;
+  shortDescription?: string;
   price: number;
+  compareAtPrice?: number;
   currency: string;
   stock: number;
   freeShipping: boolean;
   origenRankScore: number;
   salesCount: number;
   images: Array<{ url: string }>;
-  seller?: { businessName: string; slug: string };
+  seller?: { businessName: string; slug: string; reputationScore?: number };
   status?: string;
   category?: string | { _id: string; name: string };
   brand?: string;
+  color?: string;
+  size?: string;
 }
 
 export interface HomeData {
@@ -273,5 +277,22 @@ export const createReport = (
     method: 'POST',
     body: JSON.stringify(body),
     token,
+    mobile: false,
+  });
+
+export const registerSeller = (body: {
+  name: string;
+  email: string;
+  password: string;
+  businessName: string;
+  province?: string;
+  city?: string;
+  postalCode?: string;
+  phone?: string;
+  description?: string;
+}) =>
+  apiFetch<{ message: string }>('/marketplace/sellers/register', {
+    method: 'POST',
+    body: JSON.stringify(body),
     mobile: false,
   });

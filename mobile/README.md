@@ -1,47 +1,73 @@
 # OrigenRed Mobile (Expo)
 
-App móvil React Native + Expo que consume la misma API que la web.
+App React Native + Expo Router. Consume la misma API que la web (`/api/marketplace`).
 
-## Setup
+## Setup local
 
-1. Copiar `.env.example` → `.env`
-2. `npm install`
-3. `npx expo start`
+```bash
+cd mobile
+cp .env.example .env
+npm install
+npx expo start
+```
 
 ### Variables
 
-- `EXPO_PUBLIC_API_URL` — URL del backend, ej. `http://localhost:4000/api`
-- En dispositivo físico usa la IP de tu PC, ej. `http://192.168.1.10:4000/api`
+| Variable | Ejemplo |
+|----------|---------|
+| `EXPO_PUBLIC_API_URL` | `http://localhost:4000/api` |
+| En dispositivo físico | `http://192.168.x.x:4000/api` (IP de tu PC) |
 
 ## Pantallas
 
-- **Inicio** — productos destacados
-- **Buscar** — catálogo marketplace
-- **Carrito** — agregar productos y ir al checkout
-- **Checkout** — envío + Mercado Pago (abre browser nativo)
-- **Compras** — pedidos del usuario + chat post-compra
-- **Chat** — mensajes en tiempo real (Socket.io + JWT)
-- **Perfil** — sesión con SecureStore + tokens Bearer
+| Ruta | Descripción |
+|------|-------------|
+| `(tabs)/index` | Home, categorías, destacados |
+| `(tabs)/search` | Búsqueda y filtro por categoría |
+| `(tabs)/cart` | Carrito |
+| `(tabs)/orders` | Mis compras |
+| `(tabs)/profile` | Cuenta, favoritos, vendedor |
+| `product/[slug]` | Detalle de producto |
+| `tienda/[slug]` | Tienda pública del vendedor |
+| `order/[orderNumber]` | Detalle de pedido |
+| `checkout` | Checkout + Mercado Pago |
+| `favorites` | Mis favoritos |
+| `vender` | Registro como vendedor |
+| `login` / `register` | Auth comprador |
+| `vendedor/*` | Panel vendedor (productos, ventas, chat) |
+| `chat/[orderNumber]` | Chat post-compra |
+| `payment-return` | Deep link retorno MP |
 
-## Auth móvil
+## Auth
 
-El login envía `X-OrigenRed-Client: mobile` y recibe `accessToken` + `refreshToken` en el body.
-Los tokens se guardan en Expo Secure Store.
+Login con `X-OrigenRed-Client: mobile` → tokens en body → SecureStore.
 
-### Deep links (retorno Mercado Pago)
+## Deep links (Mercado Pago)
 
 Scheme: `origenred://`
 
-- `origenred://payment-return?orderNumber=OR-XXX` — pantalla de confirmación → redirige a Compras
-- Configurar en Mercado Pago `back_urls` apuntando a esa URL para retorno nativo
+- `origenred://payment-return?status=success&orderNumber=OR-XXX`
+- El backend genera `back_urls` con este scheme cuando el checkout viene desde la app.
 
-### Push notifications
+## EAS Build (producción)
 
-- Registro automático al iniciar sesión (`POST /api/auth/push-token`)
-- Notificaciones en: nuevo mensaje de chat, nueva venta (vendedor)
-- Requiere dispositivo físico (no Expo Go web)
+1. Instalar EAS CLI: `npm i -g eas-cli`
+2. Login: `eas login`
+3. Vincular proyecto (genera `projectId` real): `eas init`
+4. Configurar secret de API en EAS:
+   ```bash
+   eas secret:create --scope project --name EXPO_PUBLIC_API_URL --value https://tu-api.onrender.com/api
+   ```
+5. Build:
+   ```bash
+   eas build --profile preview --platform android   # APK interno
+   eas build --profile production --platform all    # stores
+   ```
 
-## Próximos pasos
+Perfiles en `eas.json`: `development`, `preview`, `production`.
 
-- Editar productos desde la app
-- EAS Build para producción con projectId real
+**Nota:** El `projectId` en `app.json` debe ser el de tu cuenta Expo (`eas init` lo actualiza).
+
+## Push notifications
+
+Registro automático al login (`POST /api/auth/push-token`). Requiere dispositivo físico.

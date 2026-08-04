@@ -24,6 +24,7 @@ export default function RootLayout() {
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
           <Stack.Screen name="login" options={{ title: 'Iniciar sesión', presentation: 'modal' }} />
           <Stack.Screen name="register" options={{ title: 'Crear cuenta', presentation: 'modal' }} />
+          <Stack.Screen name="vender" options={{ title: 'Vender en OrigenRed' }} />
           <Stack.Screen name="favorites" options={{ title: 'Mis favoritos' }} />
           <Stack.Screen name="product/[slug]" options={{ title: 'Producto' }} />
           <Stack.Screen name="tienda/[slug]" options={{ title: 'Tienda' }} />

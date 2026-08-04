@@ -30,6 +30,11 @@ export default function ProfileScreen() {
             <Text style={styles.ctaOutlineText}>Crear cuenta</Text>
           </Pressable>
         </Link>
+        <Link href="/vender" asChild>
+          <Pressable style={styles.ctaOutline}>
+            <Text style={styles.ctaOutlineText}>Vender en OrigenRed</Text>
+          </Pressable>
+        </Link>
       </View>
     );
   }
@@ -55,6 +60,14 @@ export default function ProfileScreen() {
           <Text style={styles.menuBtnText}>Mis favoritos</Text>
         </Pressable>
       </Link>
+
+      {!user.roles?.includes('vendedor_marketplace') && (
+        <Link href="/vender" asChild>
+          <Pressable style={styles.menuBtn}>
+            <Text style={styles.menuBtnText}>Quiero vender en OrigenRed</Text>
+          </Pressable>
+        </Link>
+      )}
 
       <Pressable style={styles.logout} onPress={signOut}>
         <Text style={styles.logoutText}>Cerrar sesión</Text>

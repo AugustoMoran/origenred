@@ -25,6 +25,7 @@ export default function ProductScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [added, setAdded] = useState(false);
+  const [selectedImage, setSelectedImage] = useState(0);
   const { addItem } = useCart();
   const { user } = useAuth();
   const { isFavorite, toggleFavorite } = useFavorites();
@@ -34,7 +35,10 @@ export default function ProductScreen() {
   useEffect(() => {
     if (!slug) return;
     getListing(slug)
-      .then(setListing)
+      .then((data) => {
+        setListing(data);
+        setSelectedImage(0);
+      })
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [slug]);
@@ -84,16 +88,47 @@ export default function ProductScreen() {
     );
   }
 
-  const imageUrl = listing.images?.[0]?.url;
+  const images = listing.images?.length ? listing.images : [];
+  const mainImage = images[selectedImage]?.url;
+  const hasDiscount =
+    listing.compareAtPrice != null && listing.compareAtPrice > listing.price;
+  const categoryName =
+    typeof listing.category === 'object' ? listing.category?.name : undefined;
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      {imageUrl ? (
-        <Image source={{ uri: imageUrl }} style={styles.image} resizeMode="cover" />
+      {mainImage ? (
+        <Image source={{ uri: mainImage }} style={styles.image} resizeMode="cover" />
       ) : (
         <View style={[styles.image, styles.placeholder]}>
           <Text style={styles.placeholderText}>Sin imagen</Text>
         </View>
+      )}
+
+      {images.length > 1 && (
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.thumbRow}>
+          {images.map((img, i) => (
+            <Pressable key={i} onPress={() => setSelectedImage(i)}>
+              <Image
+                source={{ uri: img.url }}
+                style={[styles.thumb, selectedImage === i && styles.thumbActive]}
+                resizeMode="cover"
+              />
+            </Pressable>
+          ))}
+        </ScrollView>
+      )}
+
+      {listing.seller && (
+        <Pressable onPress={() => router.push(`/tienda/${listing.seller!.slug}`)}>
+          <Text style={styles.sellerLink}>
+            {listing.seller.businessName}
+            {listing.seller.reputationScore != null
+              ? ` · ⭐ ${listing.seller.reputationScore}`
+              : ''}
+            {' →'}
+          </Text>
+        </Pressable>
       )}
 
       <View style={styles.titleRow}>
@@ -104,21 +139,37 @@ export default function ProductScreen() {
           </Text>
         </Pressable>
       </View>
-      <Text style={styles.price}>{formatPrice(listing.price)}</Text>
+
+      <View style={styles.priceRow}>
+        <Text style={styles.price}>{formatPrice(listing.price)}</Text>
+        {hasDiscount && (
+          <Text style={styles.comparePrice}>{formatPrice(listing.compareAtPrice!)}</Text>
+        )}
+      </View>
 
       {listing.freeShipping && <Text style={styles.badge}>Envío gratis</Text>}
+
+      {listing.shortDescription ? (
+        <Text style={styles.shortDesc}>{listing.shortDescription}</Text>
+      ) : null}
+
+      {listing.description ? (
+        <Text style={styles.description}>{listing.description}</Text>
+      ) : null}
+
+      <View style={styles.chips}>
+        {categoryName && <Text style={styles.chip}>{categoryName}</Text>}
+        {listing.brand && <Text style={styles.chip}>Marca: {listing.brand}</Text>}
+        {listing.color && <Text style={styles.chip}>Color: {listing.color}</Text>}
+        {listing.size && <Text style={styles.chip}>Talle: {listing.size}</Text>}
+        <Text style={styles.chip}>
+          Stock: {listing.stock > 0 ? listing.stock : 'Agotado'}
+        </Text>
+      </View>
 
       <Text style={styles.meta}>
         OrigenRank™ {listing.origenRankScore} · {listing.salesCount} ventas
       </Text>
-
-      {listing.seller && (
-        <Pressable onPress={() => router.push(`/tienda/${listing.seller!.slug}`)}>
-          <Text style={styles.sellerLink}>
-            Vendedor: {listing.seller.businessName} →
-          </Text>
-        </Pressable>
-      )}
 
       <Text style={styles.stock}>
         {listing.stock > 0 ? `${listing.stock} disponibles` : 'Sin stock'}
@@ -165,6 +216,17 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   placeholderText: { color: colors.slate400 },
+  thumbRow: { flexGrow: 0, marginTop: 4 },
+  thumb: {
+    width: 64,
+    height: 64,
+    borderRadius: 8,
+    marginRight: 8,
+    borderWidth: 2,
+    borderColor: 'transparent',
+  },
+  thumbActive: { borderColor: colors.blue },
+  sellerLink: { fontSize: 14, color: colors.blue, fontWeight: '600' },
   title: { fontSize: 22, fontWeight: '800', color: colors.navy, flex: 1 },
   titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
   favBtn: {
@@ -178,17 +240,29 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   favBtnText: { fontSize: 22, color: colors.red },
+  priceRow: { flexDirection: 'row', alignItems: 'baseline', gap: 10 },
   price: { fontSize: 26, fontWeight: '800', color: colors.navy },
+  comparePrice: { fontSize: 18, color: colors.slate400, textDecorationLine: 'line-through' },
   badge: { color: colors.blue, fontWeight: '600' },
+  shortDesc: { fontSize: 15, color: colors.slate600, fontWeight: '500' },
+  description: { fontSize: 14, color: colors.slate600, lineHeight: 22 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  chip: {
+    fontSize: 12,
+    color: colors.slate600,
+    backgroundColor: colors.slate100,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
   meta: { fontSize: 12, color: colors.slate400 },
-  sellerLink: { fontSize: 14, color: colors.blue, fontWeight: '600' },
   stock: { fontSize: 14, color: colors.slate600 },
   buyBtn: {
     backgroundColor: colors.red,
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: 'center',
-    marginTop: 12,
+    marginTop: 8,
   },
   buyBtnDisabled: { opacity: 0.5 },
   buyBtnText: { color: colors.white, fontWeight: '700', fontSize: 16 },

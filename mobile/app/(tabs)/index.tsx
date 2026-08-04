@@ -73,6 +73,14 @@ export default function HomeScreen() {
         <Text style={styles.heroSub}>
           Comprá y vendé con confianza en toda Argentina.
         </Text>
+        <View style={styles.heroActions}>
+          <Pressable style={styles.heroBtnPrimary} onPress={() => router.push('/search')}>
+            <Text style={styles.heroBtnPrimaryText}>Explorar productos</Text>
+          </Pressable>
+          <Pressable style={styles.heroBtnSecondary} onPress={() => router.push('/vender')}>
+            <Text style={styles.heroBtnSecondaryText}>Empezar a vender</Text>
+          </Pressable>
+        </View>
       </View>
 
       {data?.categories && data.categories.length > 0 && (
@@ -134,6 +142,22 @@ const styles = StyleSheet.create({
   heroTag: { color: colors.red, fontSize: 11, fontWeight: '700', letterSpacing: 1 },
   heroTitle: { color: colors.white, fontSize: 28, fontWeight: '800' },
   heroSub: { color: '#cbd5e1', fontSize: 14, lineHeight: 20 },
+  heroActions: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginTop: 12 },
+  heroBtnPrimary: {
+    backgroundColor: colors.red,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  heroBtnPrimaryText: { color: colors.white, fontWeight: '700', fontSize: 14 },
+  heroBtnSecondary: {
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.35)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  heroBtnSecondaryText: { color: colors.white, fontWeight: '600', fontSize: 14 },
   section: { gap: 8 },
   sectionTitle: { fontSize: 18, fontWeight: '700', color: colors.navy },
   sectionSub: { fontSize: 13, color: colors.slate500 },

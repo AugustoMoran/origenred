@@ -19,7 +19,15 @@
       "adaptiveIcon": {
         "backgroundColor": "#1e3a5f"
       },
-      "package": "com.origenred.app"
+      "package": "com.origenred.app",
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [{ "scheme": "origenred" }],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "plugins": [
       "expo-router",
