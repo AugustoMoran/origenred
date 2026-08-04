@@ -71,7 +71,7 @@ export const OrigenRedHeader: React.FC = () => {
                 <Link to="/login" className="px-3 py-2 text-xs font-medium text-or-navy hover:text-or-blue transition-colors">
                   Ingresar
                 </Link>
-                <Link to="/register" className="px-4 py-2 text-xs font-semibold text-white bg-or-red hover:bg-red-600 rounded-xl transition-colors shadow-sm">
+                <Link to="/registro" className="px-4 py-2 text-xs font-semibold text-white bg-or-red hover:bg-red-600 rounded-xl transition-colors shadow-sm">
                   Registrarse
                 </Link>
               </>

@@ -1,5 +1,6 @@
 import { MarketplaceOrder, IMarketplaceOrder } from '../models/MarketplaceOrder';
 import { SellerProfile } from '../models/SellerProfile';
+import { notifyUserPush } from '../../notifications/chatPushService';
 
 type FulfillmentStatus = 'processing' | 'shipped' | 'delivered';
 
@@ -92,6 +93,19 @@ export const updateSellerOrderFulfillment = async (
 
   order.markModified('shippingBySeller');
   await order.save();
+
+  if (order.buyer && (next === 'shipped' || next === 'delivered')) {
+    const label = next === 'shipped' ? 'Tu pedido fue enviado' : 'Tu pedido fue entregado';
+    const tracking = entry.trackingCode || order.trackingCode;
+    const body = tracking
+      ? `Pedido ${order.orderNumber} — tracking: ${tracking}`
+      : `Pedido ${order.orderNumber}`;
+    await notifyUserPush(String(order.buyer), label, body, {
+      type: 'order',
+      orderNumber: order.orderNumber,
+      status: next,
+    });
+  }
 
   return order;
 };

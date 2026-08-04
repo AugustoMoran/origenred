@@ -92,6 +92,22 @@ export const marketplaceApi = createApi({
     getCategories: builder.query<MarketplaceCategory[], { all?: boolean } | void>({
       query: (params) => ({ url: '/categories', params: params?.all ? { all: 'true' } : undefined }),
     }),
+    getSellerBySlug: builder.query<
+      {
+        _id: string;
+        businessName: string;
+        slug: string;
+        description?: string;
+        province?: string;
+        city?: string;
+        reputationScore: number;
+        totalSales: number;
+        listingCount: number;
+      },
+      string
+    >({
+      query: (slug) => `/sellers/${slug}`,
+    }),
     getIntegrations: builder.query<Record<string, unknown>, void>({
       query: () => '/integrations',
     }),
@@ -314,6 +330,7 @@ export const {
   useGetListingsQuery,
   useGetListingBySlugQuery,
   useGetCategoriesQuery,
+  useGetSellerBySlugQuery,
   useGetIntegrationsQuery,
   useQuoteShippingMutation,
   useRegisterSellerMutation,

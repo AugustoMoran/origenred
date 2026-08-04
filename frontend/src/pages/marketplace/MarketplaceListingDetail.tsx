@@ -65,7 +65,7 @@ export const MarketplaceListingDetail: React.FC = () => {
 
         <div className="space-y-5">
           {listing.seller && (
-            <Link to={`/vendedor/${listing.seller.slug}`} className="text-sm text-or-blue hover:underline">
+            <Link to={`/tienda/${listing.seller.slug}`} className="text-sm text-or-blue hover:underline">
               {listing.seller.businessName} · ⭐ {listing.seller.reputationScore}
             </Link>
           )}

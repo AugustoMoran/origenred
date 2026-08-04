@@ -23,6 +23,16 @@ export const authApi = createApi({
         body: userData,
       }),
     }),
+    publicRegister: builder.mutation<
+      { id: string; name: string; email: string; roles: string[] },
+      { name: string; email: string; password: string }
+    >({
+      query: (body) => ({
+        url: 'register/public',
+        method: 'POST',
+        body,
+      }),
+    }),
     logout: builder.mutation<{ ok: boolean }, void>({
       query: () => ({
         url: 'logout',
@@ -79,6 +89,7 @@ export const authApi = createApi({
 export const {
   useLoginMutation,
   useRegisterMutation,
+  usePublicRegisterMutation,
   useLogoutMutation,
   useGetMeQuery,
   useRefreshMutation,

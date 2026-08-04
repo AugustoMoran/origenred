@@ -69,7 +69,7 @@ export const MyOrdersPage: React.FC = () => {
 
               <div className="flex gap-3 pt-1">
                 <Link
-                  to={`/compras/confirmacion/${order.orderNumber}`}
+                  to={`/cuenta/compras/${order.orderNumber}`}
                   className="text-xs text-or-blue hover:underline"
                 >
                   Ver detalle
@@ -83,7 +83,8 @@ export const MyOrdersPage: React.FC = () => {
                   </Link>
                 )}
               </div>
-            </div>          ))}
+            </div>
+          ))}
         </div>
       )}
     </div>

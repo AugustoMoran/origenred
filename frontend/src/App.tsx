@@ -17,6 +17,10 @@ import { Register } from './pages/Register';
 import { OrigenRedHome } from './pages/marketplace/OrigenRedHome';
 import { MarketplaceSearchPage } from './pages/marketplace/MarketplaceSearchPage';
 import { MarketplaceListingDetail } from './pages/marketplace/MarketplaceListingDetail';
+import { BuyerRegisterPage } from './pages/marketplace/BuyerRegisterPage';
+import { SellerStorefrontPage } from './pages/marketplace/SellerStorefrontPage';
+import { MarketplaceOrderDetailPage } from './pages/marketplace/MarketplaceOrderDetailPage';
+import { MyOrdersPage } from './pages/marketplace/MyOrdersPage';
 import { SellerRegisterPage } from './pages/marketplace/SellerRegisterPage';
 import { SellerLayout, SellerProtectedRoute } from './components/marketplace/SellerLayout';
 import { SellerDashboard } from './pages/marketplace/seller/SellerDashboard';
@@ -54,12 +58,15 @@ const router = createBrowserRouter([
       { path: '/', element: <OrigenRedHome /> },
       { path: '/buscar', element: <MarketplaceSearchPage /> },
       { path: '/p/:slug', element: <MarketplaceListingDetail /> },
+      { path: '/tienda/:slug', element: <SellerStorefrontPage /> },
+      { path: '/registro', element: <BuyerRegisterPage /> },
       { path: '/vender', element: <SellerRegisterPage /> },
       { path: '/comprar', element: <MarketplaceCheckoutPage /> },
       { path: '/compras/confirmacion/:orderNumber', element: <MarketplaceOrderConfirmation /> },
       { path: '/compras/exito', element: <MarketplaceOrderConfirmation /> },
       { path: '/compras/pendiente', element: <MarketplaceOrderConfirmation /> },
       { path: '/cuenta/compras', element: <StoreAuthRoute><MyOrdersPage /></StoreAuthRoute> },
+      { path: '/cuenta/compras/:orderNumber', element: <StoreAuthRoute><MarketplaceOrderDetailPage /></StoreAuthRoute> },
       { path: '/cuenta/favoritos', element: <StoreAuthRoute><MyFavoritesPage /></StoreAuthRoute> },
       { path: '/cuenta/chat/:orderNumber', element: <StoreAuthRoute><OrderChatPage /></StoreAuthRoute> },
       { path: '/products', element: <StoreProducts /> },
