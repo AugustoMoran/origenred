@@ -40,6 +40,7 @@ import { StoreCheckoutConfirmation } from './pages/store/StoreCheckoutConfirmati
 import { StoreWhatsAppSent } from './pages/store/StoreWhatsAppSent';
 import { StoreRegister } from './pages/store/StoreRegister';
 import { Maintenance } from './pages/store/Maintenance';
+import { NotFoundPage } from './pages/NotFoundPage';
 
 const DashboardLayout = ({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) => (
   <DashboardProtectedRoute adminOnly={adminOnly}>
@@ -163,6 +164,7 @@ const router = createBrowserRouter([
       </LoginRedirectRoute>
     ),
   },
+  { path: '*', element: <NotFoundPage /> },
 ], {
   future: {
     v7_startTransition: true,

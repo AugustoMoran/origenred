@@ -2,10 +2,12 @@ import React from 'react';
 import { Outlet } from 'react-router-dom';
 import { OrigenRedHeader } from '../marketplace/OrigenRedHeader';
 import { MarketplaceCartDrawer } from '../marketplace/MarketplaceCartDrawer';
+import { RouteChangeTracker } from '../RouteChangeTracker';
 
 export const EcommerceLayout: React.FC = () => {
   return (
     <div className="marketplace-theme min-h-screen bg-slate-50 text-or-navy flex flex-col">
+      <RouteChangeTracker />
       <OrigenRedHeader />
       <main className="flex-1">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">

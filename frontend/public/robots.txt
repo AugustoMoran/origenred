@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard
+Disallow: /vendedor
+Disallow: /login
+Disallow: /register
+
+# Sitemap: en producción apunta al backend o reescribe /sitemap.xml en Vercel
+# Ejemplo: https://tu-api.onrender.com/api/marketplace/sitemap.xml
+Sitemap: /sitemap.xml

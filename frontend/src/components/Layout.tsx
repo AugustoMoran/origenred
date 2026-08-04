@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState } from "../store";
 import { logout } from "../store/authSlice";
 import { useLogoutMutation } from "../services/authApi";
+import { RouteChangeTracker } from "./RouteChangeTracker";
 
 const brandLogo = "/brand-logo.png";
 
@@ -150,6 +151,7 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
 	return (
 		<div className="flex h-screen bg-[#030712] overflow-hidden text-slate-300">
+			<RouteChangeTracker />
 
 			{/* ── Mobile Topbar ── */}
 			<div className="lg:hidden fixed top-0 inset-x-0 z-40 h-14 bg-[#060D1F]/95 backdrop-blur border-b border-white/[0.06] px-4 flex items-center justify-between">
