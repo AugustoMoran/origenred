@@ -23,8 +23,19 @@
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "color": "#1e3a5f"
+        }
+      ]
     ],
+    "extra": {
+      "eas": {
+        "projectId": "c4e8a1b2-3d4f-5a6b-7c8d-9e0f1a2b3c4d"
+      }
+    },
     "experiments": {
       "typedRoutes": true
     }

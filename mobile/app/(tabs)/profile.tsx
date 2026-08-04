@@ -36,6 +36,15 @@ export default function ProfileScreen() {
         <Text style={styles.email}>{user.email}</Text>
         <Text style={styles.roles}>{user.roles?.join(', ')}</Text>
       </View>
+
+      {(user.roles?.includes('vendedor_marketplace') || user.roles?.includes('admin')) && (
+        <Link href="/vendedor" asChild>
+          <Pressable style={styles.sellerBtn}>
+            <Text style={styles.sellerBtnText}>Panel vendedor →</Text>
+          </Pressable>
+        </Link>
+      )}
+
       <Pressable style={styles.logout} onPress={signOut}>
         <Text style={styles.logoutText}>Cerrar sesión</Text>
       </Pressable>
@@ -66,6 +75,13 @@ const styles = StyleSheet.create({
   name: { fontSize: 20, fontWeight: '700', color: colors.navy },
   email: { color: colors.slate600 },
   roles: { fontSize: 12, color: colors.slate400, marginTop: 4 },
+  sellerBtn: {
+    backgroundColor: colors.navy,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+  },
+  sellerBtnText: { color: colors.white, fontWeight: '700' },
   logout: {
     borderWidth: 1,
     borderColor: colors.slate200,

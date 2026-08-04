@@ -34,3 +34,11 @@ export const logout = (refreshToken: string) =>
     body: JSON.stringify({ refreshToken }),
     mobile: false,
   });
+
+export const registerPushToken = (token: string, platform: string, accessToken: string) =>
+  apiFetch<{ ok: boolean }>('/auth/push-token', {
+    method: 'POST',
+    body: JSON.stringify({ token, platform }),
+    token: accessToken,
+    mobile: false,
+  });

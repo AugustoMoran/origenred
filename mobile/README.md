@@ -28,8 +28,20 @@ App móvil React Native + Expo que consume la misma API que la web.
 El login envía `X-OrigenRed-Client: mobile` y recibe `accessToken` + `refreshToken` en el body.
 Los tokens se guardan en Expo Secure Store.
 
+### Deep links (retorno Mercado Pago)
+
+Scheme: `origenred://`
+
+- `origenred://payment-return?orderNumber=OR-XXX` — pantalla de confirmación → redirige a Compras
+- Configurar en Mercado Pago `back_urls` apuntando a esa URL para retorno nativo
+
+### Push notifications
+
+- Registro automático al iniciar sesión (`POST /api/auth/push-token`)
+- Notificaciones en: nuevo mensaje de chat, nueva venta (vendedor)
+- Requiere dispositivo físico (no Expo Go web)
+
 ## Próximos pasos
 
-- Push notifications (Expo Notifications)
-- Panel vendedor en mobile
-- Deep link de retorno post-Mercado Pago
+- Crear/editar productos desde la app (upload R2)
+- EAS Build para producción con projectId real

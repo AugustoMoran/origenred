@@ -1,6 +1,7 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
 import { AuthSession, AuthUser, getMe, login as apiLogin, logout as apiLogout, refreshSession } from '../api/auth';
+import { registerForPushNotifications } from '../services/pushNotifications';
 
 const ACCESS_KEY = 'origenred_access';
 const REFRESH_KEY = 'origenred_refresh';
@@ -40,6 +41,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const me = await getMe(storedAccess);
           setUser(me);
           setAccessToken(storedAccess);
+          registerForPushNotifications(storedAccess).catch(() => undefined);
           return;
         } catch {
           // access expired
@@ -51,6 +53,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await persistSession(session);
         setUser(session.user);
         setAccessToken(session.accessToken);
+        registerForPushNotifications(session.accessToken).catch(() => undefined);
       }
     } catch {
       await clearSession();
@@ -68,6 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await persistSession(session);
     setUser(session.user);
     setAccessToken(session.accessToken);
+    registerForPushNotifications(session.accessToken).catch(() => undefined);
   };
 
   const signOut = async () => {

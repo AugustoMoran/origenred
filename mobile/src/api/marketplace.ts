@@ -12,6 +12,7 @@ export interface Listing {
   salesCount: number;
   images: Array<{ url: string }>;
   seller?: { businessName: string; slug: string };
+  status?: string;
 }
 
 export interface HomeData {
@@ -112,6 +113,39 @@ export const sendChatMessage = (conversationId: string, body: string, token: str
   apiFetch<ChatMessage>(`/marketplace/chat/conversations/${conversationId}/messages`, {
     method: 'POST',
     body: JSON.stringify({ body }),
+    token,
+    mobile: false,
+  });
+
+export interface SellerProfile {
+  _id: string;
+  businessName: string;
+  slug: string;
+  status: string;
+  listingCount: number;
+  totalSales: number;
+  reputationScore: number;
+  mercadoPagoConnected: boolean;
+  rejectionReason?: string;
+}
+
+export const getSellerProfile = (token: string) =>
+  apiFetch<SellerProfile>('/marketplace/seller/me', { token, mobile: false });
+
+export const getSellerListings = (token: string) =>
+  apiFetch<Listing[]>('/marketplace/seller/listings', { token, mobile: false });
+
+export const getSellerOrders = (token: string) =>
+  apiFetch<unknown[]>('/marketplace/seller/orders', { token, mobile: false });
+
+export const updateSellerOrder = (
+  orderNumber: string,
+  body: { status: 'shipped' | 'delivered'; trackingCode?: string },
+  token: string
+) =>
+  apiFetch<unknown>(`/marketplace/seller/orders/${orderNumber}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
     token,
     mobile: false,
   });

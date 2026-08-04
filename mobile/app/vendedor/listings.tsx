@@ -1,0 +1,78 @@
+import React, { useEffect, useState } from 'react';
+import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { getSellerListings, Listing } from '../../src/api/marketplace';
+import { useAuth } from '../../src/context/AuthContext';
+import { colors } from '../../src/theme/colors';
+
+const format = (n: number) =>
+  new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+
+export default function SellerListingsScreen() {
+  const { accessToken } = useAuth();
+  const [listings, setListings] = useState<Listing[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    getSellerListings(accessToken)
+      .then(setListings)
+      .catch(() => setListings([]))
+      .finally(() => setLoading(false));
+  }, [accessToken]);
+
+  if (loading) {
+    return (
+      <View style={styles.center}>
+        <ActivityIndicator color={colors.blue} />
+      </View>
+    );
+  }
+
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      {listings.length === 0 ? (
+        <Text style={styles.muted}>No tenés productos publicados</Text>
+      ) : (
+        listings.map((item) => (
+          <View key={item._id} style={styles.card}>
+            <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
+            <View style={styles.row}>
+              <Text style={styles.price}>{format(item.price)}</Text>
+              <Text style={styles.status}>{item.status || 'active'}</Text>
+            </View>
+            <Text style={styles.stock}>Stock: {item.stock}</Text>
+          </View>
+        ))
+      )}
+      <Text style={styles.note}>
+        Para crear o editar productos, usa el panel web en /vendedor
+      </Text>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { padding: 16, gap: 10 },
+  center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  muted: { color: colors.slate500, textAlign: 'center' },
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: colors.slate100,
+    gap: 4,
+  },
+  title: { fontWeight: '600', color: colors.navy },
+  row: { flexDirection: 'row', justifyContent: 'space-between' },
+  price: { fontWeight: '700', color: colors.navy },
+  status: { fontSize: 12, color: colors.slate500 },
+  stock: { fontSize: 12, color: colors.slate400 },
+  note: {
+    fontSize: 12,
+    color: colors.slate400,
+    textAlign: 'center',
+    marginTop: 16,
+    lineHeight: 18,
+  },
+});
