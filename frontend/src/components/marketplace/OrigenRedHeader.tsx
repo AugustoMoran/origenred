@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { selectMarketplaceCartCount, toggleMarketplaceCart } from '../../store/marketplaceCartSlice';
-import { isStaffRole } from '../ecommerce/RouteGuards';
+import { useGetNotificationSummaryQuery } from '../../services/marketplaceApi';
 
 const logo = '/origenred-logo.png';
 
@@ -11,9 +11,11 @@ export const OrigenRedHeader: React.FC = () => {
   const dispatch = useDispatch();
   const cartCount = useSelector(selectMarketplaceCartCount);
   const { user } = useSelector((state: RootState) => state.auth);
+  const { data: notifications } = useGetNotificationSummaryQuery(undefined, { skip: !user });
 
   const isSeller = user?.roles?.includes('vendedor_marketplace');
   const isAdmin = user?.roles?.includes('admin');
+  const unread = notifications?.unreadChatMessages ?? 0;
 
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm">
@@ -84,6 +86,23 @@ export const OrigenRedHeader: React.FC = () => {
                   Mis compras
                 </Link>
               </div>
+            )}
+
+            {user && (
+              <Link
+                to="/cuenta/compras"
+                className="relative w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:text-or-navy hover:border-or-blue/30 transition-colors"
+                aria-label="Mensajes"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                </svg>
+                {unread > 0 && (
+                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-or-red text-white text-[9px] font-bold flex items-center justify-center">
+                    {unread > 9 ? '9+' : unread}
+                  </span>
+                )}
+              </Link>
             )}
 
             <button

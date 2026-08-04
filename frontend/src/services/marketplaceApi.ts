@@ -212,6 +212,27 @@ export const marketplaceApi = createApi({
     reindexMarketplaceListings: builder.mutation<{ indexed: number }, void>({
       query: () => ({ url: '/admin/search/reindex', method: 'POST' }),
     }),
+    getAdminMarketplaceCategories: builder.query<MarketplaceCategory[], void>({
+      query: () => '/admin/categories',
+    }),
+    createAdminMarketplaceCategory: builder.mutation<
+      MarketplaceCategory,
+      { name: string; icon?: string; displayOrder?: number }
+    >({
+      query: (body) => ({ url: '/admin/categories', method: 'POST', body }),
+    }),
+    updateAdminMarketplaceCategory: builder.mutation<
+      MarketplaceCategory,
+      { id: string; body: Record<string, unknown> }
+    >({
+      query: ({ id, body }) => ({ url: `/admin/categories/${id}`, method: 'PATCH', body }),
+    }),
+    deleteAdminMarketplaceCategory: builder.mutation<{ deleted: boolean }, string>({
+      query: (id) => ({ url: `/admin/categories/${id}`, method: 'DELETE' }),
+    }),
+    getNotificationSummary: builder.query<{ unreadChatMessages: number }, void>({
+      query: () => '/notifications/summary',
+    }),
     getReports: builder.query<
       { reports: unknown[]; reasonLabels: Record<string, string> },
       { status?: string } | void
@@ -363,6 +384,11 @@ export const {
   useGetMercadoPagoConnectQuery,
   useCompleteMercadoPagoConnectMutation,
   useReindexMarketplaceListingsMutation,
+  useGetAdminMarketplaceCategoriesQuery,
+  useCreateAdminMarketplaceCategoryMutation,
+  useUpdateAdminMarketplaceCategoryMutation,
+  useDeleteAdminMarketplaceCategoryMutation,
+  useGetNotificationSummaryQuery,
   useGetPendingSellersQuery,
   useGetAllSellersQuery,
   useUpdateSellerStatusMutation,

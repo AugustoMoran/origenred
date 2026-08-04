@@ -22,6 +22,10 @@ import {
   listPendingSellersController,
   approveSellerController,
   createCategoryController,
+  listAdminCategoriesController,
+  updateCategoryController,
+  deleteCategoryController,
+  getNotificationSummaryController,
   reindexListingsController,
   listReportsController,
   resolveReportController,
@@ -87,6 +91,7 @@ router.post('/checkout', optionalAuthenticate, createCheckoutController);
 router.post('/checkout/webhook', marketplaceWebhookController);
 
 // Comprador (auth)
+router.get('/notifications/summary', authenticate, getNotificationSummaryController);
 router.post('/favorites/:listingId', authenticate, toggleFavoriteController);
 router.get('/favorites', authenticate, getMyFavoritesController);
 router.post('/reports', authenticate, createReportController);
@@ -96,6 +101,9 @@ router.get('/admin/sellers', authenticate, requireAdmin, listSellersAdminControl
 router.get('/admin/sellers/pending', authenticate, requireAdmin, listPendingSellersController);
 router.patch('/admin/sellers/:id/status', authenticate, requireAdmin, approveSellerController);
 router.post('/admin/categories', authenticate, requireAdmin, createCategoryController);
+router.get('/admin/categories', authenticate, requireAdmin, listAdminCategoriesController);
+router.patch('/admin/categories/:id', authenticate, requireAdmin, updateCategoryController);
+router.delete('/admin/categories/:id', authenticate, requireAdmin, deleteCategoryController);
 router.post('/admin/search/reindex', authenticate, requireAdmin, reindexListingsController);
 router.get('/admin/reports', authenticate, requireAdmin, listReportsController);
 router.patch('/admin/reports/:id', authenticate, requireAdmin, resolveReportController);

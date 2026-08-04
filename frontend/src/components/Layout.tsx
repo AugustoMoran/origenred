@@ -95,6 +95,15 @@ const NAV_ADMIN = [
 		),
 	},
 	{
+		to: "/dashboard/admin/marketplace-categories",
+		label: "Cat. Marketplace",
+		icon: (
+			<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+				<path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+			</svg>
+		),
+	},
+	{
 		to: "/dashboard/admin/marketplace-sellers",
 		label: "Vendedores MP",
 		icon: (

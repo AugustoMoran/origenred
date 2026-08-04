@@ -94,10 +94,14 @@ app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200 });
 app.use(limiter);
 
-// CSRF disabled for development/troubleshooting
-// if (process.env.NODE_ENV !== 'test') {
-//   app.use(csurf({ cookie: { httpOnly: true, sameSite: 'strict' } }));
-// }
+// CSRF en producción (opcional vía ENABLE_CSRF=true)
+if (process.env.NODE_ENV === 'production' && process.env.ENABLE_CSRF === 'true') {
+  const csrfProtection = csurf({
+    cookie: { httpOnly: true, sameSite: 'strict', secure: true },
+  });
+  app.use('/api', csrfProtection);
+  app.get('/api/csrf-token', (req, res) => res.json({ csrfToken: (req as any).csrfToken() }));
+}
 
 // Health check (used by Render / uptime monitors)
 app.get('/health', (_req, res) => {

@@ -38,6 +38,7 @@ import {
   sendMessage,
   getConversationByOrder,
   getSellerOrders,
+  getUserNotificationSummary,
 } from '../services/chatService';
 import {
   createReport,
@@ -49,6 +50,12 @@ import {
 import { reindexAllListings } from '../services/meilisearchService';
 import { updateSellerOrderFulfillment, canViewFullOrder, toPublicOrderSummary } from '../services/marketplaceOrderService';
 import { buildMarketplaceSitemap } from '../services/sitemapService';
+import {
+  listAdminCategories,
+  createMarketplaceCategory,
+  updateMarketplaceCategory,
+  deleteMarketplaceCategory,
+} from '../services/categoryService';
 import { io } from '../../../app';
 import { emitChatMessage } from '../../../socket/marketplaceChatSocket';
 import { notifyChatRecipient } from '../../../modules/notifications/chatPushService';
@@ -297,8 +304,41 @@ export async function approveSellerController(req: Request, res: Response) {
 }
 
 export async function createCategoryController(req: Request, res: Response) {
-  const category = await MarketplaceCategory.create(req.body);
-  res.status(201).json(category);
+  try {
+    const category = await createMarketplaceCategory(req.body);
+    res.status(201).json(category);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
+export async function listAdminCategoriesController(_req: Request, res: Response) {
+  const categories = await listAdminCategories();
+  res.json(categories);
+}
+
+export async function updateCategoryController(req: Request, res: Response) {
+  try {
+    const category = await updateMarketplaceCategory(String(req.params.id), req.body);
+    res.json(category);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
+export async function deleteCategoryController(req: Request, res: Response) {
+  try {
+    const result = await deleteMarketplaceCategory(String(req.params.id));
+    res.json(result);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
+export async function getNotificationSummaryController(req: Request, res: Response) {
+  const userId = String((req as any).user._id);
+  const summary = await getUserNotificationSummary(userId);
+  res.json(summary);
 }
 
 export async function reindexListingsController(_req: Request, res: Response) {

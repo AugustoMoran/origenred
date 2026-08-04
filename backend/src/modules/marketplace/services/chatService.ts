@@ -143,3 +143,30 @@ export const getSellerOrders = async (userId: string) => {
     .populate('buyer', 'name email')
     .sort({ createdAt: -1 });
 };
+
+/** Mensajes no leídos en conversaciones del usuario (comprador o vendedor) */
+export const getUnreadChatCount = async (userId: string) => {
+  const buyerConversations = await Conversation.find({ buyer: userId }).select('_id');
+  const profile = await SellerProfile.findOne({ user: userId });
+  const sellerConversations = profile
+    ? await Conversation.find({ seller: profile._id }).select('_id')
+    : [];
+
+  const conversationIds = [
+    ...buyerConversations.map((c) => c._id),
+    ...sellerConversations.map((c) => c._id),
+  ];
+
+  if (!conversationIds.length) return 0;
+
+  return Message.countDocuments({
+    conversation: { $in: conversationIds },
+    sender: { $ne: userId },
+    readAt: { $exists: false },
+  });
+};
+
+export const getUserNotificationSummary = async (userId: string) => {
+  const unreadChatMessages = await getUnreadChatCount(userId);
+  return { unreadChatMessages };
+};

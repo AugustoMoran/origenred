@@ -5,3 +5,4 @@ export { AdminProfitReport } from './AdminProfitReport';
 export { AdminSupplierLedger } from './AdminSupplierLedger';
 export { AdminMarketplaceSellers } from './AdminMarketplaceSellers';
 export { AdminMarketplaceReports } from './AdminMarketplaceReports';
+export { AdminMarketplaceCategories } from './AdminMarketplaceCategories';

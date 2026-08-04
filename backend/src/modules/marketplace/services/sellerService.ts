@@ -3,6 +3,7 @@ import { User } from '../../auth/models/User';
 import { MARKETPLACE_ROLES } from '../constants/roles';
 import { register } from '../../auth/services/authService';
 import { exchangeMercadoPagoConnectCode } from './marketplacePaymentService';
+import { sendSellerApprovedEmail } from '../../../shared/services/emailService';
 
 const slugify = (value: string) =>
   value
@@ -100,6 +101,18 @@ export const updateSellerStatus = async (
   }
 
   await profile.save();
+
+  if (status === 'approved') {
+    const user = await User.findById(profile.user).select('name email');
+    if (user?.email) {
+      sendSellerApprovedEmail({
+        email: user.email,
+        name: user.name || profile.businessName,
+        businessName: profile.businessName,
+      }).catch((err) => console.error('[seller-approved-email]', err));
+    }
+  }
+
   return profile;
 };
 

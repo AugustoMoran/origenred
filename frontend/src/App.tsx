@@ -7,7 +7,7 @@ import {
   LoginRedirectRoute,
   MaintenanceGuard,
 } from './components/ecommerce/RouteGuards';
-import { AdminUsers, AdminCatalog, AdminProfitReport, AdminSupplierLedger, AdminStoreSettings, AdminMarketplaceSellers, AdminMarketplaceReports } from './pages/admin';
+import { AdminUsers, AdminCatalog, AdminProfitReport, AdminSupplierLedger, AdminStoreSettings, AdminMarketplaceSellers, AdminMarketplaceReports, AdminMarketplaceCategories } from './pages/admin';
 import { Dashboard } from './pages/Dashboard';
 import { Inventory } from './pages/Inventory';
 import { POS } from './pages/POS';
@@ -138,6 +138,10 @@ const router = createBrowserRouter([
   {
     path: '/dashboard/admin/marketplace-sellers',
     element: <DashboardLayout adminOnly><AdminMarketplaceSellers /></DashboardLayout>,
+  },
+  {
+    path: '/dashboard/admin/marketplace-categories',
+    element: <DashboardLayout adminOnly><AdminMarketplaceCategories /></DashboardLayout>,
   },
   {
     path: '/dashboard/admin/supplier-ledger',
