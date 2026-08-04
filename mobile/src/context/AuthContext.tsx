@@ -1,6 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import * as SecureStore from 'expo-secure-store';
-import { AuthSession, AuthUser, getMe, login as apiLogin, logout as apiLogout, refreshSession } from '../api/auth';
+import { AuthSession, AuthUser, getMe, login as apiLogin, logout as apiLogout, publicRegister, refreshSession } from '../api/auth';
 import { registerForPushNotifications } from '../services/pushNotifications';
 
 const ACCESS_KEY = 'origenred_access';
@@ -11,6 +11,7 @@ interface AuthContextValue {
   accessToken: string | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
+  signUp: (name: string, email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -74,6 +75,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     registerForPushNotifications(session.accessToken).catch(() => undefined);
   };
 
+  const signUp = async (name: string, email: string, password: string) => {
+    await publicRegister(name.trim(), email.trim().toLowerCase(), password);
+    await signIn(email.trim().toLowerCase(), password);
+  };
+
   const signOut = async () => {
     const refresh = await SecureStore.getItemAsync(REFRESH_KEY);
     if (refresh) {
@@ -89,7 +95,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const value = useMemo(
-    () => ({ user, accessToken, loading, signIn, signOut }),
+    () => ({ user, accessToken, loading, signIn, signUp, signOut }),
     [user, accessToken, loading]
   );
 

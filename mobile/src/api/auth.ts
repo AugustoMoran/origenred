@@ -19,6 +19,13 @@ export const login = (email: string, password: string) =>
     body: JSON.stringify({ email, password, client: 'mobile' }),
   });
 
+export const publicRegister = (name: string, email: string, password: string) =>
+  apiFetch<{ id: string; name: string; email: string; roles: string[] }>('/auth/register/public', {
+    method: 'POST',
+    body: JSON.stringify({ name, email, password }),
+    mobile: false,
+  });
+
 export const refreshSession = (refreshToken: string) =>
   apiFetch<AuthSession>('/auth/refresh', {
     method: 'POST',

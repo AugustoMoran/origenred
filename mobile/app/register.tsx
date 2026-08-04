@@ -9,25 +9,26 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { router, Link } from 'expo-router';
-import { useAuth } from '../../src/context/AuthContext';
-import { colors } from '../../src/theme/colors';
+import { Link, router } from 'expo-router';
+import { useAuth } from '../src/context/AuthContext';
+import { colors } from '../src/theme/colors';
 
-export default function LoginScreen() {
-  const { signIn } = useAuth();
+export default function RegisterScreen() {
+  const { signUp } = useAuth();
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
+  const handleRegister = async () => {
     setError('');
     setLoading(true);
     try {
-      await signIn(email.trim(), password);
+      await signUp(name, email, password);
       router.back();
     } catch (e: any) {
-      setError(e.message || 'Error al iniciar sesión');
+      setError(e.message || 'Error al crear la cuenta');
     } finally {
       setLoading(false);
     }
@@ -38,11 +39,17 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <Text style={styles.title}>Bienvenido a OrigenRed</Text>
-      <Text style={styles.sub}>Iniciá sesión con tu cuenta</Text>
+      <Text style={styles.title}>Crear cuenta</Text>
+      <Text style={styles.sub}>Comprá y seguí tus pedidos en OrigenRed</Text>
 
       {error ? <Text style={styles.error}>{error}</Text> : null}
 
+      <TextInput
+        style={styles.input}
+        placeholder="Nombre"
+        value={name}
+        onChangeText={setName}
+      />
       <TextInput
         style={styles.input}
         placeholder="Email"
@@ -53,25 +60,25 @@ export default function LoginScreen() {
       />
       <TextInput
         style={styles.input}
-        placeholder="Contraseña"
+        placeholder="Contraseña (mín. 6 caracteres)"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
 
-      <Pressable style={styles.button} onPress={handleLogin} disabled={loading}>
+      <Pressable style={styles.button} onPress={handleRegister} disabled={loading}>
         {loading ? (
           <ActivityIndicator color={colors.white} />
         ) : (
-          <Text style={styles.buttonText}>Entrar</Text>
+          <Text style={styles.buttonText}>Registrarse</Text>
         )}
       </Pressable>
 
       <View style={styles.footer}>
-        <Text style={styles.footerText}>¿No tenés cuenta? </Text>
-        <Link href="/register" asChild>
+        <Text style={styles.footerText}>¿Ya tenés cuenta? </Text>
+        <Link href="/login" asChild>
           <Pressable>
-            <Text style={styles.link}>Registrarse</Text>
+            <Text style={styles.link}>Iniciar sesión</Text>
           </Pressable>
         </Link>
       </View>
