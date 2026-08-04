@@ -235,3 +235,18 @@ export const updateSellerOrder = (
     token,
     mobile: false,
   });
+
+export interface FavoriteEntry {
+  _id: string;
+  listing: Listing;
+}
+
+export const getFavorites = (token: string) =>
+  apiFetch<FavoriteEntry[]>('/marketplace/favorites', { token, mobile: false });
+
+export const toggleFavorite = (listingId: string, token: string) =>
+  apiFetch<{ favorited: boolean }>(`/marketplace/favorites/${listingId}`, {
+    method: 'POST',
+    token,
+    mobile: false,
+  });

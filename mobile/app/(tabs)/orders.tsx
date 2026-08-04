@@ -47,6 +47,11 @@ export default function OrdersScreen() {
             <Text style={styles.ctaText}>Iniciar sesión</Text>
           </Pressable>
         </Link>
+        <Link href="/register" asChild>
+          <Pressable style={styles.ctaOutline}>
+            <Text style={styles.ctaOutlineText}>Crear cuenta</Text>
+          </Pressable>
+        </Link>
       </View>
     );
   }
@@ -108,6 +113,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   ctaText: { color: colors.white, fontWeight: '700' },
+  ctaOutline: {
+    borderWidth: 1,
+    borderColor: colors.red,
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  ctaOutlineText: { color: colors.red, fontWeight: '700' },
   card: {
     backgroundColor: colors.white,
     borderRadius: 16,

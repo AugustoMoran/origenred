@@ -11,6 +11,8 @@ import {
 import { useLocalSearchParams, router } from 'expo-router';
 import { getListing, Listing } from '../../src/api/marketplace';
 import { useCart } from '../../src/context/CartContext';
+import { useAuth } from '../../src/context/AuthContext';
+import { useFavorites } from '../../src/context/FavoritesContext';
 import { colors } from '../../src/theme/colors';
 
 const formatPrice = (n: number) =>
@@ -23,6 +25,9 @@ export default function ProductScreen() {
   const [error, setError] = useState('');
   const [added, setAdded] = useState(false);
   const { addItem } = useCart();
+  const { user } = useAuth();
+  const { isFavorite, toggleFavorite } = useFavorites();
+  const [favBusy, setFavBusy] = useState(false);
 
   useEffect(() => {
     if (!slug) return;
@@ -31,6 +36,22 @@ export default function ProductScreen() {
       .catch((e) => setError(e.message))
       .finally(() => setLoading(false));
   }, [slug]);
+
+  const handleToggleFavorite = async () => {
+    if (!listing) return;
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+    setFavBusy(true);
+    try {
+      await toggleFavorite(listing._id);
+    } catch {
+      // ignore
+    } finally {
+      setFavBusy(false);
+    }
+  };
 
   const handleAddToCart = () => {
     if (!listing || listing.stock <= 0) return;
@@ -73,7 +94,14 @@ export default function ProductScreen() {
         </View>
       )}
 
-      <Text style={styles.title}>{listing.title}</Text>
+      <View style={styles.titleRow}>
+        <Text style={styles.title}>{listing.title}</Text>
+        <Pressable style={styles.favBtn} onPress={handleToggleFavorite} disabled={favBusy}>
+          <Text style={styles.favBtnText}>
+            {isFavorite(listing._id) ? '♥' : '♡'}
+          </Text>
+        </Pressable>
+      </View>
       <Text style={styles.price}>{formatPrice(listing.price)}</Text>
 
       {listing.freeShipping && <Text style={styles.badge}>Envío gratis</Text>}
@@ -122,7 +150,19 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   placeholderText: { color: colors.slate400 },
-  title: { fontSize: 22, fontWeight: '800', color: colors.navy },
+  title: { fontSize: 22, fontWeight: '800', color: colors.navy, flex: 1 },
+  titleRow: { flexDirection: 'row', alignItems: 'flex-start', gap: 8 },
+  favBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.white,
+    borderWidth: 1,
+    borderColor: colors.slate200,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  favBtnText: { fontSize: 22, color: colors.red },
   price: { fontSize: 26, fontWeight: '800', color: colors.navy },
   badge: { color: colors.blue, fontWeight: '600' },
   meta: { fontSize: 12, color: colors.slate400 },

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Pressable,
@@ -8,31 +8,54 @@ import {
   TextInput,
   View,
 } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 import { searchListings, Listing } from '../../src/api/marketplace';
 import { ListingCard } from '../../src/components/ListingCard';
 import { colors } from '../../src/theme/colors';
 
 export default function SearchScreen() {
+  const params = useLocalSearchParams<{ category?: string; categoryName?: string }>();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Listing[]>([]);
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
 
-  const handleSearch = async () => {
+  const runSearch = useCallback(async (searchParams: Record<string, string>) => {
     setLoading(true);
     setSearched(true);
     try {
-      const data = await searchListings({ search: query.trim(), limit: '20' });
+      const data = await searchListings({ ...searchParams, limit: '24' });
       setResults(data.items);
     } catch {
       setResults([]);
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  const handleSearch = () => {
+    const searchParams: Record<string, string> = { limit: '24' };
+    if (query.trim()) searchParams.search = query.trim();
+    if (params.category) searchParams.category = String(params.category);
+    runSearch(searchParams);
   };
+
+  useEffect(() => {
+    if (params.category) {
+      runSearch({ category: String(params.category), limit: '24' });
+    }
+  }, [params.category, runSearch]);
+
+  const categoryLabel = params.categoryName ? String(params.categoryName) : null;
 
   return (
     <View style={styles.container}>
+      {categoryLabel && (
+        <View style={styles.categoryBanner}>
+          <Text style={styles.categoryBannerText}>Categoría: {categoryLabel}</Text>
+        </View>
+      )}
+
       <View style={styles.searchRow}>
         <TextInput
           style={styles.input}
@@ -66,6 +89,14 @@ export default function SearchScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
+  categoryBanner: {
+    backgroundColor: colors.slate100,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    marginBottom: 10,
+  },
+  categoryBannerText: { fontSize: 13, fontWeight: '600', color: colors.navy },
   searchRow: { flexDirection: 'row', gap: 8 },
   input: {
     flex: 1,

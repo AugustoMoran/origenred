@@ -50,6 +50,12 @@ export default function ProfileScreen() {
         </Link>
       )}
 
+      <Link href="/favorites" asChild>
+        <Pressable style={styles.menuBtn}>
+          <Text style={styles.menuBtnText}>Mis favoritos</Text>
+        </Pressable>
+      </Link>
+
       <Pressable style={styles.logout} onPress={signOut}>
         <Text style={styles.logoutText}>Cerrar sesión</Text>
       </Pressable>
@@ -95,6 +101,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   sellerBtnText: { color: colors.white, fontWeight: '700' },
+  menuBtn: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.slate200,
+  },
+  menuBtnText: { color: colors.navy, fontWeight: '600' },
   logout: {
     borderWidth: 1,
     borderColor: colors.slate200,
