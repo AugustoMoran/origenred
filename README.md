@@ -64,3 +64,12 @@ Incluye MongoDB, Redis y Meilisearch local.
 2. Al iniciar el backend se crea el índice `listings` automáticamente.
 3. Reindexar productos activos (admin): `POST /api/marketplace/admin/search/reindex`
 4. Sin Meilisearch, la búsqueda usa MongoDB (fallback en `listingService`).
+
+## Deploy (Render + Vercel)
+
+Guía completa en [docs/DEPLOY.md](docs/DEPLOY.md).
+
+Resumen:
+- **Backend:** Render Web Service con `backend/Dockerfile` o `render.yaml`
+- **Frontend:** Vercel con root `frontend`, `VITE_API_URL` → API Render
+- **Health check:** `GET /health`

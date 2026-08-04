@@ -1,0 +1,30 @@
+# OrigenRed — Render Blueprint
+# https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: origenred-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+      - key: MONGO_URI
+        sync: false
+      - key: JWT_ACCESS_TOKEN_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_TOKEN_SECRET
+        generateValue: true
+      - key: FRONTEND_URL
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: MARKETPLACE_COMMISSION_PERCENT
+        value: "5"
+      - key: MERCADOPAGO_WEBHOOK_URL
+        sync: false
