@@ -48,6 +48,7 @@ import { reindexAllListings } from '../services/meilisearchService';
 import { updateSellerOrderFulfillment } from '../services/marketplaceOrderService';
 import { io } from '../../../app';
 import { emitChatMessage } from '../../../socket/marketplaceChatSocket';
+import { notifyChatRecipient } from '../../../modules/notifications/chatPushService';
 
 // ── Público ──────────────────────────────────────────────
 
@@ -413,6 +414,7 @@ export async function sendMessageController(req: Request, res: Response) {
     const conversationId = String(req.params.id);
     const message = await sendMessage(conversationId, userId, req.body.body);
     emitChatMessage(io, conversationId, message);
+    await notifyChatRecipient(conversationId, userId, req.body.body || '');
     res.status(201).json(message);
   } catch (error: any) {
     res.status(400).json({ message: error.message });

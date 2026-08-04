@@ -199,3 +199,25 @@ export async function logoutController(req: Request, res: Response) {
   clearAuthCookies(res);
   res.json({ ok: true });
 }
+
+export async function registerPushTokenController(req: Request, res: Response) {
+  const userId = String((req as any).user._id);
+  const { token, platform } = req.body || {};
+
+  if (!token || typeof token !== 'string') {
+    return res.status(400).json({ message: 'token requerido' });
+  }
+
+  const user = await User.findById(userId);
+  if (!user) return res.status(404).json({ message: 'Usuario no encontrado' });
+
+  const existing = (user.pushTokens || []).filter((t) => t.token !== token);
+  user.pushTokens = [
+    ...existing,
+    { token, platform: platform || 'unknown', updatedAt: new Date() },
+  ] as any;
+  user.markModified('pushTokens');
+  await user.save({ validateBeforeSave: false });
+
+  res.json({ ok: true, registered: true });
+}

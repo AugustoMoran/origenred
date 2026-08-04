@@ -3,6 +3,7 @@ import { SellerProfile } from '../models/SellerProfile';
 import { MarketplaceOrder } from '../models/MarketplaceOrder';
 import { Conversation } from '../models/Chat';
 import { initOrderFulfillmentOnPayment } from './marketplaceOrderService';
+import { notifyUserPush } from '../../notifications/chatPushService';
 import { marketplaceConfig } from '../../../config/features';
 import { PUBLIC_LISTING_FILTER } from './listingService';
 import { quoteShippingByPostalCode } from './marketplaceShippingService';
@@ -291,10 +292,23 @@ export const fulfillMarketplaceOrder = async (orderId: string, paymentId?: strin
       },
       { upsert: true, new: true }
     );
+
+    const sellerProfile = await SellerProfile.findById(sellerId);
+    if (sellerProfile?.user) {
+      await notifyUserPush(
+        String(sellerProfile.user),
+        'Nueva venta en OrigenRed',
+        `Pedido ${order.orderNumber} — ${formatCurrency(order.total)}`,
+        { type: 'order', orderNumber: order.orderNumber }
+      );
+    }
   }
 
   return order;
 };
+
+const formatCurrency = (n: number) =>
+  new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 
 export const processMarketplacePaymentWebhook = async (paymentId: string) => {
   const payment = await verifyMercadoPagoPayment(paymentId);

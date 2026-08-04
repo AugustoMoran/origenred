@@ -9,6 +9,7 @@ export interface IUser extends Document {
   commissionRate: number; // Porcentaje de comisión
   branch: Schema.Types.ObjectId; // Sucursal asignada
   refreshTokens: { token: string; createdAt: Date }[];
+  pushTokens?: Array<{ token: string; platform?: string; updatedAt: Date }>;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -24,6 +25,13 @@ const UserSchema = new Schema<IUser>(
       {
         token: { type: String },
         createdAt: { type: Date, default: Date.now },
+      },
+    ],
+    pushTokens: [
+      {
+        token: { type: String, required: true },
+        platform: { type: String },
+        updatedAt: { type: Date, default: Date.now },
       },
     ],
   },

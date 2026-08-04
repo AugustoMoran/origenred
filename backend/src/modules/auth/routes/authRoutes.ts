@@ -11,6 +11,7 @@ import {
   updatePermissionsController,
   updateCommissionController,
   updateBranchController,
+  registerPushTokenController,
 } from '../controllers/authController';
 import { authenticate, authorize } from '../../../middleware/authMiddleware';
 import { User } from '../models/User';
@@ -38,5 +39,6 @@ router.post('/login', loginController);
 router.get('/me', authenticate, getMeController);
 router.post('/refresh', refreshController);
 router.post('/logout', logoutController);
+router.post('/push-token', authenticate, registerPushTokenController);
 
 export default router;
