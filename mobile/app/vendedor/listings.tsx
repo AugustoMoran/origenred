@@ -35,19 +35,21 @@ export default function SellerListingsScreen() {
         <Text style={styles.muted}>No tenés productos publicados</Text>
       ) : (
         listings.map((item) => (
-          <View key={item._id} style={styles.card}>
+          <Pressable
+            key={item._id}
+            style={styles.card}
+            onPress={() => router.push(`/vendedor/edit/${item._id}`)}
+          >
             <Text style={styles.title} numberOfLines={2}>{item.title}</Text>
             <View style={styles.row}>
               <Text style={styles.price}>{format(item.price)}</Text>
               <Text style={styles.status}>{item.status || 'active'}</Text>
             </View>
             <Text style={styles.stock}>Stock: {item.stock}</Text>
-          </View>
+            <Text style={styles.editHint}>Tocá para editar</Text>
+          </Pressable>
         ))
       )}
-      <Text style={styles.note}>
-        Para editar productos existentes, usa el panel web en /vendedor
-      </Text>
       <Pressable style={styles.fab} onPress={() => router.push('/vendedor/new-listing')}>
         <Text style={styles.fabText}>+ Nueva publicación</Text>
       </Pressable>
@@ -72,13 +74,7 @@ const styles = StyleSheet.create({
   price: { fontWeight: '700', color: colors.navy },
   status: { fontSize: 12, color: colors.slate500 },
   stock: { fontSize: 12, color: colors.slate400 },
-  note: {
-    fontSize: 12,
-    color: colors.slate400,
-    textAlign: 'center',
-    marginTop: 16,
-    lineHeight: 18,
-  },
+  editHint: { fontSize: 11, color: colors.blue, marginTop: 4 },
   fab: {
     backgroundColor: colors.red,
     borderRadius: 12,

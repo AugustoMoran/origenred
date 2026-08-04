@@ -4,6 +4,7 @@ export interface Listing {
   _id: string;
   title: string;
   slug: string;
+  description?: string;
   price: number;
   currency: string;
   stock: number;
@@ -13,6 +14,8 @@ export interface Listing {
   images: Array<{ url: string }>;
   seller?: { businessName: string; slug: string };
   status?: string;
+  category?: string | { _id: string; name: string };
+  brand?: string;
 }
 
 export interface HomeData {
@@ -160,6 +163,18 @@ export const createSellerListing = async (formData: FormData, token: string) => 
   }
   return data as Listing;
 };
+
+export const updateSellerListing = (
+  id: string,
+  body: Record<string, string | number | boolean>,
+  token: string
+) =>
+  apiFetch<Listing>(`/marketplace/seller/listings/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(body),
+    token,
+    mobile: false,
+  });
 
 export const updateSellerOrder = (
   orderNumber: string,
