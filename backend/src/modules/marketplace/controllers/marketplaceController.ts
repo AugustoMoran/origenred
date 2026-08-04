@@ -45,7 +45,7 @@ import {
   REPORT_REASON_LABELS,
 } from '../services/reportService';
 import { reindexAllListings } from '../services/meilisearchService';
-import { updateSellerOrderFulfillment } from '../services/marketplaceOrderService';
+import { updateSellerOrderFulfillment, canViewFullOrder, toPublicOrderSummary } from '../services/marketplaceOrderService';
 import { io } from '../../../app';
 import { emitChatMessage } from '../../../socket/marketplaceChatSocket';
 import { notifyChatRecipient } from '../../../modules/notifications/chatPushService';
@@ -378,7 +378,10 @@ export async function marketplaceWebhookController(req: Request, res: Response) 
 export async function getOrderController(req: Request, res: Response) {
   const order = await getOrderByNumber(String(req.params.orderNumber));
   if (!order) return res.status(404).json({ message: 'Pedido no encontrado' });
-  res.json(order);
+
+  const user = (req as any).user;
+  const fullAccess = await canViewFullOrder(order, user);
+  res.json(fullAccess ? order : toPublicOrderSummary(order));
 }
 
 export async function getMyOrdersController(req: Request, res: Response) {

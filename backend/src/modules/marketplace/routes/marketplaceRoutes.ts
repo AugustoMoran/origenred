@@ -65,7 +65,7 @@ router.get('/seller/mercadopago/connect', authenticate, requireSeller, getMercad
 // Checkout — /orders debe ir ANTES de /orders/:orderNumber en el router de express... 
 // actually my orders list uses GET /orders and single uses GET /orders/:orderNumber
 router.get('/orders', authenticate, getMyOrdersController);
-router.get('/orders/:orderNumber', getOrderController);
+router.get('/orders/:orderNumber', optionalAuthenticate, getOrderController);
 
 // Chat post-compra
 router.get('/chat/conversations', authenticate, getMyConversationsController);

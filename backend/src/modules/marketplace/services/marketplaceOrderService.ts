@@ -1,5 +1,6 @@
 import { MarketplaceOrder, IMarketplaceOrder } from '../models/MarketplaceOrder';
 import { SellerProfile } from '../models/SellerProfile';
+import { getSellerByUserId } from './sellerService';
 import { notifyUserPush } from '../../notifications/chatPushService';
 
 type FulfillmentStatus = 'processing' | 'shipped' | 'delivered';
@@ -121,3 +122,48 @@ export const initOrderFulfillmentOnPayment = (order: IMarketplaceOrder) => {
     order.markModified('shippingBySeller');
   }
 };
+
+const buyerIdFromOrder = (order: IMarketplaceOrder) => {
+  const buyer = order.buyer as unknown;
+  if (!buyer) return null;
+  if (typeof buyer === 'object' && buyer !== null && '_id' in buyer) {
+    return String((buyer as { _id: unknown })._id);
+  }
+  return String(buyer);
+};
+
+export const canViewFullOrder = async (
+  order: IMarketplaceOrder,
+  user?: { _id: string; roles?: string[] }
+): Promise<boolean> => {
+  if (!user) return false;
+  if (user.roles?.includes('admin')) return true;
+
+  const buyerId = buyerIdFromOrder(order);
+  if (buyerId && buyerId === String(user._id)) return true;
+
+  if (user.roles?.includes('vendedor_marketplace')) {
+    const profile = await getSellerByUserId(String(user._id));
+    if (profile) {
+      const sellerId = String(profile._id);
+      if (order.items?.some((item) => String(item.seller) === sellerId)) return true;
+      if (order.shippingBySeller?.some((s) => String(s.seller) === sellerId)) return true;
+    }
+  }
+
+  return false;
+};
+
+/** Vista limitada para confirmación de checkout sin sesión */
+export const toPublicOrderSummary = (order: IMarketplaceOrder) => ({
+  orderNumber: order.orderNumber,
+  total: order.total,
+  status: order.status,
+  chatEnabled: order.chatEnabled,
+  items: order.items?.map((item) => ({
+    listing: item.listing,
+    title: item.title,
+    quantity: item.quantity,
+    subtotal: item.subtotal,
+  })),
+});
