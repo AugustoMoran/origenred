@@ -49,13 +49,27 @@ Alternativa: usar `render.yaml` en la raíz del repo (Blueprint).
 
 ## Mobile (Expo)
 
-En `mobile/.env`:
+En `mobile/.env` (desarrollo):
 
 ```
 EXPO_PUBLIC_API_URL=https://<render-api>/api
 ```
 
-Para builds de producción: `eas build` con projectId en `app.json`.
+### EAS Build
+
+1. `cd mobile && eas login && eas init` (vincula `projectId` real)
+2. `eas secret:create --scope project --name EXPO_PUBLIC_API_URL --value https://<render-api>/api`
+3. `eas build --profile production --platform all`
+
+Ver `mobile/README.md` y `mobile/eas.json`.
+
+En backend producción, opcional:
+
+```
+MOBILE_APP_SCHEME=origenred
+```
+
+Para `back_urls` de Mercado Pago desde checkout mobile.
 
 ---
 
