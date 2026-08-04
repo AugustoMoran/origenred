@@ -14,6 +14,7 @@ export default function SellerLayout() {
       <Stack.Screen name="index" options={{ title: 'Panel vendedor' }} />
       <Stack.Screen name="listings" options={{ title: 'Mis productos' }} />
       <Stack.Screen name="orders" options={{ title: 'Mis ventas' }} />
+      <Stack.Screen name="new-listing" options={{ title: 'Nueva publicación' }} />
     </Stack>
   );
 }

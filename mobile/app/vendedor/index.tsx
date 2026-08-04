@@ -70,6 +70,9 @@ export default function SellerDashboardScreen() {
         />
       </View>
 
+      <Pressable style={styles.navBtn} onPress={() => router.push('/vendedor/new-listing')}>
+        <Text style={styles.navBtnText}>+ Nueva publicación</Text>
+      </Pressable>
       <Pressable style={styles.navBtn} onPress={() => router.push('/vendedor/listings')}>
         <Text style={styles.navBtnText}>Ver mis productos →</Text>
       </Pressable>

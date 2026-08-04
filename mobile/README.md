@@ -43,5 +43,5 @@ Scheme: `origenred://`
 
 ## Próximos pasos
 
-- Crear/editar productos desde la app (upload R2)
+- Editar productos desde la app
 - EAS Build para producción con projectId real

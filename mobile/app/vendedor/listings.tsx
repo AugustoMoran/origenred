@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { router } from 'expo-router';
 import { getSellerListings, Listing } from '../../src/api/marketplace';
 import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
@@ -45,8 +46,11 @@ export default function SellerListingsScreen() {
         ))
       )}
       <Text style={styles.note}>
-        Para crear o editar productos, usa el panel web en /vendedor
+        Para editar productos existentes, usa el panel web en /vendedor
       </Text>
+      <Pressable style={styles.fab} onPress={() => router.push('/vendedor/new-listing')}>
+        <Text style={styles.fabText}>+ Nueva publicación</Text>
+      </Pressable>
     </ScrollView>
   );
 }
@@ -75,4 +79,12 @@ const styles = StyleSheet.create({
     marginTop: 16,
     lineHeight: 18,
   },
+  fab: {
+    backgroundColor: colors.red,
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  fabText: { color: colors.white, fontWeight: '700' },
 });

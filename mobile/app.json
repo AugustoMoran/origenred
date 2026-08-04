@@ -29,6 +29,12 @@
         {
           "color": "#1e3a5f"
         }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "OrigenRed necesita acceso a tus fotos para subir imágenes de productos."
+        }
       ]
     ],
     "extra": {
