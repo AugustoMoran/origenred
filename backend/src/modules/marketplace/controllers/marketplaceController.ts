@@ -20,7 +20,7 @@ import { parseListingBody } from '../utils/parseListingBody';
 import { Listing } from '../models/Listing';
 import { MarketplaceCategory } from '../models/MarketplaceCategory';
 import { Favorite } from '../models/Favorite';
-import { getMercadoPagoPublicConfig, getMercadoPagoConnectUrl } from '../services/marketplacePaymentService';
+import { getMercadoPagoPublicConfig, getMercadoPagoConnectUrl, getMercadoPagoConnectRedirectUri } from '../services/marketplacePaymentService';
 import { quoteShippingByPostalCode, getEnvioPackConfig } from '../services/marketplaceShippingService';
 import { processUploadedImages, marketplaceUpload } from '../middleware/marketplaceUpload';
 import { deleteFromR2 } from '../services/r2StorageService';
@@ -253,11 +253,14 @@ export async function getMercadoPagoConnectController(req: Request, res: Respons
   const profile = await getSellerByUserId(userId);
   if (!profile) return res.status(404).json({ message: 'Perfil de vendedor no encontrado' });
 
-  const url = getMercadoPagoConnectUrl(String(profile._id));
+  const returnClient =
+    req.headers['x-origenred-client'] === 'mobile' ? 'mobile' : 'web';
+  const url = getMercadoPagoConnectUrl(String(profile._id), returnClient);
   res.json({
     url,
     enabled: Boolean(url),
     mercadoPagoConnected: profile.mercadoPagoConnected,
+    redirectUri: getMercadoPagoConnectRedirectUri(returnClient),
   });
 }
 
@@ -270,11 +273,17 @@ export async function mercadoPagoCallbackController(req: Request, res: Response)
     const code = String(req.body?.code || '');
     if (!code) return res.status(400).json({ message: 'Código OAuth requerido' });
 
+    const returnClient =
+      req.body?.returnClient === 'mobile' || req.headers['x-origenred-client'] === 'mobile'
+        ? 'mobile'
+        : 'web';
+
     const updated = await connectMercadoPagoForSeller(
       String(profile._id),
       userId,
       code,
-      req.body?.state ? String(req.body.state) : undefined
+      req.body?.state ? String(req.body.state) : undefined,
+      returnClient
     );
 
     res.json({

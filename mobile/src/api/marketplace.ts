@@ -249,10 +249,23 @@ export const updateSellerListingFormData = async (id: string, formData: FormData
 };
 
 export const getMercadoPagoConnect = (token: string) =>
-  apiFetch<{ url: string | null; enabled: boolean; mercadoPagoConnected?: boolean }>(
-    '/marketplace/seller/mercadopago/connect',
-    { token, mobile: false }
-  );
+  apiFetch<{
+    url: string | null;
+    enabled: boolean;
+    mercadoPagoConnected?: boolean;
+    redirectUri?: string;
+  }>('/marketplace/seller/mercadopago/connect', { token, mobile: true });
+
+export const completeMercadoPagoConnect = (
+  body: { code: string; state?: string },
+  token: string
+) =>
+  apiFetch<{ mercadoPagoConnected: boolean }>('/marketplace/seller/mercadopago/callback', {
+    method: 'POST',
+    body: JSON.stringify({ ...body, returnClient: 'mobile' }),
+    token,
+    mobile: true,
+  });
 
 export const updateSellerOrder = (
   orderNumber: string,

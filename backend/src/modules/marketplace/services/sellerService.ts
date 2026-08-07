@@ -125,7 +125,8 @@ export const connectMercadoPagoForSeller = async (
   sellerProfileId: string,
   userId: string,
   code: string,
-  state?: string
+  state?: string,
+  returnClient?: 'mobile' | 'web'
 ) => {
   const profile = await SellerProfile.findOne({ _id: sellerProfileId, user: userId });
   if (!profile) throw new Error('Perfil de vendedor no encontrado');
@@ -133,7 +134,7 @@ export const connectMercadoPagoForSeller = async (
     throw new Error('La vinculación no coincide con tu cuenta de vendedor');
   }
 
-  const { userId: mpUserId } = await exchangeMercadoPagoConnectCode(code);
+  const { userId: mpUserId } = await exchangeMercadoPagoConnectCode(code, returnClient);
   profile.mercadoPagoUserId = mpUserId;
   profile.mercadoPagoConnected = true;
   await profile.save();

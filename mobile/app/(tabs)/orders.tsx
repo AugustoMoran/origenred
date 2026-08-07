@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Link } from 'expo-router';
-import { getMyOrders } from '../../src/api/marketplace';
+import { getMyOrders, cancelOrder } from '../../src/api/marketplace';
 import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
 
@@ -11,6 +11,7 @@ const STATUS_LABELS: Record<string, string> = {
   processing: 'En preparación',
   shipped: 'Enviado',
   delivered: 'Entregado',
+  cancelled: 'Cancelado',
 };
 
 const format = (n: number) =>
@@ -20,6 +21,30 @@ export default function OrdersScreen() {
   const { user, accessToken } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+
+  const [cancelling, setCancelling] = useState<string | null>(null);
+
+  const handleCancel = async (orderNumber: string) => {
+    if (!accessToken) return;
+    Alert.alert('Cancelar pedido', '¿Cancelar este pedido?', [
+      { text: 'No', style: 'cancel' },
+      {
+        text: 'Sí, cancelar',
+        style: 'destructive',
+        onPress: async () => {
+          setCancelling(orderNumber);
+          try {
+            await cancelOrder(orderNumber, accessToken);
+            await load();
+          } catch (e: any) {
+            Alert.alert('Error', e.message || 'No se pudo cancelar');
+          } finally {
+            setCancelling(null);
+          }
+        },
+      },
+    ]);
+  };
 
   const load = useCallback(async () => {
     if (!accessToken) return;
@@ -94,6 +119,16 @@ export default function OrdersScreen() {
                   </Pressable>
                 </Link>
               )}
+              {order.status === 'pending_payment' && (
+                <Pressable
+                  onPress={() => handleCancel(order.orderNumber)}
+                  disabled={cancelling === order.orderNumber}
+                >
+                  <Text style={styles.cancelLink}>
+                    {cancelling === order.orderNumber ? 'Cancelando...' : 'Cancelar pedido'}
+                  </Text>
+                </Pressable>
+              )}
             </View>
           </View>
         ))
@@ -137,4 +172,5 @@ const styles = StyleSheet.create({
   actions: { flexDirection: 'row', gap: 16, marginTop: 6 },
   detailLink: { fontSize: 13, color: colors.blue, fontWeight: '600' },
   chatLink: { fontSize: 13, color: colors.red, fontWeight: '600' },
+  cancelLink: { fontSize: 13, color: colors.slate500, fontWeight: '600' },
 });

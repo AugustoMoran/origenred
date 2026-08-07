@@ -13,23 +13,34 @@ export const getMercadoPagoPublicConfig = () => ({
   commissionPercent: marketplaceConfig.commissionPercent,
 });
 
-const getMercadoPagoRedirectUri = () =>
-  `${process.env.FRONTEND_URL || 'http://localhost:5173'}/vendedor/mercadopago/callback`;
+const getMercadoPagoRedirectUri = (returnClient?: 'mobile' | 'web') => {
+  if (returnClient === 'mobile') {
+    const scheme = process.env.MOBILE_APP_SCHEME || 'origenred';
+    return `${scheme}://mercadopago/callback`;
+  }
+  return `${process.env.FRONTEND_URL || 'http://localhost:5173'}/vendedor/mercadopago/callback`;
+};
 
 /** OAuth Connect — URL de vinculación (requiere MERCADOPAGO_CLIENT_ID) */
-export const getMercadoPagoConnectUrl = (sellerId: string) => {
+export const getMercadoPagoConnectUrl = (sellerId: string, returnClient?: 'mobile' | 'web') => {
   const clientId = process.env.MERCADOPAGO_CLIENT_ID;
-  const redirectUri = getMercadoPagoRedirectUri();
+  const redirectUri = getMercadoPagoRedirectUri(returnClient);
   if (!clientId) return null;
 
   return `https://auth.mercadopago.com.ar/authorization?client_id=${clientId}&response_type=code&platform_id=mp&state=${sellerId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
 };
 
+export const getMercadoPagoConnectRedirectUri = (returnClient?: 'mobile' | 'web') =>
+  getMercadoPagoRedirectUri(returnClient);
+
 /** Intercambia el código OAuth por credenciales del vendedor en MP */
-export const exchangeMercadoPagoConnectCode = async (code: string) => {
+export const exchangeMercadoPagoConnectCode = async (
+  code: string,
+  returnClient?: 'mobile' | 'web'
+) => {
   const clientId = process.env.MERCADOPAGO_CLIENT_ID;
   const clientSecret = process.env.MERCADOPAGO_CLIENT_SECRET;
-  const redirectUri = getMercadoPagoRedirectUri();
+  const redirectUri = getMercadoPagoRedirectUri(returnClient);
 
   if (!clientId || !clientSecret) {
     throw new Error('Mercado Pago Connect no configurado en el servidor');

@@ -1,22 +1,28 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
-  Linking,
+  Alert,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   View,
 } from 'react-native';
+import * as WebBrowser from 'expo-web-browser';
+import { router } from 'expo-router';
 import { getMercadoPagoConnect, getSellerProfile } from '../../src/api/marketplace';
 import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
 
+WebBrowser.maybeCompleteAuthSession();
+
 export default function SellerMercadoPagoScreen() {
   const { accessToken } = useAuth();
   const [loading, setLoading] = useState(true);
+  const [connecting, setConnecting] = useState(false);
   const [connected, setConnected] = useState(false);
   const [connectUrl, setConnectUrl] = useState<string | null>(null);
+  const [redirectUri, setRedirectUri] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
 
   useEffect(() => {
@@ -27,6 +33,7 @@ export default function SellerMercadoPagoScreen() {
         setConnected(profile.mercadoPagoConnected);
         const mp = await getMercadoPagoConnect(accessToken);
         setConnectUrl(mp.url);
+        setRedirectUri(mp.redirectUri || null);
         setEnabled(mp.enabled);
         if (mp.mercadoPagoConnected) setConnected(true);
       } catch {
@@ -36,6 +43,36 @@ export default function SellerMercadoPagoScreen() {
       }
     })();
   }, [accessToken]);
+
+  const handleConnect = async () => {
+    if (!connectUrl || !redirectUri) return;
+    setConnecting(true);
+    try {
+      const result = await WebBrowser.openAuthSessionAsync(connectUrl, redirectUri);
+      if (result.type !== 'success' || !result.url) {
+        if (result.type === 'cancel') return;
+        Alert.alert('Mercado Pago', 'No se completó la autorización.');
+        return;
+      }
+      const match = result.url.match(/[?&]code=([^&]+)/);
+      const code = match?.[1] ? decodeURIComponent(match[1]) : null;
+      if (!code) {
+        Alert.alert('Mercado Pago', 'No recibimos el código de autorización.');
+        return;
+      }
+      // Deep link handler en mercadopago/callback completa la vinculación
+      const stateMatch = result.url.match(/[?&]state=([^&]+)/);
+      router.push({
+        pathname: '/mercadopago/callback',
+        params: {
+          code,
+          state: stateMatch?.[1] ? decodeURIComponent(stateMatch[1]) : undefined,
+        },
+      });
+    } finally {
+      setConnecting(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -57,9 +94,17 @@ export default function SellerMercadoPagoScreen() {
         <View style={styles.successBox}>
           <Text style={styles.successText}>✓ Cuenta vinculada</Text>
         </View>
-      ) : enabled && connectUrl ? (
-        <Pressable style={styles.button} onPress={() => Linking.openURL(connectUrl)}>
-          <Text style={styles.buttonText}>Vincular Mercado Pago</Text>
+      ) : enabled && connectUrl && redirectUri ? (
+        <Pressable
+          style={[styles.button, connecting && styles.buttonDisabled]}
+          onPress={handleConnect}
+          disabled={connecting}
+        >
+          {connecting ? (
+            <ActivityIndicator color={colors.white} />
+          ) : (
+            <Text style={styles.buttonText}>Vincular Mercado Pago</Text>
+          )}
         </Pressable>
       ) : (
         <View style={styles.warnBox}>
@@ -71,8 +116,7 @@ export default function SellerMercadoPagoScreen() {
 
       {!connected && enabled && (
         <Text style={styles.hint}>
-          Tras autorizar en Mercado Pago, completa la vinculación en la web (panel vendedor → Mercado
-          Pago) con la misma cuenta.
+          Al autorizar en Mercado Pago volvés automáticamente a la app para completar la vinculación.
         </Text>
       )}
     </ScrollView>
@@ -90,6 +134,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     alignItems: 'center',
   },
+  buttonDisabled: { opacity: 0.7 },
   buttonText: { color: colors.white, fontWeight: '700', fontSize: 16 },
   successBox: {
     backgroundColor: '#ECFDF5',
