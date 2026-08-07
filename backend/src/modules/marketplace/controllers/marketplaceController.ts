@@ -41,7 +41,7 @@ import {
   getConversationByOrder,
   getSellerOrders,
 } from '../services/chatService';
-import { getUserNotificationSummary } from '../services/marketplaceNotificationService';
+import { getUserNotificationSummary, markNotificationRead, markAllNotificationsRead } from '../services/marketplaceNotificationService';
 import {
   createReport,
   listPendingReports,
@@ -395,6 +395,22 @@ export async function getNotificationSummaryController(req: Request, res: Respon
   const userId = String((req as any).user._id);
   const summary = await getUserNotificationSummary(userId);
   res.json(summary);
+}
+
+export async function markNotificationReadController(req: Request, res: Response) {
+  try {
+    const userId = String((req as any).user._id);
+    await markNotificationRead(userId, String(req.params.id));
+    res.json({ ok: true });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
+export async function markAllNotificationsReadController(req: Request, res: Response) {
+  const userId = String((req as any).user._id);
+  await markAllNotificationsRead(userId);
+  res.json({ ok: true });
 }
 
 export async function reindexListingsController(_req: Request, res: Response) {

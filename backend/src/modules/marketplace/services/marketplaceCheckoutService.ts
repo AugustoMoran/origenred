@@ -4,6 +4,7 @@ import { MarketplaceOrder } from '../models/MarketplaceOrder';
 import { Conversation } from '../models/Chat';
 import { initOrderFulfillmentOnPayment } from './marketplaceOrderService';
 import { notifyUserPush } from '../../notifications/chatPushService';
+import { createMarketplaceNotification } from './marketplaceNotificationStoreService';
 import { marketplaceConfig } from '../../../config/features';
 import { PUBLIC_LISTING_FILTER } from './listingService';
 import { quoteShippingByPostalCode } from './marketplaceShippingService';
@@ -390,6 +391,26 @@ export const fulfillMarketplaceOrder = async (orderId: string, paymentId?: strin
         `Pedido ${order.orderNumber} — ${formatCurrency(order.total)}`,
         { type: 'order', orderNumber: order.orderNumber, role: 'seller' }
       );
+      await createMarketplaceNotification({
+        userId: String(sellerProfile.user),
+        type: 'order',
+        title: 'Nueva venta',
+        body: `Pedido ${order.orderNumber}`,
+        href: '/vendedor/ventas',
+        orderNumber: order.orderNumber,
+        referenceKey: `seller-order-${order._id}`,
+      });
+    }
+    if (order.buyer) {
+      await createMarketplaceNotification({
+        userId: String(order.buyer),
+        type: 'order',
+        title: 'Pago confirmado',
+        body: `Pedido ${order.orderNumber}`,
+        href: `/cuenta/compras/${order.orderNumber}`,
+        orderNumber: order.orderNumber,
+        referenceKey: `buyer-order-paid-${order._id}`,
+      });
     }
   }
 

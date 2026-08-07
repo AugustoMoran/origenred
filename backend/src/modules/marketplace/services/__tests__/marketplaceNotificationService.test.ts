@@ -2,36 +2,37 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import { User } from '../../../auth/models/User';
 import { SellerProfile } from '../../models/SellerProfile';
-import { ReturnRequest } from '../../models/ReturnRequest';
-import { MarketplaceOrder } from '../../models/MarketplaceOrder';
+import { createReturnRequest } from '../returnRequestService';
 import { buildNotificationItems } from '../marketplaceNotificationService';
+import { MarketplaceNotification } from '../../models/MarketplaceNotification';
+import { MarketplaceOrder } from '../../models/MarketplaceOrder';
 
-describe('buildNotificationItems', () => {
-  it('includes return request notifications for buyer and seller', async () => {
+describe('persisted notifications', () => {
+  it('stores seller return notification when return is created', async () => {
     const hashed = await bcrypt.hash('Password123!', 10);
     const buyer = await User.create({
-      name: 'Buyer Notif',
-      email: 'buyer-notif@test.com',
+      name: 'Buyer Persist',
+      email: 'buyer-persist@test.com',
       password: hashed,
       roles: ['comprador_marketplace'],
     });
 
     const sellerUser = await User.create({
-      name: 'Seller Notif',
-      email: 'seller-notif@test.com',
+      name: 'Seller Persist',
+      email: 'seller-persist@test.com',
       password: hashed,
       roles: ['vendedor_marketplace'],
     });
 
     const profile = await SellerProfile.create({
       user: sellerUser._id,
-      businessName: 'Tienda Notif',
-      slug: 'tienda-notif',
+      businessName: 'Tienda Persist',
+      slug: 'tienda-persist',
       status: 'approved',
     });
 
     const order = await MarketplaceOrder.create({
-      orderNumber: 'OR-NOTIF-RET',
+      orderNumber: 'OR-PERSIST-RET',
       buyer: buyer._id,
       items: [
         {
@@ -54,20 +55,16 @@ describe('buildNotificationItems', () => {
       shippingMethod: 'pickup',
     });
 
-    await ReturnRequest.create({
-      order: order._id,
+    await createReturnRequest({
+      buyerId: String(buyer._id),
       orderNumber: order.orderNumber,
-      buyer: buyer._id,
-      seller: profile._id,
       reason: 'producto_defectuoso',
-      status: 'pending',
     });
 
-    const buyerItems = await buildNotificationItems(String(buyer._id));
-    const sellerItems = await buildNotificationItems(String(sellerUser._id));
+    const persisted = await MarketplaceNotification.findOne({ user: sellerUser._id, type: 'return' });
+    expect(persisted?.orderNumber).toBe(order.orderNumber);
 
-    expect(buyerItems.some((i) => i.type === 'return')).toBe(false);
-
-    expect(sellerItems.some((i) => i.type === 'return' && i.title.includes('devolución'))).toBe(true);
+    const items = await buildNotificationItems(String(sellerUser._id));
+    expect(items.some((i) => i.type === 'return' && i.id.startsWith('persisted-'))).toBe(true);
   });
 });

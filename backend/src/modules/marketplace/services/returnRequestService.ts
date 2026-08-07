@@ -5,6 +5,7 @@ import {
   isMercadoPagoEnabled,
   refundMercadoPagoPayment,
 } from './marketplacePaymentService';
+import { createMarketplaceNotification } from './marketplaceNotificationStoreService';
 
 export const RETURN_REASONS = [
   'producto_defectuoso',
@@ -49,7 +50,7 @@ export const createReturnRequest = async (input: {
   const sellerId = order.items[0]?.seller;
   if (!sellerId) throw new Error('Pedido sin vendedor asociado');
 
-  return ReturnRequest.create({
+  const request = await ReturnRequest.create({
     order: order._id,
     orderNumber: order.orderNumber,
     buyer: input.buyerId,
@@ -58,6 +59,21 @@ export const createReturnRequest = async (input: {
     description: input.description?.trim(),
     status: 'pending',
   });
+
+  const sellerProfile = await SellerProfile.findById(sellerId);
+  if (sellerProfile?.user) {
+    await createMarketplaceNotification({
+      userId: String(sellerProfile.user),
+      type: 'return',
+      title: 'Nueva solicitud de devolución',
+      body: `Pedido ${order.orderNumber}`,
+      href: '/vendedor/devoluciones',
+      orderNumber: order.orderNumber,
+      referenceKey: `seller-return-${request._id}`,
+    });
+  }
+
+  return request;
 };
 
 export const listBuyerReturnRequests = (buyerId: string) =>
@@ -98,6 +114,19 @@ export const updateSellerReturnRequest = async (
   request.status = status;
   if (sellerNote?.trim()) request.sellerNote = sellerNote.trim();
   await request.save();
+
+  const buyerLabel =
+    status === 'approved' ? 'Devolución aprobada' : 'Devolución rechazada';
+  await createMarketplaceNotification({
+    userId: String(request.buyer),
+    type: 'return',
+    title: buyerLabel,
+    body: `Pedido ${request.orderNumber}`,
+    href: '/cuenta/devoluciones',
+    orderNumber: request.orderNumber,
+    referenceKey: `buyer-return-${request._id}-${status}`,
+  });
+
   return request;
 };
 
@@ -135,6 +164,19 @@ export const updateAdminReturnRequest = async (
   }
 
   await request.save();
+
+  if (status === 'refunded') {
+    await createMarketplaceNotification({
+      userId: String(request.buyer),
+      type: 'return',
+      title: 'Reembolso procesado',
+      body: `Pedido ${request.orderNumber}`,
+      href: '/cuenta/devoluciones',
+      orderNumber: request.orderNumber,
+      referenceKey: `buyer-return-${request._id}-refunded`,
+    });
+  }
+
   return request;
 };
 

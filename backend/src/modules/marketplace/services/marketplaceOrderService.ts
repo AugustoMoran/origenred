@@ -2,6 +2,7 @@ import { MarketplaceOrder, IMarketplaceOrder } from '../models/MarketplaceOrder'
 import { SellerProfile } from '../models/SellerProfile';
 import { getSellerByUserId } from './sellerService';
 import { notifyUserPush } from '../../notifications/chatPushService';
+import { createMarketplaceNotification } from './marketplaceNotificationStoreService';
 
 type FulfillmentStatus = 'processing' | 'shipped' | 'delivered';
 
@@ -106,6 +107,15 @@ export const updateSellerOrderFulfillment = async (
       orderNumber: order.orderNumber,
       status: next,
       role: 'buyer',
+    });
+    await createMarketplaceNotification({
+      userId: String(order.buyer),
+      type: 'order',
+      title: label,
+      body: `Pedido ${order.orderNumber}`,
+      href: `/cuenta/compras/${order.orderNumber}`,
+      orderNumber: order.orderNumber,
+      referenceKey: `buyer-order-${next}-${order._id}`,
     });
   }
 

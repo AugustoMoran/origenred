@@ -27,6 +27,8 @@ import {
   updateCategoryController,
   deleteCategoryController,
   getNotificationSummaryController,
+  markNotificationReadController,
+  markAllNotificationsReadController,
   reindexListingsController,
   listReportsController,
   resolveReportController,
@@ -110,6 +112,8 @@ router.post('/checkout/webhook', marketplaceWebhookController);
 
 // Comprador (auth)
 router.get('/notifications/summary', authenticate, getNotificationSummaryController);
+router.patch('/notifications/:id/read', authenticate, markNotificationReadController);
+router.post('/notifications/read-all', authenticate, markAllNotificationsReadController);
 router.post('/favorites/:listingId', authenticate, toggleFavoriteController);
 router.get('/favorites', authenticate, getMyFavoritesController);
 router.post('/reports', authenticate, createReportController);

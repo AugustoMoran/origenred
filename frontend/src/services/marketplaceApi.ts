@@ -72,7 +72,7 @@ export interface HomeData {
 export const marketplaceApi = createApi({
   reducerPath: 'marketplaceApi',
   baseQuery: createReauthBaseQuery(`${API_BASE}/marketplace`),
-  tagTypes: ['Home', 'Listings', 'Listing', 'Favorites', 'Seller', 'MyListings', 'Orders'],
+  tagTypes: ['Home', 'Listings', 'Listing', 'Favorites', 'Seller', 'MyListings', 'Orders', 'Notifications'],
   endpoints: (builder) => ({
     getHomeData: builder.query<HomeData, void>({
       query: () => '/home',
@@ -250,7 +250,7 @@ export const marketplaceApi = createApi({
         totalUnread?: number;
         items?: Array<{
           id: string;
-          type: 'chat' | 'order';
+          type: 'chat' | 'order' | 'return';
           title: string;
           body: string;
           href: string;
@@ -262,6 +262,15 @@ export const marketplaceApi = createApi({
       void
     >({
       query: () => '/notifications/summary',
+      providesTags: ['Notifications'],
+    }),
+    markNotificationRead: builder.mutation<{ ok: boolean }, string>({
+      query: (id) => ({ url: `/notifications/${id}/read`, method: 'PATCH' }),
+      invalidatesTags: ['Notifications'],
+    }),
+    markAllNotificationsRead: builder.mutation<{ ok: boolean }, void>({
+      query: () => ({ url: '/notifications/read-all', method: 'POST' }),
+      invalidatesTags: ['Notifications'],
     }),
     getMarketplaceAnalytics: builder.query<
       {
@@ -566,6 +575,8 @@ export const {
   useUpdateAdminMarketplaceCategoryMutation,
   useDeleteAdminMarketplaceCategoryMutation,
   useGetNotificationSummaryQuery,
+  useMarkNotificationReadMutation,
+  useMarkAllNotificationsReadMutation,
   useGetMarketplaceAnalyticsQuery,
   useGetPendingSellersQuery,
   useGetAllSellersQuery,
