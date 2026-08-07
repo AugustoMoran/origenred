@@ -145,18 +145,66 @@ export const verifyMercadoPagoPayment = async (paymentId: string) => {
   return response.data;
 };
 
-/** Reembolso total o parcial de un pago MP (requiere paymentId del pedido) */
-export const refundMercadoPagoPayment = async (paymentId: string, amount?: number) => {
+export type MercadoPagoRefundResult = {
+  refund?: unknown;
+  alreadyRefunded?: boolean;
+  payment?: unknown;
+};
+
+/** Reembolso total o parcial de un pago MP (marketplace / Connect split usa token de la aplicación) */
+export const refundMercadoPagoPayment = async (
+  paymentId: string,
+  amount?: number
+): Promise<MercadoPagoRefundResult> => {
   const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
   if (!accessToken) throw new Error('Mercado Pago no configurado');
 
-  const body = amount != null ? { amount: Number(amount) } : {};
-  const response = await axios.post(`${MP_API_BASE}/v1/payments/${paymentId}/refunds`, body, {
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-    },
-  });
+  const payment = await verifyMercadoPagoPayment(paymentId);
+  const status = String(payment?.status || '');
+  const transactionAmount = Number(payment?.transaction_amount || 0);
+  const refundedAmount = Number(payment?.transaction_amount_refunded || 0);
 
-  return response.data;
+  if (status === 'refunded' || (transactionAmount > 0 && refundedAmount >= transactionAmount)) {
+    return { alreadyRefunded: true, payment };
+  }
+
+  if (status !== 'approved') {
+    throw new Error(`El pago no está aprobado (estado: ${status || 'desconocido'})`);
+  }
+
+  const refundAmount = amount != null ? Number(amount) : transactionAmount;
+  if (refundAmount <= 0) {
+    throw new Error('Importe de reembolso inválido');
+  }
+
+  const body = amount != null ? { amount: refundAmount } : {};
+  const idempotencyKey = `refund-${paymentId}-${amount ?? 'full'}`;
+
+  try {
+    const response = await axios.post(`${MP_API_BASE}/v1/payments/${paymentId}/refunds`, body, {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+        'X-Idempotency-Key': idempotencyKey,
+      },
+    });
+    return { refund: response.data, payment };
+  } catch (error: any) {
+    const mpMessage =
+      error?.response?.data?.message ||
+      error?.response?.data?.error ||
+      error?.message ||
+      'Error desconocido';
+
+    if (/already refunded|ya fue reembolsado/i.test(mpMessage)) {
+      return { alreadyRefunded: true, payment };
+    }
+
+    const connectHint =
+      features.mercadoPagoConnect
+        ? ' En pagos con split (Connect), el reembolso debe procesarse con el token de la aplicación marketplace.'
+        : '';
+
+    throw new Error(`Mercado Pago rechazó el reembolso: ${mpMessage}.${connectHint}`);
+  }
 };

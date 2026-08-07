@@ -388,3 +388,34 @@ export const registerSeller = (body: {
     body: JSON.stringify(body),
     mobile: false,
   });
+
+export interface OrigenRedService {
+  type: string;
+  title: string;
+  description: string;
+}
+
+export interface ServiceLead {
+  _id: string;
+  serviceType: string;
+  status: string;
+  message?: string;
+}
+
+export const getSellerServices = (token: string) =>
+  apiFetch<{
+    services: OrigenRedService[];
+    labels: Record<string, string>;
+    leads: ServiceLead[];
+  }>('/marketplace/seller/services', { token, mobile: false });
+
+export const createServiceLead = (
+  token: string,
+  body: { serviceType: string; message?: string }
+) =>
+  apiFetch<{ lead: ServiceLead }>('/marketplace/seller/service-leads', {
+    method: 'POST',
+    body: JSON.stringify(body),
+    token,
+    mobile: false,
+  });

@@ -341,6 +341,42 @@ export const marketplaceApi = createApi({
       }),
     }),
 
+    getSellerServices: builder.query<
+      {
+        services: Array<{ type: string; title: string; description: string }>;
+        labels: Record<string, string>;
+        leads: unknown[];
+      },
+      void
+    >({
+      query: () => '/seller/services',
+    }),
+    createServiceLead: builder.mutation<
+      { lead: unknown },
+      { serviceType: string; message?: string }
+    >({
+      query: (body) => ({ url: '/seller/service-leads', method: 'POST', body }),
+    }),
+    getAdminServiceLeads: builder.query<
+      { leads: unknown[]; labels: Record<string, string> },
+      { status?: string } | void
+    >({
+      query: (params) => ({
+        url: '/admin/service-leads',
+        params: params?.status ? { status: params.status } : undefined,
+      }),
+    }),
+    updateAdminServiceLead: builder.mutation<
+      unknown,
+      { id: string; status: 'contacted' | 'closed'; adminNote?: string }
+    >({
+      query: ({ id, status, adminNote }) => ({
+        url: `/admin/service-leads/${id}`,
+        method: 'PATCH',
+        body: { status, adminNote },
+      }),
+    }),
+
     // Checkout
     previewCheckout: builder.mutation<
       {
@@ -503,6 +539,10 @@ export const {
   useUpdateSellerReturnMutation,
   useGetAdminReturnRequestsQuery,
   useUpdateAdminReturnMutation,
+  useGetSellerServicesQuery,
+  useCreateServiceLeadMutation,
+  useGetAdminServiceLeadsQuery,
+  useUpdateAdminServiceLeadMutation,
   usePreviewCheckoutMutation,
   useCreateCheckoutMutation,
   useGetOrderQuery,

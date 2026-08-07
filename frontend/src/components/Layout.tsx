@@ -104,6 +104,15 @@ const NAV_ADMIN = [
 		),
 	},
 	{
+		to: "/dashboard/admin/marketplace-services",
+		label: "Servicios MP",
+		icon: (
+			<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+				<path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+			</svg>
+		),
+	},
+	{
 		to: "/dashboard/admin/marketplace-reports",
 		label: "Denuncias MP",
 		icon: (

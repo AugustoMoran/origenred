@@ -53,6 +53,10 @@ import {
   updateSellerReturnController,
   listAdminReturnRequestsController,
   updateAdminReturnController,
+  getSellerServicesController,
+  createServiceLeadController,
+  listAdminServiceLeadsController,
+  updateAdminServiceLeadController,
 } from '../controllers/marketplaceController';
 
 const router = Router();
@@ -111,6 +115,8 @@ router.get('/returns', authenticate, getMyReturnRequestsController);
 router.get('/returns/order/:orderNumber', authenticate, getReturnForOrderController);
 router.get('/seller/returns', authenticate, requireSeller, listSellerReturnRequestsController);
 router.patch('/seller/returns/:id', authenticate, requireSeller, updateSellerReturnController);
+router.get('/seller/services', authenticate, requireSeller, getSellerServicesController);
+router.post('/seller/service-leads', authenticate, requireSeller, createServiceLeadController);
 
 // Admin marketplace
 router.get('/admin/sellers', authenticate, requireAdmin, listSellersAdminController);
@@ -126,5 +132,7 @@ router.patch('/admin/reports/:id', authenticate, requireAdmin, resolveReportCont
 router.get('/admin/analytics', authenticate, requireAdmin, getMarketplaceAnalyticsController);
 router.get('/admin/returns', authenticate, requireAdmin, listAdminReturnRequestsController);
 router.patch('/admin/returns/:id', authenticate, requireAdmin, updateAdminReturnController);
+router.get('/admin/service-leads', authenticate, requireAdmin, listAdminServiceLeadsController);
+router.patch('/admin/service-leads/:id', authenticate, requireAdmin, updateAdminServiceLeadController);
 
 export default router;

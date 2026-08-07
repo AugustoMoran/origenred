@@ -63,6 +63,13 @@ import {
   RETURN_REASON_LABELS,
 } from '../services/returnRequestService';
 import {
+  getOrigenRedServicesCatalog,
+  createServiceLead,
+  listMyServiceLeads,
+  listAdminServiceLeads,
+  updateAdminServiceLead,
+} from '../services/serviceLeadService';
+import {
   listAdminCategories,
   createMarketplaceCategory,
   updateMarketplaceCategory,
@@ -681,6 +688,51 @@ export async function updateAdminReturnController(req: Request, res: Response) {
       req.body.adminNote ? String(req.body.adminNote) : undefined
     );
     res.json(request);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
+export async function getSellerServicesController(req: Request, res: Response) {
+  const userId = String((req as any).user._id);
+  const catalog = getOrigenRedServicesCatalog();
+  const leads = await listMyServiceLeads(userId);
+  res.json({ ...catalog, leads });
+}
+
+export async function createServiceLeadController(req: Request, res: Response) {
+  try {
+    const userId = String((req as any).user._id);
+    const lead = await createServiceLead({
+      userId,
+      serviceType: String(req.body.serviceType || ''),
+      message: req.body.message ? String(req.body.message) : undefined,
+    });
+    res.status(201).json({ lead });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
+export async function listAdminServiceLeadsController(req: Request, res: Response) {
+  const status = req.query.status as string | undefined;
+  const leads = await listAdminServiceLeads(status);
+  const catalog = getOrigenRedServicesCatalog();
+  res.json({ leads, labels: catalog.labels });
+}
+
+export async function updateAdminServiceLeadController(req: Request, res: Response) {
+  try {
+    const status = String(req.body.status || '');
+    if (!['new', 'contacted', 'closed'].includes(status)) {
+      return res.status(400).json({ message: 'Estado inválido' });
+    }
+    const lead = await updateAdminServiceLead(
+      String(req.params.id),
+      status as 'new' | 'contacted' | 'closed',
+      req.body.adminNote ? String(req.body.adminNote) : undefined
+    );
+    res.json(lead);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

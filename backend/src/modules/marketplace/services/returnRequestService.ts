@@ -119,9 +119,12 @@ export const updateAdminReturnRequest = async (
     if (order) {
       if (order.paymentId && isMercadoPagoEnabled()) {
         try {
-          await refundMercadoPagoPayment(order.paymentId, order.total);
+          const result = await refundMercadoPagoPayment(order.paymentId, order.total);
+          if (!result.alreadyRefunded && !result.refund) {
+            throw new Error('Mercado Pago no devolvió confirmación del reembolso');
+          }
         } catch (error: any) {
-          const msg = error?.response?.data?.message || error?.message || 'Error desconocido';
+          const msg = error?.message || 'Error desconocido';
           throw new Error(`Mercado Pago no procesó el reembolso: ${msg}`);
         }
       }

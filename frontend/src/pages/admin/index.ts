@@ -8,3 +8,4 @@ export { AdminMarketplaceReports } from './AdminMarketplaceReports';
 export { AdminMarketplaceCategories } from './AdminMarketplaceCategories';
 export { AdminMarketplaceAnalytics } from './AdminMarketplaceAnalytics';
 export { AdminMarketplaceReturns } from './AdminMarketplaceReturns';
+export { AdminMarketplaceServiceLeads } from './AdminMarketplaceServiceLeads';
