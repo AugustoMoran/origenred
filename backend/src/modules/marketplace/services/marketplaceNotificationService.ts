@@ -1,11 +1,12 @@
 import { Conversation, Message } from '../models/Chat';
 import { MarketplaceOrder } from '../models/MarketplaceOrder';
 import { SellerProfile } from '../models/SellerProfile';
+import { ReturnRequest } from '../models/ReturnRequest';
 import { getUnreadChatCount } from './chatService';
 
 export type MarketplaceNotificationItem = {
   id: string;
-  type: 'chat' | 'order';
+  type: 'chat' | 'order' | 'return';
   title: string;
   body: string;
   href: string;
@@ -131,6 +132,57 @@ export const buildNotificationItems = async (userId: string): Promise<Marketplac
       at: order.updatedAt.toISOString(),
       orderNumber: order.orderNumber,
     });
+  }
+
+  const buyerReturns = await ReturnRequest.find({
+    buyer: userId,
+    updatedAt: { $gte: since },
+    status: { $in: ['approved', 'rejected', 'refunded'] },
+  })
+    .sort({ updatedAt: -1 })
+    .limit(8);
+
+  for (const ret of buyerReturns) {
+    const statusLabel =
+      ret.status === 'approved'
+        ? 'Devolución aprobada'
+        : ret.status === 'rejected'
+          ? 'Devolución rechazada'
+          : 'Reembolso procesado';
+    items.push({
+      id: `buyer-return-${ret._id}`,
+      type: 'return',
+      title: statusLabel,
+      body: `Pedido ${ret.orderNumber}`,
+      href: '/cuenta/devoluciones',
+      at: ret.updatedAt.toISOString(),
+      orderNumber: ret.orderNumber,
+      unread: ret.updatedAt.getTime() > Date.now() - 3 * 24 * 60 * 60 * 1000,
+    });
+  }
+
+  if (profile) {
+    const sellerReturns = await ReturnRequest.find({
+      seller: profile._id,
+      createdAt: { $gte: since },
+    })
+      .populate('buyer', 'name')
+      .sort({ createdAt: -1 })
+      .limit(8);
+
+    for (const ret of sellerReturns) {
+      const isPending = ret.status === 'pending';
+      items.push({
+        id: `seller-return-${ret._id}`,
+        type: 'return',
+        title: isPending ? 'Nueva solicitud de devolución' : 'Actualización de devolución',
+        body: `Pedido ${ret.orderNumber}`,
+        href: '/vendedor/devoluciones',
+        at: (isPending ? ret.createdAt : ret.updatedAt).toISOString(),
+        orderNumber: ret.orderNumber,
+        unread: isPending,
+      });
+    }
   }
 
   return items

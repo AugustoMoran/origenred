@@ -90,6 +90,12 @@ export default function ProfileScreen() {
         </Pressable>
       </Link>
 
+      <Link href="/notifications" asChild>
+        <Pressable style={styles.menuBtn}>
+          <Text style={styles.menuBtnText}>Notificaciones</Text>
+        </Pressable>
+      </Link>
+
       {!user.roles?.includes('vendedor_marketplace') && (
         <Link href="/vender" asChild>
           <Pressable style={styles.menuBtn}>

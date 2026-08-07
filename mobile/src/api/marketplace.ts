@@ -377,6 +377,31 @@ export const getMyReturnRequests = (token: string) =>
     reasonLabels: Record<string, string>;
   }>('/marketplace/returns', { token, mobile: false });
 
+export const getSellerReturnRequests = (token: string) =>
+  apiFetch<{
+    requests: Array<{
+      _id: string;
+      orderNumber: string;
+      status: string;
+      reason: string;
+      description?: string;
+      buyer?: { name: string };
+    }>;
+    reasonLabels: Record<string, string>;
+  }>('/marketplace/seller/returns', { token, mobile: false });
+
+export const updateSellerReturn = (
+  token: string,
+  id: string,
+  status: 'approved' | 'rejected'
+) =>
+  apiFetch<unknown>(`/marketplace/seller/returns/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+    token,
+    mobile: false,
+  });
+
 export const registerSeller = (body: {
   name: string;
   email: string;
