@@ -144,3 +144,19 @@ export const verifyMercadoPagoPayment = async (paymentId: string) => {
 
   return response.data;
 };
+
+/** Reembolso total o parcial de un pago MP (requiere paymentId del pedido) */
+export const refundMercadoPagoPayment = async (paymentId: string, amount?: number) => {
+  const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  if (!accessToken) throw new Error('Mercado Pago no configurado');
+
+  const body = amount != null ? { amount: Number(amount) } : {};
+  const response = await axios.post(`${MP_API_BASE}/v1/payments/${paymentId}/refunds`, body, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+  });
+
+  return response.data;
+};

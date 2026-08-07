@@ -1,6 +1,10 @@
 import { ReturnRequest } from '../models/ReturnRequest';
 import { MarketplaceOrder } from '../models/MarketplaceOrder';
 import { SellerProfile } from '../models/SellerProfile';
+import {
+  isMercadoPagoEnabled,
+  refundMercadoPagoPayment,
+} from './marketplacePaymentService';
 
 export const RETURN_REASONS = [
   'producto_defectuoso',
@@ -113,6 +117,14 @@ export const updateAdminReturnRequest = async (
   if (status === 'refunded') {
     const order = await MarketplaceOrder.findById(request.order);
     if (order) {
+      if (order.paymentId && isMercadoPagoEnabled()) {
+        try {
+          await refundMercadoPagoPayment(order.paymentId, order.total);
+        } catch (error: any) {
+          const msg = error?.response?.data?.message || error?.message || 'Error desconocido';
+          throw new Error(`Mercado Pago no procesó el reembolso: ${msg}`);
+        }
+      }
       order.status = 'refunded';
       order.paymentStatus = 'refunded';
       await order.save();

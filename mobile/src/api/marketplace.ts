@@ -367,10 +367,10 @@ export const getReturnForOrder = (orderNumber: string, token: string) =>
   );
 
 export const getMyReturnRequests = (token: string) =>
-  apiFetch<{ requests: Array<{ _id: string; orderNumber: string; status: string; reason: string }> }>(
-    '/marketplace/returns',
-    { token, mobile: false }
-  );
+  apiFetch<{
+    requests: Array<{ _id: string; orderNumber: string; status: string; reason: string; description?: string }>;
+    reasonLabels: Record<string, string>;
+  }>('/marketplace/returns', { token, mobile: false });
 
 export const registerSeller = (body: {
   name: string;

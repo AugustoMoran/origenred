@@ -76,6 +76,12 @@ export default function ProfileScreen() {
         </Pressable>
       </Link>
 
+      <Link href="/returns" asChild>
+        <Pressable style={styles.menuBtn}>
+          <Text style={styles.menuBtnText}>Mis devoluciones</Text>
+        </Pressable>
+      </Link>
+
       <Link href="/chats" asChild>
         <Pressable style={styles.menuBtn}>
           <Text style={styles.menuBtnText}>

@@ -90,7 +90,7 @@ export const AdminMarketplaceReturns: React.FC = () => {
                     onClick={() => handle(req._id, 'refunded')}
                     className="px-3 py-1.5 text-xs bg-or-red text-white rounded-lg"
                   >
-                    Marcar reembolsado
+                    Reembolsar vía Mercado Pago
                   </button>
                 )}
               </div>
