@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import {
   registerSeller,
   getSellerByUserId,
+  updateSellerProfile,
   listPendingSellers,
   listAllSellers,
   updateSellerStatus,
@@ -186,6 +187,23 @@ export async function getMySellerProfileController(req: Request, res: Response) 
   const profile = await getSellerByUserId(userId);
   if (!profile) return res.status(404).json({ message: 'Perfil de vendedor no encontrado' });
   res.json(profile);
+}
+
+export async function updateMySellerProfileController(req: Request, res: Response) {
+  try {
+    const userId = String((req as any).user._id);
+    const profile = await updateSellerProfile(userId, {
+      businessName: req.body.businessName ? String(req.body.businessName) : undefined,
+      description: req.body.description !== undefined ? String(req.body.description) : undefined,
+      province: req.body.province !== undefined ? String(req.body.province) : undefined,
+      city: req.body.city !== undefined ? String(req.body.city) : undefined,
+      postalCode: req.body.postalCode !== undefined ? String(req.body.postalCode) : undefined,
+      phone: req.body.phone !== undefined ? String(req.body.phone) : undefined,
+    });
+    res.json(profile);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
 }
 
 export async function createListingController(req: Request, res: Response) {

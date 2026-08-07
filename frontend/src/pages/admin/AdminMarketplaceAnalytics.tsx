@@ -28,6 +28,7 @@ export const AdminMarketplaceAnalytics: React.FC = () => {
           { label: 'Pendientes aprobar', value: String(totals.pendingSellers) },
           { label: 'Denuncias abiertas', value: String(totals.pendingReports) },
           { label: 'Devoluciones abiertas', value: String(totals.pendingReturns ?? 0) },
+          { label: 'Servicios solicitados', value: String(totals.pendingServiceLeads ?? 0) },
           { label: 'Publicaciones activas', value: String(totals.activeListings) },
         ].map((card) => (
           <div key={card.label} className="bg-white/5 border border-white/10 rounded-2xl p-4">

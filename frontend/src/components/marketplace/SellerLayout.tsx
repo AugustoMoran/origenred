@@ -8,6 +8,7 @@ import { useGetMySellerProfileQuery } from '../../services/marketplaceApi';
 
 const NAV = [
   { to: '/vendedor', label: 'Resumen', exact: true },
+  { to: '/vendedor/perfil', label: 'Mi perfil' },
   { to: '/vendedor/productos', label: 'Mis productos' },
   { to: '/vendedor/productos/nuevo', label: 'Nueva publicación' },
   { to: '/vendedor/ventas', label: 'Mis ventas' },

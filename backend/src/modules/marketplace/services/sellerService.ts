@@ -17,6 +17,33 @@ const slugify = (value: string) =>
 export const getSellerByUserId = (userId: string) =>
   SellerProfile.findOne({ user: userId }).populate('user', 'name email');
 
+export const updateSellerProfile = async (
+  userId: string,
+  input: {
+    businessName?: string;
+    description?: string;
+    province?: string;
+    city?: string;
+    postalCode?: string;
+    phone?: string;
+  }
+) => {
+  const profile = await SellerProfile.findOne({ user: userId });
+  if (!profile) throw new Error('Perfil de vendedor no encontrado');
+
+  if (input.businessName?.trim()) {
+    profile.businessName = input.businessName.trim();
+  }
+  if (input.description !== undefined) profile.description = input.description.trim();
+  if (input.province !== undefined) profile.province = input.province.trim();
+  if (input.city !== undefined) profile.city = input.city.trim();
+  if (input.postalCode !== undefined) profile.postalCode = input.postalCode.trim();
+  if (input.phone !== undefined) profile.phone = input.phone.trim();
+
+  await profile.save();
+  return profile;
+};
+
 export const getApprovedSellerByUserId = async (userId: string) => {
   const profile = await SellerProfile.findOne({ user: userId, status: 'approved' });
   return profile;

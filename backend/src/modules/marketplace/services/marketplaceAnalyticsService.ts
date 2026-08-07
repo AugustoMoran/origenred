@@ -3,6 +3,7 @@ import { SellerProfile } from '../models/SellerProfile';
 import { Listing } from '../models/Listing';
 import { Report } from '../models/Report';
 import { ReturnRequest } from '../models/ReturnRequest';
+import { ServiceLead } from '../models/ServiceLead';
 
 export const getMarketplaceAdminAnalytics = async () => {
   const [
@@ -83,6 +84,7 @@ export const getMarketplaceAdminAnalytics = async () => {
       pendingSellers,
     pendingReports,
     pendingReturns: await ReturnRequest.countDocuments({ status: { $in: ['pending', 'approved'] } }),
+    pendingServiceLeads: await ServiceLead.countDocuments({ status: 'new' }),
     activeListings: await Listing.countDocuments({ status: 'active' }),
     },
     ordersByStatus: ordersByStatus.map((r) => ({ status: r._id, count: r.count })),

@@ -151,6 +151,20 @@ export const marketplaceApi = createApi({
       query: () => '/seller/me',
       providesTags: ['Seller'],
     }),
+    updateSellerProfile: builder.mutation<
+      SellerProfile,
+      {
+        businessName?: string;
+        description?: string;
+        province?: string;
+        city?: string;
+        postalCode?: string;
+        phone?: string;
+      }
+    >({
+      query: (body) => ({ url: '/seller/me', method: 'PATCH', body }),
+      invalidatesTags: ['Seller'],
+    }),
     getMySellerListings: builder.query<MarketplaceListing[], void>({
       query: () => '/seller/listings',
       providesTags: ['MyListings'],
@@ -259,6 +273,7 @@ export const marketplaceApi = createApi({
           pendingSellers: number;
           pendingReports: number;
           pendingReturns?: number;
+          pendingServiceLeads?: number;
           activeListings: number;
         };
         ordersByStatus: Array<{ status: string; count: number }>;
@@ -538,6 +553,7 @@ export const {
   useGetFavoritesQuery,
   useCreateReportMutation,
   useGetMySellerProfileQuery,
+  useUpdateSellerProfileMutation,
   useGetMySellerListingsQuery,
   useCreateSellerListingMutation,
   useUpdateSellerListingMutation,

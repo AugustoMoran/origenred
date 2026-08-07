@@ -134,6 +134,7 @@ export const getSellerDashboardInsights = async (userId: string) => {
     recommendations.push({
       id: 'complete-profile',
       message: 'Completá descripción, teléfono y ciudad en tu perfil.',
+      href: '/vendedor/perfil',
       priority: 'medium',
     });
   }
