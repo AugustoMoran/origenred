@@ -91,6 +91,9 @@ export default function SellerDashboardScreen() {
       <Pressable style={styles.navBtn} onPress={() => router.push('/vendedor/aprendizaje')}>
         <Text style={styles.navBtnText}>Centro de aprendizaje →</Text>
       </Pressable>
+      <Pressable style={styles.navBtn} onPress={() => router.push('/vendedor/perfil')}>
+        <Text style={styles.navBtnText}>Mi perfil →</Text>
+      </Pressable>
     </ScrollView>
   );
 }

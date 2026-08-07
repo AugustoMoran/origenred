@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useGetMarketplaceAnalyticsQuery } from '../../services/marketplaceApi';
 
 const format = (n: number) =>
@@ -36,6 +37,33 @@ export const AdminMarketplaceAnalytics: React.FC = () => {
             <p className="text-xl font-bold text-white mt-1">{card.value}</p>
           </div>
         ))}
+      </div>
+
+      <div className="flex flex-wrap gap-3">
+        <Link
+          to="/dashboard/admin/marketplace-sellers"
+          className="text-sm px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white"
+        >
+          Vendedores →
+        </Link>
+        <Link
+          to="/dashboard/admin/marketplace-returns"
+          className="text-sm px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white"
+        >
+          Devoluciones →
+        </Link>
+        <Link
+          to="/dashboard/admin/marketplace-services"
+          className="text-sm px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white"
+        >
+          Servicios →
+        </Link>
+        <Link
+          to="/dashboard/admin/marketplace-reports"
+          className="text-sm px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-slate-300 hover:text-white"
+        >
+          Denuncias →
+        </Link>
       </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
