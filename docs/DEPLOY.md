@@ -21,6 +21,9 @@
 | `R2_*` | Cloudflare R2 (imágenes) |
 | `MERCADOPAGO_*` | Pagos + webhook |
 | `MERCADOPAGO_WEBHOOK_URL` | `https://<render-api>/api/marketplace/checkout/webhook` |
+| `RESEND_API_KEY` | (opcional) Email aprobación vendedores |
+| `EMAIL_FROM` | Remitente, ej. `OrigenRed <noreply@origenred.com.ar>` |
+| `ENABLE_CSRF` | `true` en producción si el frontend envía token CSRF |
 
 5. Tras deploy, anotar URL: `https://origenred-api.onrender.com`
 
