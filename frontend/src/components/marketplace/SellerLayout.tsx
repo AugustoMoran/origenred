@@ -13,6 +13,7 @@ const NAV = [
   { to: '/vendedor/ventas', label: 'Mis ventas' },
   { to: '/vendedor/devoluciones', label: 'Devoluciones' },
   { to: '/vendedor/servicios', label: 'Servicios OrigenRed' },
+  { to: '/vendedor/aprendizaje', label: 'Aprendizaje' },
   { to: '/vendedor/mercadopago', label: 'Mercado Pago' },
 ];
 

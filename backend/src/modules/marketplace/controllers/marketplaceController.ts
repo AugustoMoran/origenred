@@ -69,6 +69,7 @@ import {
   listAdminServiceLeads,
   updateAdminServiceLead,
 } from '../services/serviceLeadService';
+import { getSellerDashboardInsights } from '../services/sellerDashboardService';
 import {
   listAdminCategories,
   createMarketplaceCategory,
@@ -688,6 +689,16 @@ export async function updateAdminReturnController(req: Request, res: Response) {
       req.body.adminNote ? String(req.body.adminNote) : undefined
     );
     res.json(request);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
+export async function getSellerDashboardController(req: Request, res: Response) {
+  try {
+    const userId = String((req as any).user._id);
+    const insights = await getSellerDashboardInsights(userId);
+    res.json(insights);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

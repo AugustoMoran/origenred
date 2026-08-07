@@ -55,6 +55,7 @@ import {
   updateAdminReturnController,
   getSellerServicesController,
   createServiceLeadController,
+  getSellerDashboardController,
   listAdminServiceLeadsController,
   updateAdminServiceLeadController,
 } from '../controllers/marketplaceController';
@@ -76,6 +77,7 @@ router.post('/sellers/register', registerSellerController);
 
 // Vendedor
 router.get('/seller/me', authenticate, requireSeller, getMySellerProfileController);
+router.get('/seller/dashboard', authenticate, requireSeller, getSellerDashboardController);
 router.get('/seller/listings', authenticate, requireSeller, getMyListingsController);
 router.post('/seller/listings', authenticate, requireSeller, uploadListingImagesMiddleware, createListingController);
 router.patch('/seller/listings/:id', authenticate, requireSeller, uploadListingImagesMiddleware, updateListingController);

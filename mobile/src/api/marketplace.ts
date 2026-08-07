@@ -419,3 +419,21 @@ export const createServiceLead = (
     token,
     mobile: false,
   });
+
+export interface SellerDashboardInsights {
+  health: {
+    score: number;
+    label: string;
+    factors: Array<{ key: string; label: string; ok: boolean; weight: number }>;
+  };
+  recommendations: Array<{ id: string; message: string; href?: string; priority: string }>;
+  learningArticles: Array<{
+    id: string;
+    title: string;
+    summary: string;
+    tips: string[];
+  }>;
+}
+
+export const getSellerDashboard = (token: string) =>
+  apiFetch<SellerDashboardInsights>('/marketplace/seller/dashboard', { token, mobile: false });

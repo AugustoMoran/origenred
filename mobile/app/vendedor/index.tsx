@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { router } from 'expo-router';
-import { getSellerProfile, getSellerListings, SellerProfile } from '../../src/api/marketplace';
+import { getSellerProfile, getSellerListings, getSellerDashboard, SellerProfile } from '../../src/api/marketplace';
 import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
 
@@ -16,6 +16,7 @@ export default function SellerDashboardScreen() {
   const { accessToken } = useAuth();
   const [profile, setProfile] = useState<SellerProfile | null>(null);
   const [activeCount, setActiveCount] = useState(0);
+  const [healthScore, setHealthScore] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -26,6 +27,8 @@ export default function SellerDashboardScreen() {
         setProfile(p);
         const listings = await getSellerListings(accessToken);
         setActiveCount(listings.filter((l) => l.status === 'active').length);
+        const dash = await getSellerDashboard(accessToken);
+        setHealthScore(dash.health.score);
       } catch {
         setProfile(null);
       } finally {
@@ -65,8 +68,8 @@ export default function SellerDashboardScreen() {
         <StatCard label="Ventas" value={profile.totalSales} />
         <StatCard label="Reputación" value={`${profile.reputationScore}/100`} />
         <StatCard
-          label="Mercado Pago"
-          value={profile.mercadoPagoConnected ? '✓' : '—'}
+          label="Salud cuenta"
+          value={healthScore != null ? `${healthScore}%` : '—'}
         />
       </View>
 
@@ -84,6 +87,9 @@ export default function SellerDashboardScreen() {
       </Pressable>
       <Pressable style={styles.navBtn} onPress={() => router.push('/vendedor/servicios')}>
         <Text style={styles.navBtnText}>Servicios OrigenRed →</Text>
+      </Pressable>
+      <Pressable style={styles.navBtn} onPress={() => router.push('/vendedor/aprendizaje')}>
+        <Text style={styles.navBtnText}>Centro de aprendizaje →</Text>
       </Pressable>
     </ScrollView>
   );

@@ -351,6 +351,30 @@ export const marketplaceApi = createApi({
     >({
       query: () => '/seller/services',
     }),
+    getSellerDashboard: builder.query<
+      {
+        health: {
+          score: number;
+          label: string;
+          factors: Array<{ key: string; label: string; ok: boolean; weight: number }>;
+        };
+        recommendations: Array<{
+          id: string;
+          message: string;
+          href?: string;
+          priority: string;
+        }>;
+        learningArticles: Array<{
+          id: string;
+          title: string;
+          summary: string;
+          tips: string[];
+        }>;
+      },
+      void
+    >({
+      query: () => '/seller/dashboard',
+    }),
     createServiceLead: builder.mutation<
       { lead: unknown },
       { serviceType: string; message?: string }
@@ -540,6 +564,7 @@ export const {
   useGetAdminReturnRequestsQuery,
   useUpdateAdminReturnMutation,
   useGetSellerServicesQuery,
+  useGetSellerDashboardQuery,
   useCreateServiceLeadMutation,
   useGetAdminServiceLeadsQuery,
   useUpdateAdminServiceLeadMutation,

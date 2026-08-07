@@ -35,6 +35,7 @@ import { OrderChatPage } from './pages/marketplace/OrderChatPage';
 import { SellerOrdersPage } from './pages/marketplace/seller/SellerOrdersPage';
 import { SellerReturnsPage } from './pages/marketplace/seller/SellerReturnsPage';
 import { SellerServicesPage } from './pages/marketplace/seller/SellerServicesPage';
+import { SellerLearningPage } from './pages/marketplace/seller/SellerLearningPage';
 import { SellerMercadoPagoPage } from './pages/marketplace/seller/SellerMercadoPagoPage';
 import { SellerMercadoPagoCallbackPage } from './pages/marketplace/seller/SellerMercadoPagoCallbackPage';
 import { MarketplacePaymentReturnPage } from './pages/marketplace/MarketplacePaymentReturnPage';
@@ -164,6 +165,7 @@ const router = createBrowserRouter([
       { path: 'ventas', element: <SellerOrdersPage /> },
       { path: 'devoluciones', element: <SellerReturnsPage /> },
       { path: 'servicios', element: <SellerServicesPage /> },
+      { path: 'aprendizaje', element: <SellerLearningPage /> },
       { path: 'mercadopago', element: <SellerMercadoPagoPage /> },
       { path: 'mercadopago/callback', element: <SellerMercadoPagoCallbackPage /> },
     ],
