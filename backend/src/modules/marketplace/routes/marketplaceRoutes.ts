@@ -46,6 +46,13 @@ import {
   updateSellerOrderController,
   getSitemapController,
   getMarketplaceAnalyticsController,
+  createReturnRequestController,
+  getMyReturnRequestsController,
+  getReturnForOrderController,
+  listSellerReturnRequestsController,
+  updateSellerReturnController,
+  listAdminReturnRequestsController,
+  updateAdminReturnController,
 } from '../controllers/marketplaceController';
 
 const router = Router();
@@ -99,6 +106,12 @@ router.post('/favorites/:listingId', authenticate, toggleFavoriteController);
 router.get('/favorites', authenticate, getMyFavoritesController);
 router.post('/reports', authenticate, createReportController);
 
+router.post('/returns', authenticate, createReturnRequestController);
+router.get('/returns', authenticate, getMyReturnRequestsController);
+router.get('/returns/order/:orderNumber', authenticate, getReturnForOrderController);
+router.get('/seller/returns', authenticate, requireSeller, listSellerReturnRequestsController);
+router.patch('/seller/returns/:id', authenticate, requireSeller, updateSellerReturnController);
+
 // Admin marketplace
 router.get('/admin/sellers', authenticate, requireAdmin, listSellersAdminController);
 router.get('/admin/sellers/pending', authenticate, requireAdmin, listPendingSellersController);
@@ -111,5 +124,7 @@ router.post('/admin/search/reindex', authenticate, requireAdmin, reindexListings
 router.get('/admin/reports', authenticate, requireAdmin, listReportsController);
 router.patch('/admin/reports/:id', authenticate, requireAdmin, resolveReportController);
 router.get('/admin/analytics', authenticate, requireAdmin, getMarketplaceAnalyticsController);
+router.get('/admin/returns', authenticate, requireAdmin, listAdminReturnRequestsController);
+router.patch('/admin/returns/:id', authenticate, requireAdmin, updateAdminReturnController);
 
 export default router;

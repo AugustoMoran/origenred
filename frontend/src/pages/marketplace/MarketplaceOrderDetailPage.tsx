@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { SEO } from '../../components/ecommerce/SEO';
 import { MarketplaceReportModal } from '../../components/marketplace/MarketplaceReportModal';
-import { useGetOrderQuery } from '../../services/marketplaceApi';
+import { ReturnRequestModal } from '../../components/marketplace/ReturnRequestModal';
+import { useGetOrderQuery, useGetReturnForOrderQuery } from '../../services/marketplaceApi';
 
 const STATUS_LABELS: Record<string, string> = {
   pending_payment: 'Pendiente de pago',
@@ -26,7 +27,9 @@ const format = (n: number) =>
 export const MarketplaceOrderDetailPage: React.FC = () => {
   const { orderNumber = '' } = useParams();
   const { data: order, isLoading, error } = useGetOrderQuery(orderNumber, { skip: !orderNumber });
+  const { data: returnData, refetch: refetchReturn } = useGetReturnForOrderQuery(orderNumber, { skip: !orderNumber });
   const [showReport, setShowReport] = useState(false);
+  const [showReturn, setShowReturn] = useState(false);
 
   if (isLoading) {
     return <p className="text-center py-16 text-slate-400">Cargando pedido...</p>;
@@ -44,6 +47,10 @@ export const MarketplaceOrderDetailPage: React.FC = () => {
   }
 
   const o = order as any;
+  const existingReturn = returnData?.request as any;
+  const canRequestReturn =
+    ['paid', 'processing', 'shipped', 'delivered'].includes(o.status) && !existingReturn;
+  const returnReasonLabels = returnData?.reasonLabels || {};
 
   return (
     <div className="max-w-2xl mx-auto space-y-6 animate-fade-in">
@@ -122,7 +129,32 @@ export const MarketplaceOrderDetailPage: React.FC = () => {
         >
           Denunciar pedido
         </button>
+
+        {canRequestReturn && (
+          <button
+            type="button"
+            onClick={() => setShowReturn(true)}
+            className="text-sm text-or-blue font-medium hover:underline"
+          >
+            Solicitar devolución
+          </button>
+        )}
+
+        {existingReturn && (
+          <div className="text-sm text-slate-600 border-t border-slate-100 pt-3">
+            <p className="font-medium text-or-navy">Devolución: {existingReturn.status}</p>
+            <p>{returnReasonLabels[existingReturn.reason] || existingReturn.reason}</p>
+          </div>
+        )}
       </div>
+
+      {showReturn && (
+        <ReturnRequestModal
+          orderNumber={o.orderNumber}
+          onClose={() => setShowReturn(false)}
+          onSuccess={() => refetchReturn()}
+        />
+      )}
 
       {showReport && (
         <MarketplaceReportModal

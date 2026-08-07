@@ -258,6 +258,7 @@ export const marketplaceApi = createApi({
           activeSellers: number;
           pendingSellers: number;
           pendingReports: number;
+          pendingReturns?: number;
           activeListings: number;
         };
         ordersByStatus: Array<{ status: string; count: number }>;
@@ -283,6 +284,60 @@ export const marketplaceApi = createApi({
         url: `/admin/reports/${id}`,
         method: 'PATCH',
         body: { status, resolution },
+      }),
+    }),
+
+    createReturnRequest: builder.mutation<
+      { message: string },
+      { orderNumber: string; reason: string; description?: string }
+    >({
+      query: (body) => ({ url: '/returns', method: 'POST', body }),
+    }),
+    getMyReturnRequests: builder.query<
+      { requests: unknown[]; reasonLabels: Record<string, string> },
+      void
+    >({
+      query: () => '/returns',
+    }),
+    getReturnForOrder: builder.query<
+      { request: unknown | null; reasonLabels: Record<string, string> },
+      string
+    >({
+      query: (orderNumber) => `/returns/order/${orderNumber}`,
+    }),
+    getSellerReturnRequests: builder.query<
+      { requests: unknown[]; reasonLabels: Record<string, string> },
+      void
+    >({
+      query: () => '/seller/returns',
+    }),
+    updateSellerReturn: builder.mutation<
+      unknown,
+      { id: string; status: 'approved' | 'rejected'; sellerNote?: string }
+    >({
+      query: ({ id, status, sellerNote }) => ({
+        url: `/seller/returns/${id}`,
+        method: 'PATCH',
+        body: { status, sellerNote },
+      }),
+    }),
+    getAdminReturnRequests: builder.query<
+      { requests: unknown[]; reasonLabels: Record<string, string> },
+      { status?: string } | void
+    >({
+      query: (params) => ({
+        url: '/admin/returns',
+        params: params?.status ? { status: params.status } : undefined,
+      }),
+    }),
+    updateAdminReturn: builder.mutation<
+      unknown,
+      { id: string; status: 'approved' | 'rejected' | 'refunded'; adminNote?: string }
+    >({
+      query: ({ id, status, adminNote }) => ({
+        url: `/admin/returns/${id}`,
+        method: 'PATCH',
+        body: { status, adminNote },
       }),
     }),
 
@@ -441,6 +496,13 @@ export const {
   useUpdateSellerStatusMutation,
   useGetReportsQuery,
   useResolveReportMutation,
+  useCreateReturnRequestMutation,
+  useGetMyReturnRequestsQuery,
+  useGetReturnForOrderQuery,
+  useGetSellerReturnRequestsQuery,
+  useUpdateSellerReturnMutation,
+  useGetAdminReturnRequestsQuery,
+  useUpdateAdminReturnMutation,
   usePreviewCheckoutMutation,
   useCreateCheckoutMutation,
   useGetOrderQuery,

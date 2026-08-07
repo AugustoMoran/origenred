@@ -38,6 +38,9 @@ export const MyOrdersPage: React.FC = () => {
         <Link to="/cuenta/mensajes" className="text-sm text-or-blue font-medium hover:underline">
           Mensajes
         </Link>
+        <Link to="/cuenta/devoluciones" className="text-sm text-or-blue font-medium hover:underline">
+          Devoluciones
+        </Link>
       </div>
 
       {isLoading ? (

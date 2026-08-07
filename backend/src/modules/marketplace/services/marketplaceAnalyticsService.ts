@@ -2,6 +2,7 @@ import { MarketplaceOrder } from '../models/MarketplaceOrder';
 import { SellerProfile } from '../models/SellerProfile';
 import { Listing } from '../models/Listing';
 import { Report } from '../models/Report';
+import { ReturnRequest } from '../models/ReturnRequest';
 
 export const getMarketplaceAdminAnalytics = async () => {
   const [
@@ -80,8 +81,9 @@ export const getMarketplaceAdminAnalytics = async () => {
       commissionTotal: stats.commissionTotal,
       activeSellers: await SellerProfile.countDocuments({ status: 'approved' }),
       pendingSellers,
-      pendingReports,
-      activeListings: await Listing.countDocuments({ status: 'active' }),
+    pendingReports,
+    pendingReturns: await ReturnRequest.countDocuments({ status: { $in: ['pending', 'approved'] } }),
+    activeListings: await Listing.countDocuments({ status: 'active' }),
     },
     ordersByStatus: ordersByStatus.map((r) => ({ status: r._id, count: r.count })),
     topSellers: topSellers.map((s) => ({

@@ -351,6 +351,27 @@ export const cancelOrder = (orderNumber: string, token: string) =>
     { method: 'POST', token, mobile: false }
   );
 
+export const createReturnRequest = (
+  body: { orderNumber: string; reason: string; description?: string },
+  token: string
+) =>
+  apiFetch<{ message: string; request: { status: string; orderNumber: string } }>(
+    '/marketplace/returns',
+    { method: 'POST', body: JSON.stringify(body), token, mobile: false }
+  );
+
+export const getReturnForOrder = (orderNumber: string, token: string) =>
+  apiFetch<{ request: { status: string; reason: string } | null; reasonLabels: Record<string, string> }>(
+    `/marketplace/returns/order/${orderNumber}`,
+    { token, mobile: false }
+  );
+
+export const getMyReturnRequests = (token: string) =>
+  apiFetch<{ requests: Array<{ _id: string; orderNumber: string; status: string; reason: string }> }>(
+    '/marketplace/returns',
+    { token, mobile: false }
+  );
+
 export const registerSeller = (body: {
   name: string;
   email: string;

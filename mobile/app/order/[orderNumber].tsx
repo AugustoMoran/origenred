@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Link, useLocalSearchParams } from 'expo-router';
-import { getOrder, MarketplaceOrder } from '../../src/api/marketplace';
+import { getOrder, createReturnRequest, getReturnForOrder, MarketplaceOrder } from '../../src/api/marketplace';
 import { useAuth } from '../../src/context/AuthContext';
 import { ReportModal } from '../../src/components/ReportModal';
 import { colors } from '../../src/theme/colors';
@@ -32,6 +32,7 @@ export default function OrderDetailScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [showReport, setShowReport] = useState(false);
+  const [returnStatus, setReturnStatus] = useState<string | null>(null);
 
   useEffect(() => {
     if (!orderNumber) return;
@@ -39,6 +40,13 @@ export default function OrderDetailScreen() {
       .then(setOrder)
       .catch((e) => setError(e.message || 'Pedido no encontrado'))
       .finally(() => setLoading(false));
+  }, [orderNumber, accessToken]);
+
+  useEffect(() => {
+    if (!orderNumber || !accessToken) return;
+    getReturnForOrder(orderNumber, accessToken)
+      .then((data) => setReturnStatus(data.request?.status ?? null))
+      .catch(() => setReturnStatus(null));
   }, [orderNumber, accessToken]);
 
   if (loading) {
@@ -128,6 +136,54 @@ export default function OrderDetailScreen() {
             <Text style={styles.reportLink}>Denunciar este pedido</Text>
           </Pressable>
         )}
+
+        {user &&
+          ['paid', 'processing', 'shipped', 'delivered'].includes(order.status) &&
+          !returnStatus && (
+            <Pressable
+              onPress={() => {
+                Alert.alert('Solicitar devolución', 'Seleccioná el motivo', [
+                  {
+                    text: 'Producto defectuoso',
+                    onPress: async () => {
+                      try {
+                        await createReturnRequest(
+                          { orderNumber: order.orderNumber, reason: 'producto_defectuoso' },
+                          accessToken!
+                        );
+                        setReturnStatus('pending');
+                        Alert.alert('Listo', 'Solicitud de devolución enviada');
+                      } catch (e: any) {
+                        Alert.alert('Error', e.message || 'No se pudo enviar');
+                      }
+                    },
+                  },
+                  {
+                    text: 'No recibí el pedido',
+                    onPress: async () => {
+                      try {
+                        await createReturnRequest(
+                          { orderNumber: order.orderNumber, reason: 'no_recibido' },
+                          accessToken!
+                        );
+                        setReturnStatus('pending');
+                        Alert.alert('Listo', 'Solicitud enviada');
+                      } catch (e: any) {
+                        Alert.alert('Error', e.message || 'No se pudo enviar');
+                      }
+                    },
+                  },
+                  { text: 'Cancelar', style: 'cancel' },
+                ]);
+              }}
+            >
+              <Text style={styles.returnLink}>Solicitar devolución</Text>
+            </Pressable>
+          )}
+
+        {returnStatus && (
+          <Text style={styles.textMuted}>Devolución: {returnStatus}</Text>
+        )}
       </View>
 
       <ReportModal
@@ -175,4 +231,5 @@ const styles = StyleSheet.create({
   itemRow: { flexDirection: 'row', justifyContent: 'space-between', gap: 8 },
   chatLink: { fontSize: 14, color: colors.red, fontWeight: '600' },
   reportLink: { fontSize: 13, color: colors.slate400, marginTop: 4 },
+  returnLink: { fontSize: 13, color: colors.blue, fontWeight: '600', marginTop: 8 },
 });

@@ -53,6 +53,16 @@ import { updateSellerOrderFulfillment, canViewFullOrder, toPublicOrderSummary, c
 import { buildMarketplaceSitemap } from '../services/sitemapService';
 import { getMarketplaceAdminAnalytics } from '../services/marketplaceAnalyticsService';
 import {
+  createReturnRequest,
+  listBuyerReturnRequests,
+  listSellerReturnRequests,
+  listAdminReturnRequests,
+  updateSellerReturnRequest,
+  updateAdminReturnRequest,
+  getReturnRequestForOrder,
+  RETURN_REASON_LABELS,
+} from '../services/returnRequestService';
+import {
   listAdminCategories,
   createMarketplaceCategory,
   updateMarketplaceCategory,
@@ -595,6 +605,82 @@ export async function updateSellerOrderController(req: Request, res: Response) {
       }
     );
     res.json(order);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
+// ── Devoluciones ───────────────────────────────────────────
+
+export async function createReturnRequestController(req: Request, res: Response) {
+  try {
+    const buyerId = String((req as any).user._id);
+    const request = await createReturnRequest({
+      buyerId,
+      orderNumber: String(req.body.orderNumber || ''),
+      reason: String(req.body.reason || ''),
+      description: req.body.description ? String(req.body.description) : undefined,
+    });
+    res.status(201).json({ message: 'Solicitud de devolución enviada', request });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
+export async function getMyReturnRequestsController(req: Request, res: Response) {
+  const buyerId = String((req as any).user._id);
+  const requests = await listBuyerReturnRequests(buyerId);
+  res.json({ requests, reasonLabels: RETURN_REASON_LABELS });
+}
+
+export async function getReturnForOrderController(req: Request, res: Response) {
+  const buyerId = String((req as any).user._id);
+  const request = await getReturnRequestForOrder(buyerId, String(req.params.orderNumber));
+  res.json({ request, reasonLabels: RETURN_REASON_LABELS });
+}
+
+export async function listSellerReturnRequestsController(req: Request, res: Response) {
+  const userId = String((req as any).user._id);
+  const requests = await listSellerReturnRequests(userId);
+  res.json({ requests, reasonLabels: RETURN_REASON_LABELS });
+}
+
+export async function updateSellerReturnController(req: Request, res: Response) {
+  try {
+    const userId = String((req as any).user._id);
+    const status = req.body.status === 'approved' ? 'approved' : 'rejected';
+    const request = await updateSellerReturnRequest(
+      String(req.params.id),
+      userId,
+      status,
+      req.body.sellerNote ? String(req.body.sellerNote) : undefined
+    );
+    res.json(request);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
+export async function listAdminReturnRequestsController(req: Request, res: Response) {
+  const status = req.query.status as string | undefined;
+  const requests = await listAdminReturnRequests(status);
+  res.json({ requests, reasonLabels: RETURN_REASON_LABELS });
+}
+
+export async function updateAdminReturnController(req: Request, res: Response) {
+  try {
+    const adminId = String((req as any).user._id);
+    const status = String(req.body.status || 'refunded');
+    if (!['approved', 'rejected', 'refunded'].includes(status)) {
+      return res.status(400).json({ message: 'Estado inválido' });
+    }
+    const request = await updateAdminReturnRequest(
+      String(req.params.id),
+      adminId,
+      status as 'approved' | 'rejected' | 'refunded',
+      req.body.adminNote ? String(req.body.adminNote) : undefined
+    );
+    res.json(request);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

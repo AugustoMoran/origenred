@@ -21,6 +21,7 @@ import { SellerStorefrontPage } from './pages/marketplace/SellerStorefrontPage';
 import { MarketplaceOrderDetailPage } from './pages/marketplace/MarketplaceOrderDetailPage';
 import { MyChatsPage } from './pages/marketplace/MyChatsPage';
 import { NotificationsPage } from './pages/marketplace/NotificationsPage';
+import { MyReturnsPage } from './pages/marketplace/MyReturnsPage';
 import { MyOrdersPage } from './pages/marketplace/MyOrdersPage';
 import { SellerRegisterPage } from './pages/marketplace/SellerRegisterPage';
 import { SellerLayout, SellerProtectedRoute } from './components/marketplace/SellerLayout';
@@ -32,6 +33,7 @@ import { MarketplaceOrderConfirmation } from './pages/marketplace/MarketplaceOrd
 import { MyFavoritesPage } from './pages/marketplace/MyFavoritesPage';
 import { OrderChatPage } from './pages/marketplace/OrderChatPage';
 import { SellerOrdersPage } from './pages/marketplace/seller/SellerOrdersPage';
+import { SellerReturnsPage } from './pages/marketplace/seller/SellerReturnsPage';
 import { SellerMercadoPagoPage } from './pages/marketplace/seller/SellerMercadoPagoPage';
 import { SellerMercadoPagoCallbackPage } from './pages/marketplace/seller/SellerMercadoPagoCallbackPage';
 import { MarketplacePaymentReturnPage } from './pages/marketplace/MarketplacePaymentReturnPage';
@@ -61,6 +63,9 @@ const AdminMarketplaceCategories = React.lazy(() =>
 );
 const AdminMarketplaceAnalytics = React.lazy(() =>
   import('./pages/admin').then((m) => ({ default: m.AdminMarketplaceAnalytics }))
+);
+const AdminMarketplaceReturns = React.lazy(() =>
+  import('./pages/admin').then((m) => ({ default: m.AdminMarketplaceReturns }))
 );
 
 const LazyAdmin = ({ children }: { children: React.ReactNode }) => (
@@ -97,6 +102,7 @@ const router = createBrowserRouter([
       { path: '/cuenta/favoritos', element: <StoreAuthRoute><MyFavoritesPage /></StoreAuthRoute> },
       { path: '/cuenta/mensajes', element: <StoreAuthRoute><MyChatsPage /></StoreAuthRoute> },
       { path: '/cuenta/notificaciones', element: <StoreAuthRoute><NotificationsPage /></StoreAuthRoute> },
+      { path: '/cuenta/devoluciones', element: <StoreAuthRoute><MyReturnsPage /></StoreAuthRoute> },
       { path: '/cuenta/chat/:orderNumber', element: <StoreAuthRoute><OrderChatPage /></StoreAuthRoute> },
       { path: '/products', element: <StoreProducts /> },
       { path: '/products/:id', element: <StoreProductDetail /> },
@@ -152,6 +158,7 @@ const router = createBrowserRouter([
       { path: 'productos/nuevo', element: <SellerListingFormPage /> },
       { path: 'productos/:id/editar', element: <SellerListingFormPage /> },
       { path: 'ventas', element: <SellerOrdersPage /> },
+      { path: 'devoluciones', element: <SellerReturnsPage /> },
       { path: 'mercadopago', element: <SellerMercadoPagoPage /> },
       { path: 'mercadopago/callback', element: <SellerMercadoPagoCallbackPage /> },
     ],
@@ -171,6 +178,10 @@ const router = createBrowserRouter([
   {
     path: '/dashboard/admin/marketplace-analytics',
     element: <DashboardLayout adminOnly><LazyAdmin><AdminMarketplaceAnalytics /></LazyAdmin></DashboardLayout>,
+  },
+  {
+    path: '/dashboard/admin/marketplace-returns',
+    element: <DashboardLayout adminOnly><LazyAdmin><AdminMarketplaceReturns /></LazyAdmin></DashboardLayout>,
   },
   {
     path: '/dashboard/admin/supplier-ledger',

@@ -7,3 +7,4 @@ export { AdminMarketplaceSellers } from './AdminMarketplaceSellers';
 export { AdminMarketplaceReports } from './AdminMarketplaceReports';
 export { AdminMarketplaceCategories } from './AdminMarketplaceCategories';
 export { AdminMarketplaceAnalytics } from './AdminMarketplaceAnalytics';
+export { AdminMarketplaceReturns } from './AdminMarketplaceReturns';
