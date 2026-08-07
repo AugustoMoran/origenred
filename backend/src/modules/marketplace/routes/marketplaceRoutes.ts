@@ -45,6 +45,7 @@ import {
   getSellerOrdersController,
   updateSellerOrderController,
   getSitemapController,
+  getMarketplaceAnalyticsController,
 } from '../controllers/marketplaceController';
 
 const router = Router();
@@ -109,5 +110,6 @@ router.delete('/admin/categories/:id', authenticate, requireAdmin, deleteCategor
 router.post('/admin/search/reindex', authenticate, requireAdmin, reindexListingsController);
 router.get('/admin/reports', authenticate, requireAdmin, listReportsController);
 router.patch('/admin/reports/:id', authenticate, requireAdmin, resolveReportController);
+router.get('/admin/analytics', authenticate, requireAdmin, getMarketplaceAnalyticsController);
 
 export default router;

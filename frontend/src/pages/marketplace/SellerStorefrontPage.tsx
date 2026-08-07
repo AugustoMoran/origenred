@@ -1,11 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { SEO } from '../../components/ecommerce/SEO';
 import { MarketplaceListingCard } from '../../components/marketplace/MarketplaceListingCard';
+import { MarketplaceReportModal } from '../../components/marketplace/MarketplaceReportModal';
 import { useGetSellerBySlugQuery, useGetListingsQuery } from '../../services/marketplaceApi';
 
 export const SellerStorefrontPage: React.FC = () => {
   const { slug = '' } = useParams();
+  const [showReport, setShowReport] = useState(false);
   const { data: seller, isLoading, error } = useGetSellerBySlugQuery(slug, { skip: !slug });
   const { data: listingsData, isLoading: listingsLoading } = useGetListingsQuery(
     seller?._id ? { seller: seller._id, limit: 24 } : undefined,
@@ -46,8 +48,24 @@ export const SellerStorefrontPage: React.FC = () => {
           <span>Reputación {seller.reputationScore}/100</span>
           <span>{seller.totalSales} ventas</span>
           <span>{seller.listingCount} publicaciones</span>
+          <button
+            type="button"
+            onClick={() => setShowReport(true)}
+            className="text-slate-400 hover:text-or-red"
+          >
+            Denunciar vendedor
+          </button>
         </div>
       </section>
+
+      {showReport && (
+        <MarketplaceReportModal
+          title="Denunciar vendedor"
+          subtitle={seller.businessName}
+          sellerId={seller._id}
+          onClose={() => setShowReport(false)}
+        />
+      )}
 
       <section>
         <h2 className="text-xl font-bold text-or-navy mb-4">Productos</h2>

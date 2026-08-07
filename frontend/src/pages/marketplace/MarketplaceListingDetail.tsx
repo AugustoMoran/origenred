@@ -5,7 +5,7 @@ import { SEO } from '../../components/ecommerce/SEO';
 import { useGetListingBySlugQuery, useToggleFavoriteMutation } from '../../services/marketplaceApi';
 import { RootState } from '../../store';
 import { addMarketplaceItem, setMarketplaceCartOpen } from '../../store/marketplaceCartSlice';
-import { ReportListingModal } from '../../components/marketplace/ReportListingModal';
+import { ReportListingModal } from '../../components/marketplace/MarketplaceReportModal';
 
 const formatPrice = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);

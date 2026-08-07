@@ -388,7 +388,7 @@ export const fulfillMarketplaceOrder = async (orderId: string, paymentId?: strin
         String(sellerProfile.user),
         'Nueva venta en OrigenRed',
         `Pedido ${order.orderNumber} — ${formatCurrency(order.total)}`,
-        { type: 'order', orderNumber: order.orderNumber }
+        { type: 'order', orderNumber: order.orderNumber, role: 'seller' }
       );
     }
   }

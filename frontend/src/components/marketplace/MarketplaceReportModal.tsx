@@ -10,12 +10,22 @@ const REASONS = [
 ];
 
 interface Props {
-  listingId: string;
-  listingTitle: string;
+  title: string;
+  subtitle?: string;
+  listingId?: string;
+  sellerId?: string;
+  orderId?: string;
   onClose: () => void;
 }
 
-export const ReportListingModal: React.FC<Props> = ({ listingId, listingTitle, onClose }) => {
+export const MarketplaceReportModal: React.FC<Props> = ({
+  title,
+  subtitle,
+  listingId,
+  sellerId,
+  orderId,
+  onClose,
+}) => {
   const [reason, setReason] = useState('');
   const [description, setDescription] = useState('');
   const [createReport, { isLoading, isSuccess, error }] = useCreateReportMutation();
@@ -23,7 +33,7 @@ export const ReportListingModal: React.FC<Props> = ({ listingId, listingTitle, o
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!reason) return;
-    await createReport({ listingId, reason, description });
+    await createReport({ listingId, sellerId, orderId, reason, description });
   };
 
   if (isSuccess) {
@@ -32,7 +42,7 @@ export const ReportListingModal: React.FC<Props> = ({ listingId, listingTitle, o
         <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center space-y-4">
           <div className="text-4xl">✅</div>
           <p className="font-semibold text-or-navy">Denuncia enviada</p>
-          <p className="text-sm text-slate-500">Un administrador revisará este producto.</p>
+          <p className="text-sm text-slate-500">Un administrador revisará tu reporte.</p>
           <button onClick={onClose} className="w-full py-2.5 bg-or-navy text-white rounded-xl text-sm font-semibold">
             Cerrar
           </button>
@@ -45,10 +55,10 @@ export const ReportListingModal: React.FC<Props> = ({ listingId, listingTitle, o
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
       <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4">
         <div className="flex items-center justify-between">
-          <h2 className="font-bold text-or-navy">Denunciar producto</h2>
+          <h2 className="font-bold text-or-navy">{title}</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-or-navy">✕</button>
         </div>
-        <p className="text-sm text-slate-500 truncate">{listingTitle}</p>
+        {subtitle && <p className="text-sm text-slate-500 truncate">{subtitle}</p>}
 
         {(error as any)?.data?.message && (
           <div className="bg-red-50 text-red-600 text-sm px-3 py-2 rounded-xl">{(error as any).data.message}</div>
@@ -91,3 +101,17 @@ export const ReportListingModal: React.FC<Props> = ({ listingId, listingTitle, o
     </div>
   );
 };
+
+/** @deprecated use MarketplaceReportModal */
+export const ReportListingModal: React.FC<{
+  listingId: string;
+  listingTitle: string;
+  onClose: () => void;
+}> = ({ listingId, listingTitle, onClose }) => (
+  <MarketplaceReportModal
+    title="Denunciar producto"
+    subtitle={listingTitle}
+    listingId={listingId}
+    onClose={onClose}
+  />
+);

@@ -20,6 +20,7 @@ import { BuyerRegisterPage } from './pages/marketplace/BuyerRegisterPage';
 import { SellerStorefrontPage } from './pages/marketplace/SellerStorefrontPage';
 import { MarketplaceOrderDetailPage } from './pages/marketplace/MarketplaceOrderDetailPage';
 import { MyChatsPage } from './pages/marketplace/MyChatsPage';
+import { NotificationsPage } from './pages/marketplace/NotificationsPage';
 import { MyOrdersPage } from './pages/marketplace/MyOrdersPage';
 import { SellerRegisterPage } from './pages/marketplace/SellerRegisterPage';
 import { SellerLayout, SellerProtectedRoute } from './components/marketplace/SellerLayout';
@@ -58,6 +59,9 @@ const AdminMarketplaceReports = React.lazy(() =>
 const AdminMarketplaceCategories = React.lazy(() =>
   import('./pages/admin').then((m) => ({ default: m.AdminMarketplaceCategories }))
 );
+const AdminMarketplaceAnalytics = React.lazy(() =>
+  import('./pages/admin').then((m) => ({ default: m.AdminMarketplaceAnalytics }))
+);
 
 const LazyAdmin = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={<div className="p-8 text-slate-500 text-sm">Cargando...</div>}>{children}</Suspense>
@@ -92,6 +96,7 @@ const router = createBrowserRouter([
       { path: '/cuenta/compras/:orderNumber', element: <StoreAuthRoute><MarketplaceOrderDetailPage /></StoreAuthRoute> },
       { path: '/cuenta/favoritos', element: <StoreAuthRoute><MyFavoritesPage /></StoreAuthRoute> },
       { path: '/cuenta/mensajes', element: <StoreAuthRoute><MyChatsPage /></StoreAuthRoute> },
+      { path: '/cuenta/notificaciones', element: <StoreAuthRoute><NotificationsPage /></StoreAuthRoute> },
       { path: '/cuenta/chat/:orderNumber', element: <StoreAuthRoute><OrderChatPage /></StoreAuthRoute> },
       { path: '/products', element: <StoreProducts /> },
       { path: '/products/:id', element: <StoreProductDetail /> },
@@ -162,6 +167,10 @@ const router = createBrowserRouter([
   {
     path: '/dashboard/admin/marketplace-categories',
     element: <DashboardLayout adminOnly><LazyAdmin><AdminMarketplaceCategories /></LazyAdmin></DashboardLayout>,
+  },
+  {
+    path: '/dashboard/admin/marketplace-analytics',
+    element: <DashboardLayout adminOnly><LazyAdmin><AdminMarketplaceAnalytics /></LazyAdmin></DashboardLayout>,
   },
   {
     path: '/dashboard/admin/supplier-ledger',

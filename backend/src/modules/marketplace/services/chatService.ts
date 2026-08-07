@@ -182,8 +182,3 @@ export const getUnreadChatCount = async (userId: string) => {
     readAt: { $exists: false },
   });
 };
-
-export const getUserNotificationSummary = async (userId: string) => {
-  const unreadChatMessages = await getUnreadChatCount(userId);
-  return { unreadChatMessages };
-};

@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { SEO } from '../../components/ecommerce/SEO';
+import { MarketplaceReportModal } from '../../components/marketplace/MarketplaceReportModal';
 import { useGetOrderQuery } from '../../services/marketplaceApi';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -25,6 +26,7 @@ const format = (n: number) =>
 export const MarketplaceOrderDetailPage: React.FC = () => {
   const { orderNumber = '' } = useParams();
   const { data: order, isLoading, error } = useGetOrderQuery(orderNumber, { skip: !orderNumber });
+  const [showReport, setShowReport] = useState(false);
 
   if (isLoading) {
     return <p className="text-center py-16 text-slate-400">Cargando pedido...</p>;
@@ -112,7 +114,24 @@ export const MarketplaceOrderDetailPage: React.FC = () => {
             💬 Chatear con el vendedor
           </Link>
         )}
+
+        <button
+          type="button"
+          onClick={() => setShowReport(true)}
+          className="text-sm text-slate-500 hover:text-or-navy"
+        >
+          Denunciar pedido
+        </button>
       </div>
+
+      {showReport && (
+        <MarketplaceReportModal
+          title="Denunciar pedido"
+          subtitle={o.orderNumber}
+          orderId={o._id}
+          onClose={() => setShowReport(false)}
+        />
+      )}
     </div>
   );
 };

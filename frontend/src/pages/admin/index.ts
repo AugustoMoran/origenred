@@ -6,3 +6,4 @@ export { AdminSupplierLedger } from './AdminSupplierLedger';
 export { AdminMarketplaceSellers } from './AdminMarketplaceSellers';
 export { AdminMarketplaceReports } from './AdminMarketplaceReports';
 export { AdminMarketplaceCategories } from './AdminMarketplaceCategories';
+export { AdminMarketplaceAnalytics } from './AdminMarketplaceAnalytics';

@@ -39,8 +39,8 @@ import {
   sendMessage,
   getConversationByOrder,
   getSellerOrders,
-  getUserNotificationSummary,
 } from '../services/chatService';
+import { getUserNotificationSummary } from '../services/marketplaceNotificationService';
 import {
   createReport,
   listPendingReports,
@@ -51,6 +51,7 @@ import {
 import { reindexAllListings } from '../services/meilisearchService';
 import { updateSellerOrderFulfillment, canViewFullOrder, toPublicOrderSummary, cancelMarketplaceOrder } from '../services/marketplaceOrderService';
 import { buildMarketplaceSitemap } from '../services/sitemapService';
+import { getMarketplaceAdminAnalytics } from '../services/marketplaceAnalyticsService';
 import {
   listAdminCategories,
   createMarketplaceCategory,
@@ -379,10 +380,22 @@ export async function reindexListingsController(_req: Request, res: Response) {
 
 export async function listReportsController(req: Request, res: Response) {
   const status = req.query.status as string | undefined;
-  const reports = status
-    ? await listAllReports(status)
-    : await listPendingReports();
+  const reports =
+    status && status !== 'all'
+      ? await listAllReports(status)
+      : status === 'all'
+        ? await listAllReports()
+        : await listPendingReports();
   res.json({ reports, reasonLabels: REPORT_REASON_LABELS });
+}
+
+export async function getMarketplaceAnalyticsController(_req: Request, res: Response) {
+  try {
+    const analytics = await getMarketplaceAdminAnalytics();
+    res.json(analytics);
+  } catch (error: any) {
+    res.status(500).json({ message: error.message || 'Error al cargar analytics' });
+  }
 }
 
 export async function resolveReportController(req: Request, res: Response) {

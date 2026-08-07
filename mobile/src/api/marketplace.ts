@@ -319,6 +319,21 @@ export const createReport = (
     mobile: false,
   });
 
+export const getNotificationSummary = (token: string) =>
+  apiFetch<{
+    unreadChatMessages: number;
+    totalUnread?: number;
+    items?: Array<{
+      id: string;
+      type: string;
+      title: string;
+      body: string;
+      href: string;
+      at: string;
+      unread?: boolean;
+    }>;
+  }>('/marketplace/notifications/summary', { token, mobile: true });
+
 export const getMyConversations = (token: string) =>
   apiFetch<
     Array<{

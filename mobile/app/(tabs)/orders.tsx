@@ -12,6 +12,7 @@ const STATUS_LABELS: Record<string, string> = {
   shipped: 'Enviado',
   delivered: 'Entregado',
   cancelled: 'Cancelado',
+  refunded: 'Reembolsado',
 };
 
 const format = (n: number) =>

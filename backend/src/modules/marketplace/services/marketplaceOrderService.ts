@@ -105,6 +105,7 @@ export const updateSellerOrderFulfillment = async (
       type: 'order',
       orderNumber: order.orderNumber,
       status: next,
+      role: 'buyer',
     });
   }
 

@@ -11,7 +11,7 @@ const STATUS_LABELS: Record<string, string> = {
 export const AdminMarketplaceReports: React.FC = () => {
   const [tab, setTab] = useState<'pending' | 'all'>('pending');
   const { data, isLoading, refetch } = useGetReportsQuery(
-    tab === 'pending' ? { status: 'pending' } : undefined
+    tab === 'pending' ? { status: 'pending' } : { status: 'all' }
   );
   const [resolveReport, { isLoading: resolving }] = useResolveReportMutation();
 

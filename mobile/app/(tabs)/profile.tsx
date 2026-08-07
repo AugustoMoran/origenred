@@ -1,11 +1,20 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Link } from 'expo-router';
+import { getNotificationSummary } from '../../src/api/marketplace';
 import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
 
 export default function ProfileScreen() {
-  const { user, signOut, loading } = useAuth();
+  const { user, signOut, loading, accessToken } = useAuth();
+  const [unread, setUnread] = useState(0);
+
+  useEffect(() => {
+    if (!accessToken) return;
+    getNotificationSummary(accessToken)
+      .then((s) => setUnread(s.totalUnread ?? s.unreadChatMessages ?? 0))
+      .catch(() => setUnread(0));
+  }, [accessToken]);
 
   if (loading) {
     return (
@@ -69,7 +78,9 @@ export default function ProfileScreen() {
 
       <Link href="/chats" asChild>
         <Pressable style={styles.menuBtn}>
-          <Text style={styles.menuBtnText}>Mis mensajes</Text>
+          <Text style={styles.menuBtnText}>
+            Mis mensajes{unread > 0 ? ` (${unread > 9 ? '9+' : unread})` : ''}
+          </Text>
         </Pressable>
       </Link>
 

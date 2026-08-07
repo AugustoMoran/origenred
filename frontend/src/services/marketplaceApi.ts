@@ -230,8 +230,44 @@ export const marketplaceApi = createApi({
     deleteAdminMarketplaceCategory: builder.mutation<{ deleted: boolean }, string>({
       query: (id) => ({ url: `/admin/categories/${id}`, method: 'DELETE' }),
     }),
-    getNotificationSummary: builder.query<{ unreadChatMessages: number }, void>({
+    getNotificationSummary: builder.query<
+      {
+        unreadChatMessages: number;
+        totalUnread?: number;
+        items?: Array<{
+          id: string;
+          type: 'chat' | 'order';
+          title: string;
+          body: string;
+          href: string;
+          at: string;
+          unread?: boolean;
+          orderNumber?: string;
+        }>;
+      },
+      void
+    >({
       query: () => '/notifications/summary',
+    }),
+    getMarketplaceAnalytics: builder.query<
+      {
+        totals: {
+          orderCount: number;
+          gmv: number;
+          commissionTotal: number;
+          activeSellers: number;
+          pendingSellers: number;
+          pendingReports: number;
+          activeListings: number;
+        };
+        ordersByStatus: Array<{ status: string; count: number }>;
+        topSellers: Array<{ sellerId: string; sellerName: string; revenue: number; units: number }>;
+        listingsByStatus: Array<{ status: string; count: number }>;
+        gmvLast30Days: Array<{ date: string; total: number; count: number }>;
+      },
+      void
+    >({
+      query: () => '/admin/analytics',
     }),
     getReports: builder.query<
       { reports: unknown[]; reasonLabels: Record<string, string> },
@@ -399,6 +435,7 @@ export const {
   useUpdateAdminMarketplaceCategoryMutation,
   useDeleteAdminMarketplaceCategoryMutation,
   useGetNotificationSummaryQuery,
+  useGetMarketplaceAnalyticsQuery,
   useGetPendingSellersQuery,
   useGetAllSellersQuery,
   useUpdateSellerStatusMutation,

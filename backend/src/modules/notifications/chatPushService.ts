@@ -9,7 +9,8 @@ export const notifyChatRecipient = async (
 ) => {
   const conversation = await Conversation.findById(conversationId)
     .populate('seller', 'user businessName')
-    .populate('buyer', 'name email');
+    .populate('buyer', 'name email')
+    .populate('order', 'orderNumber');
 
   if (!conversation) return;
 
@@ -28,7 +29,11 @@ export const notifyChatRecipient = async (
     tokens,
     'Nuevo mensaje en OrigenRed',
     messagePreview.slice(0, 120),
-    { type: 'chat', conversationId }
+    {
+      type: 'chat',
+      conversationId,
+      orderNumber: (conversation.order as any)?.orderNumber,
+    }
   );
 };
 
