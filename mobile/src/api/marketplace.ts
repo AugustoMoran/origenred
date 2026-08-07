@@ -138,6 +138,11 @@ export interface SellerProfile {
   businessName: string;
   slug: string;
   status: string;
+  description?: string;
+  province?: string;
+  city?: string;
+  postalCode?: string;
+  phone?: string;
   listingCount: number;
   totalSales: number;
   reputationScore: number;
