@@ -156,6 +156,122 @@ export const previewCheckout = async (input: {
   };
 };
 
+type PreviewSlice = {
+  items: Awaited<ReturnType<typeof resolveCheckoutItems>>;
+  subtotal: number;
+  shippingTotal: number;
+  commissionTotal: number;
+  commissionPercent: number;
+  total: number;
+  bySeller: Array<{
+    sellerId: string;
+    sellerName: string;
+    items: Awaited<ReturnType<typeof resolveCheckoutItems>>;
+    productSubtotal: number;
+    shippingCost: number;
+    shippingQuotes?: unknown[];
+    freeShipping?: boolean;
+  }>;
+};
+
+const createOneCheckoutOrder = async (
+  slice: PreviewSlice,
+  input: {
+    buyerId?: string;
+    guestEmail?: string;
+    guestName?: string;
+    guestPhone?: string;
+    shippingAddress: {
+      fullName: string;
+      phone: string;
+      street: string;
+      city: string;
+      province: string;
+      postalCode: string;
+      notes?: string;
+    };
+    shippingMethod?: 'delivery' | 'pickup';
+    returnClient?: 'mobile' | 'web';
+  },
+  sellerProfile?: { mercadoPagoUserId?: string; mercadoPagoConnected?: boolean; businessName?: string } | null
+) => {
+  const group = slice.bySeller[0];
+
+  const order = await MarketplaceOrder.create({
+    orderNumber: generateOrderNumber(),
+    buyer: input.buyerId || undefined,
+    guestEmail: input.guestEmail,
+    guestName: input.guestName || input.shippingAddress.fullName,
+    guestPhone: input.guestPhone || input.shippingAddress.phone,
+    items: slice.items.map((i) => ({
+      listing: i.listing,
+      seller: i.seller,
+      title: i.title,
+      slug: i.slug,
+      price: i.price,
+      quantity: i.quantity,
+      imageUrl: i.imageUrl,
+      subtotal: i.subtotal,
+    })),
+    subtotal: slice.subtotal,
+    shippingTotal: slice.shippingTotal,
+    commissionTotal: slice.commissionTotal,
+    commissionPercent: slice.commissionPercent,
+    total: slice.total,
+    status: 'pending_payment',
+    shippingAddress: input.shippingAddress,
+    shippingMethod: input.shippingMethod || 'delivery',
+    shippingBySeller: [
+      {
+        seller: group.sellerId,
+        sellerName: group.sellerName,
+        shippingCost: group.shippingCost,
+      },
+    ],
+    chatEnabled: false,
+  });
+
+  let payment = null;
+  if (isMercadoPagoEnabled()) {
+    if (isMercadoPagoConnectEnabled() && sellerProfile) {
+      if (!sellerProfile.mercadoPagoConnected || !sellerProfile.mercadoPagoUserId) {
+        throw new Error(
+          `El vendedor "${sellerProfile.businessName || group.sellerName}" debe vincular Mercado Pago antes de vender`
+        );
+      }
+    }
+
+    const mpItems = slice.items.map((i) => ({
+      title: i.title,
+      quantity: i.quantity,
+      unit_price: i.price,
+    }));
+    if (slice.shippingTotal > 0) {
+      mpItems.push({
+        title: 'Envío',
+        quantity: 1,
+        unit_price: slice.shippingTotal,
+      });
+    }
+
+    payment = await createMarketplacePreference({
+      orderId: String(order._id),
+      orderNumber: order.orderNumber,
+      items: mpItems,
+      payerEmail: input.guestEmail,
+      marketplaceFee: slice.commissionTotal,
+      collectorId: sellerProfile?.mercadoPagoUserId,
+      returnClient: input.returnClient,
+    });
+
+    order.mercadoPagoPreferenceId = payment.id;
+    order.paymentStatus = 'pending';
+    await order.save();
+  }
+
+  return { order, payment };
+};
+
 export const createMarketplaceCheckout = async (input: {
   items: CheckoutItemInput[];
   buyerId?: string;
@@ -178,98 +294,50 @@ export const createMarketplaceCheckout = async (input: {
     throw new Error('Se requiere iniciar sesión o proporcionar un email');
   }
 
-  const preview = await previewCheckout({
+  const fullPreview = await previewCheckout({
     items: input.items,
     postalCode: input.shippingAddress.postalCode,
     province: input.shippingAddress.province,
     shippingMethod: input.shippingMethod,
   });
 
-  const order = await MarketplaceOrder.create({
-    orderNumber: generateOrderNumber(),
-    buyer: input.buyerId || undefined,
-    guestEmail: input.guestEmail,
-    guestName: input.guestName || input.shippingAddress.fullName,
-    guestPhone: input.guestPhone || input.shippingAddress.phone,
-    items: preview.items.map((i) => ({
-      listing: i.listing,
-      seller: i.seller,
-      title: i.title,
-      slug: i.slug,
-      price: i.price,
-      quantity: i.quantity,
-      imageUrl: i.imageUrl,
-      subtotal: i.subtotal,
-    })),
-    subtotal: preview.subtotal,
-    shippingTotal: preview.shippingTotal,
-    commissionTotal: preview.commissionTotal,
-    commissionPercent: preview.commissionPercent,
-    total: preview.total,
-    status: 'pending_payment',
-    shippingAddress: input.shippingAddress,
-    shippingMethod: input.shippingMethod || 'delivery',
-    shippingBySeller: preview.bySeller.map((g) => ({
-      seller: g.sellerId,
-      sellerName: g.sellerName,
-      shippingCost: g.shippingCost,
-    })),
-    chatEnabled: false,
-  });
+  const sellerIds = [...new Set(fullPreview.items.map((i) => i.seller))];
+  const orderResults: Array<{ order: typeof MarketplaceOrder.prototype; payment: any }> = [];
 
-  let payment = null;
-  if (isMercadoPagoEnabled()) {
-    const sellerIds = [...new Set(preview.items.map((i) => i.seller))];
-    let collectorId: string | undefined;
-
-    if (isMercadoPagoConnectEnabled()) {
-      const sellerProfiles = await SellerProfile.find({ _id: { $in: sellerIds } });
-      for (const sp of sellerProfiles) {
-        if (!sp.mercadoPagoConnected || !sp.mercadoPagoUserId) {
-          throw new Error(
-            `El vendedor "${sp.businessName}" debe vincular Mercado Pago antes de vender`
-          );
-        }
-      }
-      if (sellerIds.length === 1) {
-        const single = sellerProfiles.find((sp) => String(sp._id) === sellerIds[0]);
-        collectorId = single?.mercadoPagoUserId;
-      }
+  if (sellerIds.length <= 1) {
+    const sellerProfile = sellerIds[0] ? await SellerProfile.findById(sellerIds[0]) : null;
+    const single = await createOneCheckoutOrder(fullPreview as PreviewSlice, input, sellerProfile);
+    orderResults.push(single);
+  } else {
+    for (const group of fullPreview.bySeller) {
+      const groupItems = fullPreview.items.filter((i) => i.seller === group.sellerId);
+      const subtotal = group.productSubtotal;
+      const shippingTotal = group.shippingCost;
+      const commissionTotal = round2(subtotal * (fullPreview.commissionPercent / 100));
+      const total = round2(subtotal + shippingTotal);
+      const slice: PreviewSlice = {
+        items: groupItems,
+        subtotal,
+        shippingTotal,
+        commissionTotal,
+        commissionPercent: fullPreview.commissionPercent,
+        total,
+        bySeller: [group],
+      };
+      const sellerProfile = await SellerProfile.findById(group.sellerId);
+      orderResults.push(await createOneCheckoutOrder(slice, input, sellerProfile));
     }
-
-    const mpItems = [
-      ...preview.items.map((i) => ({
-        title: i.title,
-        quantity: i.quantity,
-        unit_price: i.price,
-      })),
-    ];
-    if (preview.shippingTotal > 0) {
-      mpItems.push({
-        title: 'Envío',
-        quantity: 1,
-        unit_price: preview.shippingTotal,
-      });
-    }
-
-    payment = await createMarketplacePreference({
-      orderId: String(order._id),
-      orderNumber: order.orderNumber,
-      items: mpItems,
-      payerEmail: input.guestEmail,
-      marketplaceFee: preview.commissionTotal,
-      collectorId,
-      returnClient: input.returnClient,
-    });
-
-    order.mercadoPagoPreferenceId = payment.id;
-    order.paymentStatus = 'pending';
-    await order.save();
   }
 
+  const orders = orderResults.map((r) => r.order);
+  const payments = orderResults.map((r) => r.payment).filter(Boolean);
+
   return {
-    order,
-    payment,
+    order: orders[0],
+    payment: payments[0] || null,
+    orders,
+    payments,
+    multiOrder: orders.length > 1,
     mercadoPagoEnabled: isMercadoPagoEnabled(),
   };
 };

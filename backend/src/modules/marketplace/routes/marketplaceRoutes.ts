@@ -37,6 +37,7 @@ import {
   marketplaceWebhookController,
   getOrderController,
   getMyOrdersController,
+  cancelOrderController,
   getMyConversationsController,
   getConversationMessagesController,
   sendMessageController,
@@ -73,6 +74,7 @@ router.post('/seller/mercadopago/callback', authenticate, requireSeller, mercado
 // Checkout — /orders debe ir ANTES de /orders/:orderNumber en el router de express... 
 // actually my orders list uses GET /orders and single uses GET /orders/:orderNumber
 router.get('/orders', authenticate, getMyOrdersController);
+router.post('/orders/:orderNumber/cancel', authenticate, cancelOrderController);
 router.get('/orders/:orderNumber', optionalAuthenticate, getOrderController);
 
 // Chat post-compra

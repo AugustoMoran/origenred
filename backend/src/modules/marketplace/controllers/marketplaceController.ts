@@ -23,6 +23,7 @@ import { Favorite } from '../models/Favorite';
 import { getMercadoPagoPublicConfig, getMercadoPagoConnectUrl } from '../services/marketplacePaymentService';
 import { quoteShippingByPostalCode, getEnvioPackConfig } from '../services/marketplaceShippingService';
 import { processUploadedImages, marketplaceUpload } from '../middleware/marketplaceUpload';
+import { deleteFromR2 } from '../services/r2StorageService';
 import { features } from '../../../config/features';
 import {
   previewCheckout,
@@ -48,7 +49,7 @@ import {
   REPORT_REASON_LABELS,
 } from '../services/reportService';
 import { reindexAllListings } from '../services/meilisearchService';
-import { updateSellerOrderFulfillment, canViewFullOrder, toPublicOrderSummary } from '../services/marketplaceOrderService';
+import { updateSellerOrderFulfillment, canViewFullOrder, toPublicOrderSummary, cancelMarketplaceOrder } from '../services/marketplaceOrderService';
 import { buildMarketplaceSitemap } from '../services/sitemapService';
 import {
   listAdminCategories,
@@ -201,6 +202,15 @@ export async function updateListingController(req: Request, res: Response) {
     if (!existing) return res.status(404).json({ message: 'Publicación no encontrada' });
 
     let images = parsed.images ?? [...existing.images];
+    if (parsed.removeImageKeys?.length) {
+      const toRemove = new Set(parsed.removeImageKeys);
+      for (const img of existing.images) {
+        if (img.key && toRemove.has(img.key)) {
+          await deleteFromR2(img.key).catch(() => undefined);
+        }
+      }
+      images = images.filter((img) => !img.key || !toRemove.has(img.key));
+    }
     if (req.files && Array.isArray(req.files) && req.files.length) {
       const uploaded = await processUploadedImages(req.files as Express.Multer.File[]);
       images = [...images, ...uploaded.map((u) => ({ url: u.url, key: u.key }))];
@@ -451,6 +461,9 @@ export async function createCheckoutController(req: Request, res: Response) {
     res.status(201).json({
       order: result.order,
       payment: result.payment,
+      orders: result.orders,
+      payments: result.payments,
+      multiOrder: result.multiOrder,
       mercadoPagoEnabled: result.mercadoPagoEnabled,
     });
   } catch (error: any) {
@@ -483,6 +496,16 @@ export async function getMyOrdersController(req: Request, res: Response) {
   const userId = String((req as any).user._id);
   const orders = await getBuyerOrders(userId);
   res.json(orders);
+}
+
+export async function cancelOrderController(req: Request, res: Response) {
+  try {
+    const userId = String((req as any).user._id);
+    const order = await cancelMarketplaceOrder(userId, String(req.params.orderNumber));
+    res.json(order);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
 }
 
 // ── Chat post-compra ───────────────────────────────────────

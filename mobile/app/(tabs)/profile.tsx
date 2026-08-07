@@ -61,6 +61,18 @@ export default function ProfileScreen() {
         </Pressable>
       </Link>
 
+      <Link href="/orders" asChild>
+        <Pressable style={styles.menuBtn}>
+          <Text style={styles.menuBtnText}>Mis compras</Text>
+        </Pressable>
+      </Link>
+
+      <Link href="/chats" asChild>
+        <Pressable style={styles.menuBtn}>
+          <Text style={styles.menuBtnText}>Mis mensajes</Text>
+        </Pressable>
+      </Link>
+
       {!user.roles?.includes('vendedor_marketplace') && (
         <Link href="/vender" asChild>
           <Pressable style={styles.menuBtn}>

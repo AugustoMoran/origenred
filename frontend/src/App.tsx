@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { createBrowserRouter, RouterProvider, Navigate } from 'react-router-dom';
 import { Layout } from './components/Layout';
 import { EcommerceLayout } from './components/ecommerce/EcommerceLayout';
@@ -7,7 +7,6 @@ import {
   LoginRedirectRoute,
   MaintenanceGuard,
 } from './components/ecommerce/RouteGuards';
-import { AdminUsers, AdminCatalog, AdminProfitReport, AdminSupplierLedger, AdminStoreSettings, AdminMarketplaceSellers, AdminMarketplaceReports, AdminMarketplaceCategories } from './pages/admin';
 import { Dashboard } from './pages/Dashboard';
 import { Inventory } from './pages/Inventory';
 import { POS } from './pages/POS';
@@ -20,6 +19,7 @@ import { MarketplaceListingDetail } from './pages/marketplace/MarketplaceListing
 import { BuyerRegisterPage } from './pages/marketplace/BuyerRegisterPage';
 import { SellerStorefrontPage } from './pages/marketplace/SellerStorefrontPage';
 import { MarketplaceOrderDetailPage } from './pages/marketplace/MarketplaceOrderDetailPage';
+import { MyChatsPage } from './pages/marketplace/MyChatsPage';
 import { MyOrdersPage } from './pages/marketplace/MyOrdersPage';
 import { SellerRegisterPage } from './pages/marketplace/SellerRegisterPage';
 import { SellerLayout, SellerProtectedRoute } from './components/marketplace/SellerLayout';
@@ -43,6 +43,25 @@ import { StoreWhatsAppSent } from './pages/store/StoreWhatsAppSent';
 import { StoreRegister } from './pages/store/StoreRegister';
 import { Maintenance } from './pages/store/Maintenance';
 import { NotFoundPage } from './pages/NotFoundPage';
+
+const AdminUsers = React.lazy(() => import('./pages/admin').then((m) => ({ default: m.AdminUsers })));
+const AdminCatalog = React.lazy(() => import('./pages/admin').then((m) => ({ default: m.AdminCatalog })));
+const AdminProfitReport = React.lazy(() => import('./pages/admin').then((m) => ({ default: m.AdminProfitReport })));
+const AdminSupplierLedger = React.lazy(() => import('./pages/admin').then((m) => ({ default: m.AdminSupplierLedger })));
+const AdminStoreSettings = React.lazy(() => import('./pages/admin').then((m) => ({ default: m.AdminStoreSettings })));
+const AdminMarketplaceSellers = React.lazy(() =>
+  import('./pages/admin').then((m) => ({ default: m.AdminMarketplaceSellers }))
+);
+const AdminMarketplaceReports = React.lazy(() =>
+  import('./pages/admin').then((m) => ({ default: m.AdminMarketplaceReports }))
+);
+const AdminMarketplaceCategories = React.lazy(() =>
+  import('./pages/admin').then((m) => ({ default: m.AdminMarketplaceCategories }))
+);
+
+const LazyAdmin = ({ children }: { children: React.ReactNode }) => (
+  <Suspense fallback={<div className="p-8 text-slate-500 text-sm">Cargando...</div>}>{children}</Suspense>
+);
 
 const DashboardLayout = ({ children, adminOnly = false }: { children: React.ReactNode; adminOnly?: boolean }) => (
   <DashboardProtectedRoute adminOnly={adminOnly}>
@@ -72,6 +91,7 @@ const router = createBrowserRouter([
       { path: '/cuenta/compras', element: <StoreAuthRoute><MyOrdersPage /></StoreAuthRoute> },
       { path: '/cuenta/compras/:orderNumber', element: <StoreAuthRoute><MarketplaceOrderDetailPage /></StoreAuthRoute> },
       { path: '/cuenta/favoritos', element: <StoreAuthRoute><MyFavoritesPage /></StoreAuthRoute> },
+      { path: '/cuenta/mensajes', element: <StoreAuthRoute><MyChatsPage /></StoreAuthRoute> },
       { path: '/cuenta/chat/:orderNumber', element: <StoreAuthRoute><OrderChatPage /></StoreAuthRoute> },
       { path: '/products', element: <StoreProducts /> },
       { path: '/products/:id', element: <StoreProductDetail /> },
@@ -100,19 +120,19 @@ const router = createBrowserRouter([
   },
   {
     path: '/dashboard/admin/users',
-    element: <DashboardLayout adminOnly><AdminUsers /></DashboardLayout>,
+    element: <DashboardLayout adminOnly><LazyAdmin><AdminUsers /></LazyAdmin></DashboardLayout>,
   },
   {
     path: '/dashboard/admin/catalog',
-    element: <DashboardLayout adminOnly><AdminCatalog /></DashboardLayout>,
+    element: <DashboardLayout adminOnly><LazyAdmin><AdminCatalog /></LazyAdmin></DashboardLayout>,
   },
   {
     path: '/dashboard/admin/store-settings',
-    element: <DashboardLayout adminOnly><AdminStoreSettings /></DashboardLayout>,
+    element: <DashboardLayout adminOnly><LazyAdmin><AdminStoreSettings /></LazyAdmin></DashboardLayout>,
   },
   {
     path: '/dashboard/admin/profit-report',
-    element: <DashboardLayout adminOnly><AdminProfitReport /></DashboardLayout>,
+    element: <DashboardLayout adminOnly><LazyAdmin><AdminProfitReport /></LazyAdmin></DashboardLayout>,
   },
   {
     path: '/vendedor',
@@ -133,19 +153,19 @@ const router = createBrowserRouter([
   },
   {
     path: '/dashboard/admin/marketplace-reports',
-    element: <DashboardLayout adminOnly><AdminMarketplaceReports /></DashboardLayout>,
+    element: <DashboardLayout adminOnly><LazyAdmin><AdminMarketplaceReports /></LazyAdmin></DashboardLayout>,
   },
   {
     path: '/dashboard/admin/marketplace-sellers',
-    element: <DashboardLayout adminOnly><AdminMarketplaceSellers /></DashboardLayout>,
+    element: <DashboardLayout adminOnly><LazyAdmin><AdminMarketplaceSellers /></LazyAdmin></DashboardLayout>,
   },
   {
     path: '/dashboard/admin/marketplace-categories',
-    element: <DashboardLayout adminOnly><AdminMarketplaceCategories /></DashboardLayout>,
+    element: <DashboardLayout adminOnly><LazyAdmin><AdminMarketplaceCategories /></LazyAdmin></DashboardLayout>,
   },
   {
     path: '/dashboard/admin/supplier-ledger',
-    element: <DashboardLayout adminOnly><AdminSupplierLedger /></DashboardLayout>,
+    element: <DashboardLayout adminOnly><LazyAdmin><AdminSupplierLedger /></LazyAdmin></DashboardLayout>,
   },
   // Legacy redirects
   { path: '/pos', element: <Navigate to="/dashboard/pos" replace /> },

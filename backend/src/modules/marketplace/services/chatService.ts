@@ -1,4 +1,4 @@
-import { Conversation, Message } from '../models/Chat';
+import { Conversation, Message, IConversation } from '../models/Chat';
 import { MarketplaceOrder } from '../models/MarketplaceOrder';
 import { SellerProfile } from '../models/SellerProfile';
 
@@ -8,10 +8,12 @@ export const getBuyerConversations = async (buyerId: string) => {
     .populate('seller', 'businessName slug')
     .sort({ lastMessageAt: -1, updatedAt: -1 });
 
-  return conversations.filter((c) => {
+  const filtered = conversations.filter((c) => {
     const order = c.order as any;
     return order?.chatEnabled;
   });
+
+  return attachUnreadCounts(filtered, buyerId);
 };
 
 export const getSellerConversations = async (userId: string) => {
@@ -23,10 +25,25 @@ export const getSellerConversations = async (userId: string) => {
     .populate('buyer', 'name email')
     .sort({ lastMessageAt: -1, updatedAt: -1 });
 
-  return conversations.filter((c) => {
+  const filtered = conversations.filter((c) => {
     const order = c.order as any;
     return order?.chatEnabled;
   });
+
+  return attachUnreadCounts(filtered, userId);
+};
+
+const attachUnreadCounts = async (conversations: IConversation[], userId: string) => {
+  const result = [];
+  for (const c of conversations) {
+    const unreadCount = await Message.countDocuments({
+      conversation: c._id,
+      sender: { $ne: userId },
+      readAt: { $exists: false },
+    });
+    result.push({ ...c.toObject(), unreadCount });
+  }
+  return result;
 };
 
 export const getConversationMessages = async (conversationId: string, userId: string) => {

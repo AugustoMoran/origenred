@@ -280,8 +280,11 @@ export const marketplaceApi = createApi({
     }),
     createCheckout: builder.mutation<
       {
-        order: { orderNumber: string; total: number; status: string; chatEnabled: boolean; items: unknown[] };
+        order: { orderNumber: string; total: number; status: string };
         payment: { id: string; initPoint: string; sandboxInitPoint?: string } | null;
+        orders?: Array<{ orderNumber: string; total: number; status: string }>;
+        payments?: Array<{ initPoint: string; sandboxInitPoint?: string }>;
+        multiOrder?: boolean;
         mercadoPagoEnabled: boolean;
       },
       {
@@ -318,6 +321,13 @@ export const marketplaceApi = createApi({
     getMyOrders: builder.query<unknown[], void>({
       query: () => '/orders',
       providesTags: ['Orders'],
+    }),
+    cancelOrder: builder.mutation<{ orderNumber: string; status: string }, string>({
+      query: (orderNumber) => ({
+        url: `/orders/${orderNumber}/cancel`,
+        method: 'POST',
+      }),
+      invalidatesTags: ['Orders'],
     }),
 
     // Chat
@@ -398,6 +408,7 @@ export const {
   useCreateCheckoutMutation,
   useGetOrderQuery,
   useGetMyOrdersQuery,
+  useCancelOrderMutation,
   useGetMyConversationsQuery,
   useGetConversationMessagesQuery,
   useGetChatByOrderQuery,

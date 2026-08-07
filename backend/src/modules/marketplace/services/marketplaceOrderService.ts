@@ -167,3 +167,15 @@ export const toPublicOrderSummary = (order: IMarketplaceOrder) => ({
     subtotal: item.subtotal,
   })),
 });
+
+export const cancelMarketplaceOrder = async (userId: string, orderNumber: string) => {
+  const order = await MarketplaceOrder.findOne({ orderNumber, buyer: userId });
+  if (!order) throw new Error('Pedido no encontrado');
+  if (order.status !== 'pending_payment') {
+    throw new Error('Solo podés cancelar pedidos que aún no fueron pagados');
+  }
+  order.status = 'cancelled';
+  order.paymentStatus = 'cancelled';
+  await order.save();
+  return order;
+};

@@ -13,10 +13,11 @@ import {
 } from 'react-native';
 import * as Linking from 'expo-linking';
 import { router } from 'expo-router';
-import { createCheckout, previewCheckout } from '../../src/api/marketplace';
-import { useAuth } from '../../src/context/AuthContext';
-import { useCart } from '../../src/context/CartContext';
-import { colors } from '../../src/theme/colors';
+import { createCheckout, previewCheckout } from '../src/api/marketplace';
+import { useAuth } from '../src/context/AuthContext';
+import { useCart } from '../src/context/CartContext';
+import type { CartItem } from '../src/context/CartContext';
+import { colors } from '../src/theme/colors';
 
 const format = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
@@ -24,6 +25,7 @@ const format = (n: number) =>
 export default function CheckoutScreen() {
   const { items, clearCart, subtotal } = useCart();
   const { user, accessToken } = useAuth();
+  const token = accessToken ?? undefined;
 
   const [form, setForm] = useState({
     fullName: user?.name || '',
@@ -51,10 +53,10 @@ export default function CheckoutScreen() {
       if (shippingMethod === 'pickup' && items.length > 0) {
         previewCheckout(
           {
-            items: items.map((i) => ({ listingId: i.listingId, quantity: i.quantity })),
+            items: items.map((i: CartItem) => ({ listingId: i.listingId, quantity: i.quantity })),
             shippingMethod: 'pickup',
           },
-          accessToken
+          token
         )
           .then(setPreview)
           .catch(() => setPreview(null));
@@ -63,16 +65,16 @@ export default function CheckoutScreen() {
     }
     previewCheckout(
       {
-        items: items.map((i) => ({ listingId: i.listingId, quantity: i.quantity })),
+        items: items.map((i: CartItem) => ({ listingId: i.listingId, quantity: i.quantity })),
         postalCode: form.postalCode,
         province: form.province,
         shippingMethod,
       },
-      accessToken
+      token
     )
       .then(setPreview)
       .catch(() => setPreview(null));
-  }, [form.postalCode, form.province, shippingMethod, items, accessToken]);
+  }, [form.postalCode, form.province, shippingMethod, items, token]);
 
   const handleSubmit = async () => {
     setError('');
@@ -95,7 +97,7 @@ export default function CheckoutScreen() {
     try {
       const result = await createCheckout(
         {
-          items: items.map((i) => ({ listingId: i.listingId, quantity: i.quantity })),
+          items: items.map((i: CartItem) => ({ listingId: i.listingId, quantity: i.quantity })),
           guestEmail: user ? undefined : form.email,
           guestName: form.fullName,
           guestPhone: form.phone,
@@ -110,10 +112,23 @@ export default function CheckoutScreen() {
           },
           shippingMethod,
         },
-        accessToken
+        token
       );
 
       clearCart();
+
+      if (result.multiOrder && result.payments?.length) {
+        for (const p of result.payments) {
+          const url = p.initPoint || p.sandboxInitPoint;
+          if (url) await Linking.openURL(url);
+        }
+        Alert.alert(
+          'Pedidos creados',
+          `Se crearon ${result.orders?.length || 1} pedidos. Completa cada pago en Mercado Pago.`,
+          [{ text: 'Mis compras', onPress: () => router.replace('/orders') }]
+        );
+        return;
+      }
 
       const payUrl = result.payment?.initPoint || result.payment?.sandboxInitPoint;
       if (payUrl) {

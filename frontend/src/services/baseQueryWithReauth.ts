@@ -4,6 +4,21 @@ import { logout, setUser, AuthUser } from '../store/authSlice';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
+let csrfToken: string | null = null;
+
+export async function fetchCsrfToken(): Promise<void> {
+  if (import.meta.env.VITE_ENABLE_CSRF !== 'true') return;
+  try {
+    const res = await fetch(`${API_BASE_URL}/csrf-token`, { credentials: 'include' });
+    if (res.ok) {
+      const data = await res.json();
+      csrfToken = data.csrfToken;
+    }
+  } catch {
+    csrfToken = null;
+  }
+}
+
 const refreshBaseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
   credentials: 'include',
@@ -66,6 +81,10 @@ export function createReauthBaseQuery(
   const baseQuery = fetchBaseQuery({
     baseUrl,
     credentials: 'include',
+    prepareHeaders: (headers) => {
+      if (csrfToken) headers.set('X-CSRF-Token', csrfToken);
+      return headers;
+    },
   });
 
   return async (args, api, extraOptions) => {
@@ -98,11 +117,15 @@ export async function bootstrapAuthSession(store: {
   };
 
   const hasSession = await fetchCurrentUser(api);
-  if (hasSession) return;
+  if (hasSession) {
+    await fetchCsrfToken();
+    return;
+  }
 
   const refreshed = await tryRefreshSession(api, { logoutOnFail: false });
   if (refreshed) {
     await fetchCurrentUser(api);
+    await fetchCsrfToken();
     return;
   }
 

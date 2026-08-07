@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { SEO } from '../../components/ecommerce/SEO';
-import { useGetMyOrdersQuery } from '../../services/marketplaceApi';
+import { useCancelOrderMutation, useGetMyOrdersQuery } from '../../services/marketplaceApi';
 
 const STATUS_LABELS: Record<string, string> = {
   pending_payment: 'Pendiente de pago',
@@ -17,12 +17,28 @@ const format = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 
 export const MyOrdersPage: React.FC = () => {
-  const { data: orders = [], isLoading } = useGetMyOrdersQuery();
+  const { data: orders = [], isLoading, refetch } = useGetMyOrdersQuery();
+  const [cancelOrder, { isLoading: cancelling }] = useCancelOrderMutation();
+
+  const handleCancel = async (orderNumber: string) => {
+    if (!confirm('¿Cancelar este pedido?')) return;
+    try {
+      await cancelOrder(orderNumber).unwrap();
+      refetch();
+    } catch (err: any) {
+      alert(err?.data?.message || 'No se pudo cancelar');
+    }
+  };
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
       <SEO title="Mis compras — OrigenRed" />
-      <h1 className="text-2xl font-bold text-or-navy">Mis compras</h1>
+      <div className="flex items-center justify-between gap-4">
+        <h1 className="text-2xl font-bold text-or-navy">Mis compras</h1>
+        <Link to="/cuenta/mensajes" className="text-sm text-or-blue font-medium hover:underline">
+          Mensajes
+        </Link>
+      </div>
 
       {isLoading ? (
         <p className="text-slate-400">Cargando...</p>
@@ -67,7 +83,7 @@ export const MyOrdersPage: React.FC = () => {
                 </p>
               )}
 
-              <div className="flex gap-3 pt-1">
+              <div className="flex flex-wrap gap-3 pt-1">
                 <Link
                   to={`/cuenta/compras/${order.orderNumber}`}
                   className="text-xs text-or-blue hover:underline"
@@ -79,8 +95,18 @@ export const MyOrdersPage: React.FC = () => {
                     to={`/cuenta/chat/${order.orderNumber}`}
                     className="text-xs text-or-red font-medium hover:underline"
                   >
-                    💬 Chatear con vendedor
+                    Chatear con vendedor
                   </Link>
+                )}
+                {order.status === 'pending_payment' && (
+                  <button
+                    type="button"
+                    disabled={cancelling}
+                    onClick={() => handleCancel(order.orderNumber)}
+                    className="text-xs text-slate-500 hover:text-red-600 disabled:opacity-50"
+                  >
+                    Cancelar pedido
+                  </button>
                 )}
               </div>
             </div>

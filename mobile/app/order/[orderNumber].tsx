@@ -35,7 +35,7 @@ export default function OrderDetailScreen() {
 
   useEffect(() => {
     if (!orderNumber) return;
-    getOrder(orderNumber, accessToken)
+    getOrder(orderNumber, accessToken ?? undefined)
       .then(setOrder)
       .catch((e) => setError(e.message || 'Pedido no encontrado'))
       .finally(() => setLoading(false));

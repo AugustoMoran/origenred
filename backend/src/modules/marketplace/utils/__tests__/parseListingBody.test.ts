@@ -24,4 +24,12 @@ describe('parseListingBody', () => {
 
     expect(parsed.images).toEqual([{ url: 'https://example.com/a.jpg' }]);
   });
+
+  it('parses removeImageKeys JSON string', () => {
+    const parsed = parseListingBody({
+      removeImageKeys: JSON.stringify(['img-1', 'img-2']),
+    });
+
+    expect(parsed.removeImageKeys).toEqual(['img-1', 'img-2']);
+  });
 });

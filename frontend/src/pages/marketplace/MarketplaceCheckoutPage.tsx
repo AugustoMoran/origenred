@@ -42,6 +42,13 @@ export const MarketplaceCheckoutPage: React.FC = () => {
 
   useEffect(() => {
     if (items.length === 0) return;
+    if (shippingMethod === 'pickup') {
+      previewCheckout({
+        items: items.map((i) => ({ listingId: i.listingId, quantity: i.quantity })),
+        shippingMethod: 'pickup',
+      });
+      return;
+    }
     if (form.postalCode.length >= 4) {
       previewCheckout({
         items: items.map((i) => ({ listingId: i.listingId, quantity: i.quantity })),
@@ -66,14 +73,30 @@ export const MarketplaceCheckoutPage: React.FC = () => {
 
   const handleSubmit = async () => {
     setError('');
-    if (!form.fullName || !form.phone || !form.street || !form.city || !form.province || !form.postalCode) {
-      setError('Completá todos los datos de envío');
+    if (!form.fullName || !form.phone) {
+      setError('Completá nombre y teléfono');
       return;
+    }
+    if (shippingMethod === 'delivery') {
+      if (!form.street || !form.city || !form.province || !form.postalCode) {
+        setError('Completá todos los datos de envío');
+        return;
+      }
     }
     if (!user && !form.email) {
       setError('Ingresá tu email o iniciá sesión');
       return;
     }
+
+    const shippingAddress = {
+      fullName: form.fullName,
+      phone: form.phone,
+      street: shippingMethod === 'pickup' ? 'Retiro en persona' : form.street,
+      city: shippingMethod === 'pickup' ? form.city || 'Retiro' : form.city,
+      province: shippingMethod === 'pickup' ? form.province || '—' : form.province,
+      postalCode: shippingMethod === 'pickup' ? form.postalCode || '0000' : form.postalCode,
+      notes: form.notes,
+    };
 
     try {
       const result = await createCheckout({
@@ -81,19 +104,23 @@ export const MarketplaceCheckoutPage: React.FC = () => {
         guestEmail: user ? undefined : form.email,
         guestName: form.fullName,
         guestPhone: form.phone,
-        shippingAddress: {
-          fullName: form.fullName,
-          phone: form.phone,
-          street: form.street,
-          city: form.city,
-          province: form.province,
-          postalCode: form.postalCode,
-          notes: form.notes,
-        },
+        shippingAddress,
         shippingMethod,
       }).unwrap();
 
       dispatch(clearMarketplaceCart());
+
+      if (result.multiOrder && result.payments?.length) {
+        result.payments.forEach((p) => {
+          const url = p.initPoint || p.sandboxInitPoint;
+          if (url) window.open(url, '_blank', 'noopener');
+        });
+        alert(
+          `Se crearon ${result.orders?.length || 1} pedidos (uno por vendedor). Completa cada pago en Mercado Pago.`
+        );
+        navigate('/cuenta/compras');
+        return;
+      }
 
       if (result.payment?.initPoint) {
         window.location.href = result.payment.initPoint;
@@ -118,7 +145,9 @@ export const MarketplaceCheckoutPage: React.FC = () => {
         <div className="lg:col-span-3 space-y-6">
           {step === 'address' && (
             <div className="bg-white rounded-2xl border border-slate-100 p-6 space-y-4">
-              <h2 className="font-semibold text-or-navy">Datos de envío</h2>
+              <h2 className="font-semibold text-or-navy">
+                {shippingMethod === 'pickup' ? 'Datos de contacto' : 'Datos de envío'}
+              </h2>
               {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl">{error}</div>}
 
               {!user && (
@@ -128,10 +157,20 @@ export const MarketplaceCheckoutPage: React.FC = () => {
               <div className="grid sm:grid-cols-2 gap-4">
                 <Field label="Nombre completo *" value={form.fullName} onChange={set('fullName')} />
                 <Field label="Teléfono *" value={form.phone} onChange={set('phone')} />
-                <Field label="Calle y número *" value={form.street} onChange={set('street')} className="sm:col-span-2" />
-                <Field label="Ciudad *" value={form.city} onChange={set('city')} />
-                <Field label="Provincia *" value={form.province} onChange={set('province')} />
-                <Field label="Código postal *" value={form.postalCode} onChange={set('postalCode')} />
+                {shippingMethod === 'delivery' && (
+                  <>
+                    <Field label="Calle y número *" value={form.street} onChange={set('street')} className="sm:col-span-2" />
+                    <Field label="Ciudad *" value={form.city} onChange={set('city')} />
+                    <Field label="Provincia *" value={form.province} onChange={set('province')} />
+                    <Field label="Código postal *" value={form.postalCode} onChange={set('postalCode')} />
+                  </>
+                )}
+                {shippingMethod === 'pickup' && (
+                  <>
+                    <Field label="Ciudad (opcional)" value={form.city} onChange={set('city')} />
+                    <Field label="Provincia (opcional)" value={form.province} onChange={set('province')} />
+                  </>
+                )}
               </div>
 
               <div className="flex gap-3">
@@ -168,7 +207,11 @@ export const MarketplaceCheckoutPage: React.FC = () => {
               {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl">{error}</div>}
 
               <div className="text-sm text-slate-600 space-y-1">
-                <p><strong>Envío a:</strong> {form.street}, {form.city}, {form.province} ({form.postalCode})</p>
+                {shippingMethod === 'pickup' ? (
+                  <p><strong>Retiro en persona</strong> — {form.fullName} — {form.phone}</p>
+                ) : (
+                  <p><strong>Envío a:</strong> {form.street}, {form.city}, {form.province} ({form.postalCode})</p>
+                )}
                 <p><strong>Contacto:</strong> {form.fullName} — {form.phone}</p>
               </div>
 

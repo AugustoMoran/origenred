@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
-import { colors } from '../../src/theme/colors';
+import { colors } from '../src/theme/colors';
 
 export default function PaymentReturnScreen() {
   const { orderNumber, status } = useLocalSearchParams<{ orderNumber?: string; status?: string }>();

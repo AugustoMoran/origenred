@@ -85,12 +85,15 @@ export const OrigenRedHeader: React.FC = () => {
                 <Link to="/cuenta/compras" className="px-3 py-2 text-xs text-slate-500 hover:text-or-navy">
                   Mis compras
                 </Link>
+                <Link to="/cuenta/mensajes" className="px-3 py-2 text-xs text-slate-500 hover:text-or-navy">
+                  Mensajes
+                </Link>
               </div>
             )}
 
             {user && (
               <Link
-                to="/cuenta/compras"
+                to="/cuenta/mensajes"
                 className="relative w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:text-or-navy hover:border-or-blue/30 transition-colors"
                 aria-label="Mensajes"
               >

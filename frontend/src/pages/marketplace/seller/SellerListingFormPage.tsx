@@ -37,7 +37,8 @@ export const SellerListingFormPage: React.FC = () => {
 
   const [form, setForm] = useState(emptyForm);
   const [images, setImages] = useState<File[]>([]);
-  const [existingImages, setExistingImages] = useState<Array<{ url: string }>>([]);
+  const [existingImages, setExistingImages] = useState<Array<{ url: string; key?: string }>>([]);
+  const [removeImageKeys, setRemoveImageKeys] = useState<string[]>([]);
   const [error, setError] = useState('');
 
   useEffect(() => {
@@ -90,14 +91,19 @@ export const SellerListingFormPage: React.FC = () => {
 
     try {
       if (isEdit && id) {
-        if (images.length > 0) {
-          const fd = new FormData();
-          Object.entries(form).forEach(([k, v]) => fd.append(k, String(v)));
-          images.forEach((file) => fd.append('images', file));
-          await updateListing({ id, body: fd }).unwrap();
-        } else {
-          await updateListing({ id, body: form }).unwrap();
-        }
+        const body: Record<string, unknown> | FormData =
+          images.length > 0 || removeImageKeys.length > 0
+            ? (() => {
+                const fd = new FormData();
+                Object.entries(form).forEach(([k, v]) => fd.append(k, String(v)));
+                if (removeImageKeys.length) {
+                  fd.append('removeImageKeys', JSON.stringify(removeImageKeys));
+                }
+                images.forEach((file) => fd.append('images', file));
+                return fd;
+              })()
+            : form;
+        await updateListing({ id, body }).unwrap();
       } else {
         const fd = new FormData();
         Object.entries(form).forEach(([k, v]) => fd.append(k, String(v)));
@@ -198,14 +204,31 @@ export const SellerListingFormPage: React.FC = () => {
             <label className="block text-sm font-medium text-or-navy">Imágenes</label>
             {existingImages.length > 0 && (
               <div className="flex flex-wrap gap-2">
-                {existingImages.map((img) => (
-                  <img
-                    key={img.url}
-                    src={img.url}
-                    alt=""
-                    className="w-16 h-16 rounded-lg object-cover border border-slate-200"
-                  />
-                ))}
+                {existingImages.map((img) => {
+                  const marked = img.key && removeImageKeys.includes(img.key);
+                  return (
+                    <button
+                      key={img.url}
+                      type="button"
+                      onClick={() => {
+                        if (!img.key) return;
+                        setRemoveImageKeys((keys) =>
+                          keys.includes(img.key!)
+                            ? keys.filter((k) => k !== img.key)
+                            : [...keys, img.key!]
+                        );
+                      }}
+                      className={`relative rounded-lg border-2 ${marked ? 'border-red-400 opacity-50' : 'border-slate-200'}`}
+                    >
+                      <img src={img.url} alt="" className="w-16 h-16 rounded-lg object-cover" />
+                      {img.key && (
+                        <span className="absolute bottom-0 left-0 right-0 text-[10px] bg-black/60 text-white text-center rounded-b-lg">
+                          {marked ? 'Quitar' : 'Tocar para quitar'}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
               </div>
             )}
             <input

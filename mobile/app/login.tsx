@@ -10,8 +10,8 @@ import {
   View,
 } from 'react-native';
 import { router, Link } from 'expo-router';
-import { useAuth } from '../../src/context/AuthContext';
-import { colors } from '../../src/theme/colors';
+import { useAuth } from '../src/context/AuthContext';
+import { colors } from '../src/theme/colors';
 
 export default function LoginScreen() {
   const { signIn } = useAuth();

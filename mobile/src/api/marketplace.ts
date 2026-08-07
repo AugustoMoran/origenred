@@ -40,6 +40,9 @@ export interface CheckoutPreview {
 export interface CheckoutResult {
   order: { orderNumber: string; total: number; status: string };
   payment: { initPoint: string; sandboxInitPoint?: string } | null;
+  orders?: Array<{ orderNumber: string; total: number; status: string }>;
+  payments?: Array<{ initPoint: string; sandboxInitPoint?: string }>;
+  multiOrder?: boolean;
   mercadoPagoEnabled: boolean;
 }
 
@@ -302,6 +305,23 @@ export const createReport = (
     token,
     mobile: false,
   });
+
+export const getMyConversations = (token: string) =>
+  apiFetch<
+    Array<{
+      _id: string;
+      unreadCount?: number;
+      order?: { orderNumber: string; total: number; status: string };
+      seller?: { businessName: string; slug: string };
+      buyer?: { name: string; email: string };
+    }>
+  >('/marketplace/chat/conversations', { token, mobile: false });
+
+export const cancelOrder = (orderNumber: string, token: string) =>
+  apiFetch<{ orderNumber: string; status: string }>(
+    `/marketplace/orders/${orderNumber}/cancel`,
+    { method: 'POST', token, mobile: false }
+  );
 
 export const registerSeller = (body: {
   name: string;

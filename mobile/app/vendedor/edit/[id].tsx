@@ -27,7 +27,8 @@ export default function EditListingScreen() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [existingImages, setExistingImages] = useState<Array<{ url: string }>>([]);
+  const [existingImages, setExistingImages] = useState<Array<{ url: string; key?: string }>>([]);
+  const [removeImageKeys, setRemoveImageKeys] = useState<string[]>([]);
   const [newImages, setNewImages] = useState<Array<{ uri: string }>>([]);
 
   const [form, setForm] = useState({
@@ -99,7 +100,8 @@ export default function EditListingScreen() {
 
     setSubmitting(true);
     try {
-      if (newImages.length > 0) {
+      const needsFormData = newImages.length > 0 || removeImageKeys.length > 0;
+      if (needsFormData) {
         const fd = new FormData();
         fd.append('title', form.title.trim());
         fd.append('description', form.description.trim());
@@ -108,6 +110,9 @@ export default function EditListingScreen() {
         fd.append('category', form.category);
         fd.append('brand', form.brand.trim());
         fd.append('status', form.status);
+        if (removeImageKeys.length) {
+          fd.append('removeImageKeys', JSON.stringify(removeImageKeys));
+        }
         newImages.forEach((img, i) => {
           fd.append('images', {
             uri: img.uri,
@@ -229,10 +234,32 @@ export default function EditListingScreen() {
       </View>
 
       {existingImages.length > 0 && (
+        <Text style={styles.label}>Imágenes actuales (tocá para quitar)</Text>
+      )}
+      {existingImages.length > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catRow}>
-          {existingImages.map((img) => (
-            <Image key={img.url} source={{ uri: img.url }} style={styles.thumb} />
-          ))}
+          {existingImages.map((img) => {
+            const marked = img.key && removeImageKeys.includes(img.key);
+            return (
+              <Pressable
+                key={img.url}
+                onPress={() => {
+                  if (!img.key) return;
+                  setRemoveImageKeys((keys) =>
+                    keys.includes(img.key!)
+                      ? keys.filter((k) => k !== img.key)
+                      : [...keys, img.key!]
+                  );
+                }}
+                style={[styles.thumbWrap, marked && styles.thumbMarked]}
+              >
+                <Image source={{ uri: img.url }} style={styles.thumb} />
+                {img.key ? (
+                  <Text style={styles.thumbHint}>{marked ? 'Quitar' : 'Tocar'}</Text>
+                ) : null}
+              </Pressable>
+            );
+          })}
         </ScrollView>
       )}
       <Pressable style={styles.imageBtn} onPress={pickImages}>
@@ -301,7 +328,22 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   submitText: { color: colors.white, fontWeight: '700', fontSize: 16 },
-  thumb: { width: 64, height: 64, borderRadius: 8, marginRight: 8 },
+  thumb: { width: 64, height: 64, borderRadius: 8 },
+  thumbWrap: {
+    marginRight: 8,
+    borderRadius: 8,
+    borderWidth: 2,
+    borderColor: colors.slate200,
+    overflow: 'hidden',
+  },
+  thumbMarked: { borderColor: colors.red, opacity: 0.55 },
+  thumbHint: {
+    fontSize: 9,
+    color: colors.white,
+    backgroundColor: 'rgba(0,0,0,0.55)',
+    textAlign: 'center',
+    paddingVertical: 2,
+  },
   imageBtn: {
     backgroundColor: colors.white,
     borderRadius: 12,

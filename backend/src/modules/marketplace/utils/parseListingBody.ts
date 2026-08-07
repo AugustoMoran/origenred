@@ -42,5 +42,16 @@ export const parseListingBody = (body: Record<string, unknown>) => {
     seoTitle: body.seoTitle ? String(body.seoTitle) : undefined,
     seoDescription: body.seoDescription ? String(body.seoDescription) : undefined,
     images: Array.isArray(images) ? images : undefined,
+    removeImageKeys: (() => {
+      let keys = body.removeImageKeys;
+      if (typeof keys === 'string') {
+        try {
+          keys = JSON.parse(keys);
+        } catch {
+          keys = [];
+        }
+      }
+      return Array.isArray(keys) ? keys.map(String) : undefined;
+    })(),
   };
 };
