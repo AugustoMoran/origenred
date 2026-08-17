@@ -14,6 +14,7 @@ import { afipApi } from '../services/afipApi';
 import { ecommerceApi } from '../services/ecommerceApi';
 import { settingsApi } from '../services/settingsApi';
 import { analyticsApi } from '../services/analyticsApi';
+import { paymentsApi } from '../services/paymentsApi';
 import { marketplaceApi } from '../services/marketplaceApi';
 
 export const store = configureStore({
