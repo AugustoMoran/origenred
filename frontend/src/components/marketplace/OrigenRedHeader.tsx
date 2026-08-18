@@ -5,6 +5,7 @@ import { RootState } from '../../store';
 import { selectMarketplaceCartCount, toggleMarketplaceCart } from '../../store/marketplaceCartSlice';
 import { useGetNotificationSummaryQuery } from '../../services/marketplaceApi';
 import { OrigenRedLogo } from '../branding/OrigenRedLogo';
+import { MarketplaceAccountMenu } from './MarketplaceAccountMenu';
 
 export const OrigenRedHeader: React.FC = () => {
   const dispatch = useDispatch();
@@ -21,7 +22,7 @@ export const OrigenRedHeader: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="h-20 sm:h-24 flex items-center justify-between gap-4">
           <Link to="/" className="flex items-center min-w-0 flex-shrink-0 group">
-            <OrigenRedLogo size="lg" showWordmark className="group-hover:opacity-90 transition-opacity" />
+            <OrigenRedLogo size="lg" className="group-hover:opacity-90 transition-opacity" />
           </Link>
 
           <div className="hidden md:flex flex-1 max-w-xl mx-4">
@@ -54,12 +55,18 @@ export const OrigenRedHeader: React.FC = () => {
 
           <div className="flex items-center gap-2">
             {isAdmin && (
-              <Link to="/dashboard" className="hidden sm:inline-flex items-center px-3 py-2 text-xs font-medium text-or-navy bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors">
-                Admin
+              <Link
+                to="/dashboard"
+                className="inline-flex items-center px-3 py-2 text-xs font-semibold text-white bg-or-red hover:bg-red-600 rounded-lg transition-colors shadow-sm"
+              >
+                Panel admin
               </Link>
             )}
             {isSeller && (
-              <Link to="/vendedor" className="hidden sm:inline-flex items-center px-3 py-2 text-xs font-medium text-or-blue bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
+              <Link
+                to="/vendedor"
+                className="hidden sm:inline-flex items-center px-3 py-2 text-xs font-medium text-or-blue bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+              >
                 Mi tienda
               </Link>
             )}
@@ -73,20 +80,17 @@ export const OrigenRedHeader: React.FC = () => {
                 </Link>
               </>
             ) : (
-              <div className="hidden sm:flex items-center gap-1">
-                <Link to="/cuenta/favoritos" className="px-3 py-2 text-xs text-slate-500 hover:text-or-navy">
-                  Favoritos
-                </Link>
-                <Link to="/cuenta/compras" className="px-3 py-2 text-xs text-slate-500 hover:text-or-navy">
-                  Mis compras
-                </Link>
-                <Link to="/cuenta/notificaciones" className="px-3 py-2 text-xs text-slate-500 hover:text-or-navy">
-                  Notificaciones
-                </Link>
-                <Link to="/cuenta/mensajes" className="px-3 py-2 text-xs text-slate-500 hover:text-or-navy">
-                  Mensajes
-                </Link>
-              </div>
+              <>
+                <div className="hidden md:flex items-center gap-1">
+                  <Link to="/cuenta/favoritos" className="px-2 py-2 text-xs text-slate-500 hover:text-or-navy">
+                    Favoritos
+                  </Link>
+                  <Link to="/cuenta/compras" className="px-2 py-2 text-xs text-slate-500 hover:text-or-navy">
+                    Compras
+                  </Link>
+                </div>
+                <MarketplaceAccountMenu />
+              </>
             )}
 
             {user && (

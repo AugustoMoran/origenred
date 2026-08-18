@@ -1,6 +1,6 @@
 import React from 'react';
 
-const LOGO_SRC = '/origenred-logo.svg';
+const LOGO_SRC = '/origenred-logo.png';
 
 type Props = {
   size?: 'sm' | 'md' | 'lg' | 'xl' | 'hero';
@@ -9,20 +9,21 @@ type Props = {
 };
 
 const sizeMap = {
-  sm: 'h-10 w-10',
-  md: 'h-14 w-14',
-  lg: 'h-20 w-20',
-  xl: 'h-28 w-28',
-  hero: 'h-36 w-36 sm:h-44 sm:w-44',
+  sm: 'h-12 w-12',
+  md: 'h-16 w-16',
+  lg: 'h-24 w-24 sm:h-28 sm:w-28',
+  xl: 'h-32 w-32 sm:h-36 sm:w-36',
+  hero: 'h-40 w-40 sm:h-48 sm:w-48',
 };
 
+/** Logo oficial OrigenRed (PNG en public/) */
 export const OrigenRedLogo: React.FC<Props> = ({ size = 'md', showWordmark = false, className = '' }) => {
   return (
     <div className={`flex items-center gap-3 ${className}`}>
       <img
         src={LOGO_SRC}
         alt="OrigenRed"
-        className={`${sizeMap[size]} object-contain drop-shadow-lg`}
+        className={`${sizeMap[size]} object-contain drop-shadow-md`}
       />
       {showWordmark && (
         <span className="text-2xl sm:text-3xl font-extrabold tracking-tight">

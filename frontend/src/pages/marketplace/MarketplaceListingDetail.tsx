@@ -42,7 +42,7 @@ export const MarketplaceListingDetail: React.FC = () => {
   if (isLoading) return <div className="py-20 text-center text-slate-400">Cargando...</div>;
   if (error || !listing) return <div className="py-20 text-center text-slate-400">Producto no encontrado</div>;
 
-  const images = listing.images?.length ? listing.images : [{ url: '/origenred-logo.svg' }];
+  const images = listing.images?.length ? listing.images : [{ url: '/origenred-logo.png' }];
   const hasDiscount = listing.compareAtPrice && listing.compareAtPrice > listing.price;
 
   return (

@@ -23,6 +23,7 @@ import { MyChatsPage } from './pages/marketplace/MyChatsPage';
 import { NotificationsPage } from './pages/marketplace/NotificationsPage';
 import { MyReturnsPage } from './pages/marketplace/MyReturnsPage';
 import { MyOrdersPage } from './pages/marketplace/MyOrdersPage';
+import { BuyerAccountPage } from './pages/marketplace/BuyerAccountPage';
 import { SellerRegisterPage } from './pages/marketplace/SellerRegisterPage';
 import { SellerLayout, SellerProtectedRoute } from './components/marketplace/SellerLayout';
 import { SellerDashboard } from './pages/marketplace/seller/SellerDashboard';
@@ -109,6 +110,7 @@ const router = createBrowserRouter([
       { path: '/cuenta/mensajes', element: <StoreAuthRoute><MyChatsPage /></StoreAuthRoute> },
       { path: '/cuenta/notificaciones', element: <StoreAuthRoute><NotificationsPage /></StoreAuthRoute> },
       { path: '/cuenta/devoluciones', element: <StoreAuthRoute><MyReturnsPage /></StoreAuthRoute> },
+      { path: '/cuenta/perfil', element: <StoreAuthRoute><BuyerAccountPage /></StoreAuthRoute> },
       { path: '/cuenta/chat/:orderNumber', element: <StoreAuthRoute><OrderChatPage /></StoreAuthRoute> },
       { path: '/products', element: <StoreProducts /> },
       { path: '/products/:id', element: <StoreProductDetail /> },
