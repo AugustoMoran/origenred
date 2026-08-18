@@ -68,7 +68,7 @@ export const SellerLayout: React.FC = () => {
       <aside className="hidden md:flex w-60 flex-col bg-or-navy text-white fixed inset-y-0 left-0">
         <div className="p-5 border-b border-white/10">
           <Link to="/" className="flex items-center gap-2">
-            <img src="/origenred-logo.png" alt="" className="h-8 w-8" />
+            <img src="/origenred-logo.svg" alt="" className="h-8 w-8" />
             <span className="font-bold">Panel Vendedor</span>
           </Link>
         </div>

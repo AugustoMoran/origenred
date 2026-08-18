@@ -3,8 +3,8 @@ import { useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLoginMutation } from '../services/authApi';
 import { setCredentials } from '../store/authSlice';
-
-const brandLogo = '/brand-logo.png';
+import { OrigenRedLogo } from '../components/branding/OrigenRedLogo';
+import { NetworkBackdrop } from '../components/branding/NetworkBackdrop';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -36,19 +36,14 @@ export const Login = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-[#030712] relative overflow-hidden px-4">
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-brand-900/20 rounded-full blur-[160px]" />
-        <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-900/20 rounded-full blur-[160px]" />
-      </div>
+      <NetworkBackdrop variant="dark" />
 
       <div className="w-full max-w-sm relative z-10 animate-slide-up">
-        <div className="glass rounded-2xl p-8">
+        <div className="glass rounded-2xl p-8 border border-white/10">
           <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-xl bg-white/90 mx-auto mb-4 flex items-center justify-center shadow-glow-md ring-1 ring-white/30 overflow-hidden">
-              <img src={brandLogo} alt="Logo" className="w-10 h-10 object-contain" />
-            </div>
-            <h1 className="text-xl font-bold text-white">FacturaApp</h1>
-            <p className="text-sm text-slate-500 mt-1">Panel de gestión profesional</p>
+            <OrigenRedLogo size="xl" className="justify-center mb-4" />
+            <h1 className="text-xl font-bold text-white">Ingresar a OrigenRed</h1>
+            <p className="text-sm text-slate-400 mt-1">Marketplace y panel de gestión</p>
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
@@ -63,32 +58,38 @@ export const Login = () => {
 
             <div>
               <label className="section-heading">Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)}
-                className="input" placeholder="nombre@empresa.com" required />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="input"
+                placeholder="tu@email.com"
+                required
+              />
             </div>
 
             <div>
               <label className="section-heading">Contraseña</label>
-              <input type="password" value={password} onChange={e => setPassword(e.target.value)}
-                className="input" placeholder="••••••••" required />
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="input"
+                placeholder="••••••••"
+                required
+              />
             </div>
 
             <button type="submit" disabled={isLoading} className="btn-primary w-full mt-2">
-              {isLoading ? (
-                <span className="flex items-center justify-center gap-2">
-                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  Iniciando...
-                </span>
-              ) : 'Iniciar sesión'}
+              {isLoading ? 'Iniciando...' : 'Iniciar sesión'}
             </button>
           </form>
 
-          <p className="text-center text-sm text-slate-600 mt-6">
-            ¿No tienes cuenta?{' '}
-            <Link to="/register" className="text-brand-400 hover:text-brand-300 transition-colors">Registrarse</Link>
+          <p className="text-center text-sm text-slate-500 mt-6">
+            ¿Querés comprar en el marketplace?{' '}
+            <Link to="/registro" className="text-or-red hover:text-red-400 transition-colors font-medium">
+              Crear cuenta
+            </Link>
           </p>
         </div>
       </div>

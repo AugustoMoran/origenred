@@ -4,8 +4,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { selectMarketplaceCartCount, toggleMarketplaceCart } from '../../store/marketplaceCartSlice';
 import { useGetNotificationSummaryQuery } from '../../services/marketplaceApi';
-
-const logo = '/origenred-logo.png';
+import { OrigenRedLogo } from '../branding/OrigenRedLogo';
 
 export const OrigenRedHeader: React.FC = () => {
   const dispatch = useDispatch();
@@ -20,13 +19,9 @@ export const OrigenRedHeader: React.FC = () => {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="h-16 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center gap-2.5 min-w-0 flex-shrink-0">
-            <img src={logo} alt="OrigenRed" className="h-9 w-9 object-contain" />
-            <span className="text-lg font-bold tracking-tight">
-              <span className="text-or-navy">Origen</span>
-              <span className="text-or-red">Red</span>
-            </span>
+        <div className="h-20 sm:h-24 flex items-center justify-between gap-4">
+          <Link to="/" className="flex items-center min-w-0 flex-shrink-0 group">
+            <OrigenRedLogo size="lg" showWordmark className="group-hover:opacity-90 transition-opacity" />
           </Link>
 
           <div className="hidden md:flex flex-1 max-w-xl mx-4">

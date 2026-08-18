@@ -11,6 +11,11 @@ import {
   buildAuthPayload,
 } from '../utils/authCookies';
 
+export async function bootstrapStatusController(_req: Request, res: Response) {
+  const count = await User.countDocuments();
+  res.json({ needsBootstrap: count === 0, adminExists: count > 0 });
+}
+
 export async function registerController(req: Request, res: Response) {
   const { email, password, roles, permissions, name, branch, commissionRate } = req.body;
   

@@ -16,6 +16,9 @@ export const authApi = createApi({
         body: credentials,
       }),
     }),
+    getBootstrapStatus: builder.query<{ needsBootstrap: boolean; adminExists: boolean }, void>({
+      query: () => '/bootstrap',
+    }),
     register: builder.mutation({
       query: (userData) => ({
         url: 'register',
@@ -88,6 +91,7 @@ export const authApi = createApi({
 
 export const {
   useLoginMutation,
+  useGetBootstrapStatusQuery,
   useRegisterMutation,
   usePublicRegisterMutation,
   useLogoutMutation,

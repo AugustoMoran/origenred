@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { 
   registerController,
   publicRegisterController,
+  bootstrapStatusController,
   loginController,
   logoutController, 
   refreshController,
@@ -28,6 +29,7 @@ const canRegister = async (req: any, res: any, next: any) => {
   });
 };
 
+router.get('/bootstrap', bootstrapStatusController);
 router.post('/register/public', publicRegisterController);
 router.post('/register', canRegister, registerController);
 router.get('/users', authenticate, authorize('admin'), getUsersController);
