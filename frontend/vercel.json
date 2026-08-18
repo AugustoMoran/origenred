@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/sitemap.xml",
-      "destination": "https://origenred-api.onrender.com/api/marketplace/sitemap.xml"
+      "destination": "https://origenred.onrender.com/api/marketplace/sitemap.xml"
     },
     {
       "source": "/(.*)",

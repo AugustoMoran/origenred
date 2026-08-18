@@ -22,7 +22,7 @@ const parseAllowedOrigins = () => {
   const raw = process.env.CORS_ALLOWED_ORIGINS || process.env.FRONTEND_URL || '';
   return raw
     .split(',')
-    .map((origin) => origin.trim())
+    .map((origin) => origin.trim().replace(/\/+$/, ''))
     .filter(Boolean);
 };
 
