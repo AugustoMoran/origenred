@@ -5,6 +5,7 @@ import { RootState } from '../../store';
 import { logout } from '../../store/authSlice';
 import { useLogoutMutation } from '../../services/authApi';
 import { useGetMySellerProfileQuery } from '../../services/marketplaceApi';
+import { OrigenRedLogo } from '../branding/OrigenRedLogo';
 
 const NAV = [
   { to: '/vendedor', label: 'Resumen', exact: true },
@@ -67,9 +68,9 @@ export const SellerLayout: React.FC = () => {
     <div className="min-h-screen bg-slate-50 flex">
       <aside className="hidden md:flex w-60 flex-col bg-or-navy text-white fixed inset-y-0 left-0">
         <div className="p-5 border-b border-white/10">
-          <Link to="/" className="flex items-center gap-2">
-            <img src="/origenred-logo.png" alt="" className="h-8 w-8" />
-            <span className="font-bold">Panel Vendedor</span>
+          <Link to="/" className="flex flex-col gap-2">
+            <OrigenRedLogo size="md" />
+            <span className="font-bold text-sm text-blue-100">Panel Vendedor</span>
           </Link>
         </div>
         <nav className="flex-1 p-3 space-y-1">

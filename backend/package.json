@@ -8,6 +8,7 @@
     "start": "node dist/server.js",
     "lint": "eslint 'src/**/*.{ts,tsx}' --fix",
     "seed": "ts-node scripts/seed-origenred.ts",
+    "r2:bootstrap": "ts-node scripts/r2-bootstrap.ts",
     "test": "jest --passWithNoTests"
   },
   "dependencies": {

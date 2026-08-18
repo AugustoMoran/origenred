@@ -5,7 +5,7 @@ import { RootState } from '../../store';
 import { selectCartCount, toggleCart } from '../../store/cartSlice';
 import { isStaffRole } from './RouteGuards';
 
-const brandLogo = '/brand-logo.png';
+const brandLogo = '/logooficialdefinitivo.png';
 
 export const StoreHeader: React.FC = () => {
   const dispatch = useDispatch();

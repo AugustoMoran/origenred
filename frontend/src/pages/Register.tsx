@@ -42,7 +42,7 @@ export const Register = () => {
       <div className="w-full max-w-sm relative z-10 animate-slide-up">
         <div className="glass rounded-2xl p-8 border border-white/10">
           <div className="text-center mb-8">
-            <OrigenRedLogo size="xl" className="justify-center mb-4" />
+            <OrigenRedLogo size="hero" className="justify-center mb-6" />
             <h1 className="text-xl font-bold text-white">Crear cuenta</h1>
             <p className="text-sm text-slate-400 mt-1">
               {adminExists ? 'Registro en OrigenRed' : 'Configuración inicial de administrador'}

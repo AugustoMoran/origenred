@@ -68,7 +68,7 @@ export const SellerListingsPage: React.FC = () => {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <img
-                        src={listing.images?.[0]?.url || '/origenred-logo.png'}
+                        src={listing.images?.[0]?.url || '/logooficialdefinitivo.png'}
                         alt=""
                         className="w-10 h-10 rounded-lg object-cover bg-slate-100"
                       />

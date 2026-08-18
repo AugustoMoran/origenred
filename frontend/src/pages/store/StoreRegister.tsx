@@ -5,7 +5,7 @@ import { SEO } from '../../components/ecommerce/SEO';
 import { useRegisterMutation } from '../../services/authApi';
 import { setCredentials } from '../../store/authSlice';
 
-const brandLogo = '/brand-logo.png';
+const brandLogo = '/logooficialdefinitivo.png';
 
 export const StoreRegister: React.FC = () => {
   const [name, setName] = useState('');

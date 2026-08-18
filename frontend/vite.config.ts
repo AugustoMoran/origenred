@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['origenred-logo.png', 'brand-logo.png'],
+      includeAssets: ['logooficialdefinitivo.png', 'origenred-logo.png'],
       manifest: {
         name: 'OrigenRed — Marketplace',
         short_name: 'OrigenRed',
@@ -19,13 +19,13 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: '/origenred-logo.png',
+            src: '/logooficialdefinitivo.png',
             sizes: '192x192',
             type: 'image/png',
             purpose: 'any',
           },
           {
-            src: '/origenred-logo.png',
+            src: '/logooficialdefinitivo.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'any maskable',

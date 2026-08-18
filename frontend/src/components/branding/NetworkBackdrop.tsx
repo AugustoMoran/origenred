@@ -69,7 +69,7 @@ export const NetworkBackdrop: React.FC<Props> = ({
         <img
           src={ORIGENRED_LOGO_SRC}
           alt=""
-          className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(70vw,420px)] opacity-[0.04] ${
+          className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[min(85vw,560px)] opacity-[0.05] ${
             isDark ? 'opacity-[0.06]' : ''
           }`}
         />

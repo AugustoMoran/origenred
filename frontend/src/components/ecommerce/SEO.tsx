@@ -31,7 +31,7 @@ export const SEO = ({ title, description, image, url, type = 'website' }: SEOPro
 
     const desc = description || DEFAULT_DESCRIPTION;
     const pageUrl = url || window.location.href;
-    const imageUrl = image || `${window.location.origin}/origenred-logo.png`;
+    const imageUrl = image || `${window.location.origin}/logooficialdefinitivo.png`;
 
     setMeta('description', desc);
     setMeta('og:title', fullTitle, true);

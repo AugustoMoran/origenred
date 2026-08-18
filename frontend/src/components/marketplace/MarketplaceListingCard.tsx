@@ -17,7 +17,7 @@ export const MarketplaceListingCard: React.FC<Props> = ({ listing }) => {
   const [toggleFavorite] = useToggleFavoriteMutation();
 
   const isFavorited = favorites.some((f) => f.listing?._id === listing._id);
-  const imageUrl = listing.images?.[0]?.url || '/origenred-logo.png';
+  const imageUrl = listing.images?.[0]?.url || '/logooficialdefinitivo.png';
   const hasDiscount = listing.compareAtPrice && listing.compareAtPrice > listing.price;
 
   const handleFavorite = (e: React.MouseEvent) => {

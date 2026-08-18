@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { SEO } from '../../components/ecommerce/SEO';
 import { useGetPublicSettingsQuery } from '../../services/settingsApi';
 
-const brandLogo = '/brand-logo.png';
+const brandLogo = '/logooficialdefinitivo.png';
 
 export const Maintenance: React.FC = () => {
   const { data: settings } = useGetPublicSettingsQuery();
