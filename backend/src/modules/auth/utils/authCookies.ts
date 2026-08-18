@@ -1,7 +1,7 @@
 import { Request, Response } from 'express';
 import { IUser } from '../models/User';
 
-const ACCESS_COOKIE_MAX_AGE_MS = 60 * 60 * 1000;
+const ACCESS_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 const REFRESH_COOKIE_MAX_AGE_MS = 30 * 24 * 60 * 60 * 1000;
 
 const isProd = () => process.env.NODE_ENV === 'production';
@@ -18,7 +18,7 @@ export const buildRefreshCookieOptions = () => ({
   httpOnly: true,
   sameSite: (isProd() ? 'none' : 'strict') as 'none' | 'strict',
   secure: isProd(),
-  path: '/api/auth',
+  path: '/api',
   maxAge: REFRESH_COOKIE_MAX_AGE_MS,
 });
 

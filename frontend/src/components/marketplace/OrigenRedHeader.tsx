@@ -20,9 +20,12 @@ export const OrigenRedHeader: React.FC = () => {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="h-24 sm:h-28 flex items-center justify-between gap-4">
-          <Link to="/" className="flex items-center min-w-0 flex-shrink-0 group">
-            <OrigenRedLogo size="xl" className="group-hover:opacity-90 transition-opacity" />
+        <div className="h-16 sm:h-[4.5rem] flex items-center justify-between gap-4">
+          <Link
+            to="/"
+            className="flex items-center h-full max-h-14 sm:max-h-16 py-1 min-w-0 flex-shrink-0 overflow-hidden group"
+          >
+            <OrigenRedLogo size="nav" className="group-hover:opacity-90 transition-opacity" />
           </Link>
 
           <div className="hidden md:flex flex-1 max-w-xl mx-4">

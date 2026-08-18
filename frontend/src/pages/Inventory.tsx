@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { useSelector } from 'react-redux';
+import { Link } from 'react-router-dom';
 import { 
   useGetProductsQuery, 
   useCreateProductMutation, 
@@ -16,6 +17,7 @@ import { useGetCategoriesQuery } from '../services/categoryApi';
 import { useGetSuppliersQuery } from '../services/supplierApi';
 import { HasPermission } from '../components/auth/HasPermission';
 import { PERMISSIONS } from '../constants/permissions';
+import { RootState } from '../store';
 
 interface ProductFormData {
   name: string;
@@ -162,6 +164,8 @@ const StockCell = ({ product }: { product: any }) => {
 };
 
 export const Inventory = () => {
+  const { user } = useSelector((state: RootState) => state.auth);
+  const isAdmin = user?.roles?.includes('admin');
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [supplierFilter, setSupplierFilter] = useState('');
@@ -747,11 +751,24 @@ export const Inventory = () => {
 
   return (
     <div className="space-y-6 animate-slide-up">
+      {isAdmin && (
+        <div className="card p-4 border border-brand-500/20 bg-brand-500/5">
+          <p className="text-sm text-slate-300">
+            Este inventario es del <strong className="text-white">punto de venta (POS)</strong>, no del marketplace.
+            Para ver publicaciones de vendedores, ir a{' '}
+            <Link to="/dashboard/admin/marketplace-listings" className="text-brand-400 hover:underline">
+              Productos MP
+            </Link>
+            .
+          </p>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="page-title">Inventario</h1>
-          <p className="page-sub">Gestión de stock y productos</p>
+          <h1 className="page-title">Inventario POS</h1>
+          <p className="page-sub">Stock y productos del punto de venta</p>
         </div>
         <HasPermission permission={PERMISSIONS.INVENTORY_EDIT}>
           <button onClick={openCreateModal} className="btn-primary w-full sm:w-auto justify-center">

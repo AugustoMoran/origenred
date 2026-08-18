@@ -30,7 +30,7 @@ const NAV_MAIN = [
 	},
 	{
 		to: "/dashboard/inventory",
-		label: "Inventario",
+		label: "Inventario POS",
 		icon: (
 			<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
 				<path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
@@ -49,6 +49,15 @@ const NAV_MAIN = [
 ];
 
 const NAV_ADMIN = [
+	{
+		to: "/dashboard/admin/marketplace-listings",
+		label: "Productos MP",
+		icon: (
+			<svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+				<path strokeLinecap="round" strokeLinejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+			</svg>
+		),
+	},
 	{
 		to: "/dashboard/admin/users",
 		label: "Usuarios",
@@ -183,8 +192,6 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 
 	if (!user) return <>{children}</>;
 
-	const companyName = (import.meta as any).env?.VITE_COMPANY_NAME || "FacturaApp";
-
 	return (
 		<div className="flex h-screen bg-[#030712] overflow-hidden text-slate-300">
 			<RouteChangeTracker />
@@ -200,11 +207,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 						<path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
 					</svg>
 				</button>
-				<div className="flex items-center gap-2">
-					<div className="w-8 h-8 rounded-lg bg-white/90 flex items-center justify-center ring-1 ring-white/30 overflow-hidden">
-						<img src={brandLogo} alt="OrigenRed" className="h-12 w-auto max-w-[160px] object-contain" />
+				<div className="flex items-center gap-2 min-w-0">
+					<div className="w-9 h-9 rounded-lg bg-white/90 flex items-center justify-center ring-1 ring-white/30 overflow-hidden flex-shrink-0">
+						<img src={brandLogo} alt="OrigenRed" className="h-8 w-auto max-w-[72px] object-contain object-left" />
 					</div>
-					<p className="text-sm font-semibold text-white">{companyName}</p>
+					<p className="text-sm font-semibold text-white truncate">OrigenRed</p>
 				</div>
 				<button
 					onClick={handleLogout}
@@ -234,11 +241,11 @@ export const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) =>
 				{/* Logo */}
 				<div className="px-5 py-5 flex items-center gap-3 border-b border-white/[0.04]">
 					<div className="w-9 h-9 rounded-lg bg-white/90 flex items-center justify-center ring-1 ring-white/25 shadow-glow-sm overflow-hidden flex-shrink-0">
-						<img src={brandLogo} alt="OrigenRed" className="h-14 w-auto max-w-[180px] object-contain" />
+						<img src={brandLogo} alt="OrigenRed" className="h-8 w-auto max-w-[72px] object-contain object-left" />
 					</div>
 					<div className="min-w-0">
-						<p className="text-sm font-semibold text-white truncate leading-tight">{companyName}</p>
-						<p className="text-[10px] text-slate-500 leading-tight">Sistema de Facturación</p>
+						<p className="text-sm font-semibold text-white truncate leading-tight">OrigenRed</p>
+						<p className="text-[10px] text-slate-500 leading-tight">Panel de gestión</p>
 					</div>
 					<button
 						className="lg:hidden ml-auto btn-icon-sm"

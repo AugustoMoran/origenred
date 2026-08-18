@@ -4,7 +4,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useLoginMutation } from '../services/authApi';
 import { setCredentials } from '../store/authSlice';
 import { OrigenRedLogo } from '../components/branding/OrigenRedLogo';
-import { NetworkBackdrop } from '../components/branding/NetworkBackdrop';
+import { SEO } from '../components/ecommerce/SEO';
 
 export const Login = () => {
   const [email, setEmail] = useState('');
@@ -35,64 +35,59 @@ export const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#030712] relative overflow-hidden px-4">
-      <NetworkBackdrop variant="dark" />
+    <div className="max-w-md mx-auto py-4 sm:py-8 animate-fade-in">
+      <SEO title="Ingresar" description="Ingresá a tu cuenta de OrigenRed" />
 
-      <div className="w-full max-w-sm relative z-10 animate-slide-up">
-        <div className="glass rounded-2xl p-8 border border-white/10">
-          <div className="text-center mb-8">
-            <OrigenRedLogo size="hero" className="justify-center mb-6" />
-            <h1 className="text-xl font-bold text-white">Ingresar a OrigenRed</h1>
-            <p className="text-sm text-slate-400 mt-1">Marketplace y panel de gestión</p>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="flex items-start gap-3 bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-xl text-sm">
-                <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
-                {error}
-              </div>
-            )}
-
-            <div>
-              <label className="section-heading">Email</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="input"
-                placeholder="tu@email.com"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="section-heading">Contraseña</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="input"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-
-            <button type="submit" disabled={isLoading} className="btn-primary w-full mt-2">
-              {isLoading ? 'Iniciando...' : 'Iniciar sesión'}
-            </button>
-          </form>
-
-          <p className="text-center text-sm text-slate-500 mt-6">
-            ¿Querés comprar en el marketplace?{' '}
-            <Link to="/registro" className="text-or-red hover:text-red-400 transition-colors font-medium">
-              Crear cuenta
-            </Link>
-          </p>
-        </div>
+      <div className="text-center mb-6">
+        <OrigenRedLogo size="lg" className="justify-center mb-4" />
+        <h1 className="text-2xl font-bold text-or-navy">Ingresar a OrigenRed</h1>
+        <p className="text-sm text-slate-500 mt-1">Marketplace y panel de gestión</p>
       </div>
+
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-100 p-6 space-y-4 shadow-sm">
+        {error && (
+          <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl">{error}</div>
+        )}
+
+        <div>
+          <label className="block text-sm font-medium text-or-navy mb-1.5">Email</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-or-blue focus:ring-2 focus:ring-or-blue/10"
+            placeholder="tu@email.com"
+            required
+          />
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-or-navy mb-1.5">Contraseña</label>
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-or-blue focus:ring-2 focus:ring-or-blue/10"
+            placeholder="••••••••"
+            required
+          />
+        </div>
+
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full py-3 bg-or-red hover:bg-red-600 text-white font-semibold rounded-xl disabled:opacity-50 transition-colors"
+        >
+          {isLoading ? 'Iniciando...' : 'Iniciar sesión'}
+        </button>
+
+        <p className="text-center text-sm text-slate-500">
+          ¿Querés comprar en el marketplace?{' '}
+          <Link to="/registro" className="text-or-blue font-medium hover:underline">
+            Crear cuenta
+          </Link>
+        </p>
+      </form>
     </div>
   );
 };

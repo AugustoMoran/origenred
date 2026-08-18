@@ -20,6 +20,7 @@ import {
   getMercadoPagoConnectController,
   mercadoPagoCallbackController,
   listSellersAdminController,
+  listAdminListingsController,
   listPendingSellersController,
   approveSellerController,
   createCategoryController,
@@ -128,6 +129,7 @@ router.post('/seller/service-leads', authenticate, requireSeller, createServiceL
 
 // Admin marketplace
 router.get('/admin/sellers', authenticate, requireAdmin, listSellersAdminController);
+router.get('/admin/listings', authenticate, requireAdmin, listAdminListingsController);
 router.get('/admin/sellers/pending', authenticate, requireAdmin, listPendingSellersController);
 router.patch('/admin/sellers/:id/status', authenticate, requireAdmin, approveSellerController);
 router.post('/admin/categories', authenticate, requireAdmin, createCategoryController);

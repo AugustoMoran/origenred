@@ -15,6 +15,7 @@ import {
   getPublicListings,
   getPublicListingBySlug,
   getSellerListings,
+  getAdminListings,
   deleteListing,
 } from '../services/listingService';
 import { parseListingBody } from '../utils/parseListingBody';
@@ -337,6 +338,11 @@ export async function mercadoPagoCallbackController(req: Request, res: Response)
 export async function listSellersAdminController(req: Request, res: Response) {
   const sellers = await listAllSellers({ status: req.query.status as string });
   res.json(sellers);
+}
+
+export async function listAdminListingsController(req: Request, res: Response) {
+  const result = await getAdminListings(req.query as Record<string, unknown>);
+  res.json(result);
 }
 
 export async function listPendingSellersController(_req: Request, res: Response) {

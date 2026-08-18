@@ -3,6 +3,8 @@ dist
 build
 /.env
 /backend/.env
+/backend/.env.render
+/backend/.env.production
 /frontend/.env
 /.env.local
 /.env.*.local

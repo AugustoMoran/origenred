@@ -71,6 +71,9 @@ const AdminMarketplaceAnalytics = React.lazy(() =>
 const AdminMarketplaceReturns = React.lazy(() =>
   import('./pages/admin').then((m) => ({ default: m.AdminMarketplaceReturns }))
 );
+const AdminMarketplaceListings = React.lazy(() =>
+  import('./pages/admin').then((m) => ({ default: m.AdminMarketplaceListings }))
+);
 const AdminMarketplaceServiceLeads = React.lazy(() =>
   import('./pages/admin').then((m) => ({ default: m.AdminMarketplaceServiceLeads }))
 );
@@ -118,6 +121,14 @@ const router = createBrowserRouter([
       { path: '/checkout/consulta-enviada', element: <StoreWhatsAppSent /> },
       { path: '/checkout/confirmation/:orderId', element: <StoreCheckoutConfirmation /> },
       { path: '/store/register', element: <StoreRegister /> },
+      {
+        path: '/login',
+        element: (
+          <LoginRedirectRoute>
+            <Login />
+          </LoginRedirectRoute>
+        ),
+      },
     ],
   },
   { path: '/maintenance', element: <Maintenance /> },
@@ -175,6 +186,10 @@ const router = createBrowserRouter([
     ],
   },
   {
+    path: '/dashboard/admin/marketplace-listings',
+    element: <DashboardLayout adminOnly><LazyAdmin><AdminMarketplaceListings /></LazyAdmin></DashboardLayout>,
+  },
+  {
     path: '/dashboard/admin/marketplace-reports',
     element: <DashboardLayout adminOnly><LazyAdmin><AdminMarketplaceReports /></LazyAdmin></DashboardLayout>,
   },
@@ -211,14 +226,6 @@ const router = createBrowserRouter([
   { path: '/admin/store-settings', element: <Navigate to="/dashboard/admin/store-settings" replace /> },
   { path: '/admin/profit-report', element: <Navigate to="/dashboard/admin/profit-report" replace /> },
   { path: '/admin/supplier-ledger', element: <Navigate to="/dashboard/admin/supplier-ledger" replace /> },
-  {
-    path: '/login',
-    element: (
-      <LoginRedirectRoute>
-        <Login />
-      </LoginRedirectRoute>
-    ),
-  },
   {
     path: '/register',
     element: (

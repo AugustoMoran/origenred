@@ -195,6 +195,37 @@ export const getSellerListings = (sellerProfileId: string) =>
     .populate('category', 'name slug')
     .sort({ updatedAt: -1 });
 
+export const getAdminListings = async (query: Record<string, unknown> = {}) => {
+  const filters: Record<string, unknown> = {};
+
+  if (query.status) filters.status = String(query.status);
+  if (query.seller) filters.seller = query.seller;
+  if (query.search) {
+    const search = String(query.search).trim();
+    const regex = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+    filters.$or = [{ title: regex }, { description: regex }, { brand: regex }];
+  }
+
+  const page = Math.max(1, Number(query.page) || 1);
+  const limit = Math.min(100, Math.max(1, Number(query.limit) || 24));
+  const skip = (page - 1) * limit;
+
+  const [items, total] = await Promise.all([
+    Listing.find(filters)
+      .populate('seller', 'businessName slug status')
+      .populate('category', 'name slug')
+      .sort({ updatedAt: -1 })
+      .skip(skip)
+      .limit(limit),
+    Listing.countDocuments(filters),
+  ]);
+
+  return {
+    items,
+    pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
+  };
+};
+
 export const deleteListing = async (listingId: string, sellerProfileId: string) => {
   const listing = await Listing.findOne({ _id: listingId, seller: sellerProfileId });
   if (!listing) throw new Error('Publicación no encontrada');

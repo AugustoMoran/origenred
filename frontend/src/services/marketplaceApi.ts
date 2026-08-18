@@ -226,6 +226,16 @@ export const marketplaceApi = createApi({
     reindexMarketplaceListings: builder.mutation<{ indexed: number }, void>({
       query: () => ({ url: '/admin/search/reindex', method: 'POST' }),
     }),
+    getAdminMarketplaceListings: builder.query<
+      {
+        items: MarketplaceListing[];
+        pagination: { page: number; limit: number; total: number; pages: number };
+      },
+      { page?: number; limit?: number; status?: string; search?: string }
+    >({
+      query: (params) => ({ url: '/admin/listings', params }),
+      providesTags: ['Listings'],
+    }),
     getAdminMarketplaceCategories: builder.query<MarketplaceCategory[], void>({
       query: () => '/admin/categories',
     }),
@@ -570,6 +580,7 @@ export const {
   useGetMercadoPagoConnectQuery,
   useCompleteMercadoPagoConnectMutation,
   useReindexMarketplaceListingsMutation,
+  useGetAdminMarketplaceListingsQuery,
   useGetAdminMarketplaceCategoriesQuery,
   useCreateAdminMarketplaceCategoryMutation,
   useUpdateAdminMarketplaceCategoryMutation,
