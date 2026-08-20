@@ -17,7 +17,6 @@ import { useGetCategoriesQuery } from '../services/categoryApi';
 import { useGetSuppliersQuery } from '../services/supplierApi';
 import { HasPermission } from '../components/auth/HasPermission';
 import { PERMISSIONS } from '../constants/permissions';
-import { RootState } from '../store';
 
 interface ProductFormData {
   name: string;
@@ -164,8 +163,6 @@ const StockCell = ({ product }: { product: any }) => {
 };
 
 export const Inventory = () => {
-  const { user } = useSelector((state: RootState) => state.auth);
-  const isAdmin = user?.roles?.includes('admin');
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [supplierFilter, setSupplierFilter] = useState('');
