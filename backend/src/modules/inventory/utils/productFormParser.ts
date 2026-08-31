@@ -1,9 +1,10 @@
 import { Request } from 'express';
+import { buildLocalUploadUrl } from '../../../shared/utils/mediaUrl';
 
 const isHttpUrl = (value?: string) => !!value && /^https?:\/\//i.test(value);
 
 export const getLocalImageUrl = (req: Request, filename: string) =>
-  `${req.protocol}://${req.get('host')}/uploads/${filename}`;
+  buildLocalUploadUrl(req, filename);
 
 const toNumber = (value: unknown) => {
   if (value === '' || value === null || value === undefined) return undefined;

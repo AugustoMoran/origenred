@@ -81,8 +81,12 @@ import {
 import { io } from '../../../app';
 import { emitChatMessage } from '../../../socket/marketplaceChatSocket';
 import { notifyChatRecipient } from '../../../modules/notifications/chatPushService';
+import { normalizeListingMedia } from '../../../shared/utils/mediaUrl';
 
 // ── Público ──────────────────────────────────────────────
+
+const toPlainListing = (item: any) =>
+  typeof item?.toObject === 'function' ? item.toObject() : item;
 
 export async function getHomeDataController(_req: Request, res: Response) {
   const [featured, newest, bestsellers, categories] = await Promise.all([
@@ -95,9 +99,9 @@ export async function getHomeDataController(_req: Request, res: Response) {
   ]);
 
   res.json({
-    featured: featured.items,
-    newest: newest.items,
-    bestsellers: bestsellers.items,
+    featured: featured.items.map((item) => normalizeListingMedia(toPlainListing(item))),
+    newest: newest.items.map((item) => normalizeListingMedia(toPlainListing(item))),
+    bestsellers: bestsellers.items.map((item) => normalizeListingMedia(toPlainListing(item))),
     categories,
     integrations: {
       r2: features.r2,
@@ -110,13 +114,17 @@ export async function getHomeDataController(_req: Request, res: Response) {
 
 export async function listPublicListingsController(req: Request, res: Response) {
   const result = await getPublicListings(req.query as Record<string, unknown>);
-  res.json(result);
+  res.json({
+    ...result,
+    items: result.items.map((item: any) => normalizeListingMedia(toPlainListing(item))),
+  });
 }
 
 export async function getPublicListingController(req: Request, res: Response) {
   const listing = await getPublicListingBySlug(String(req.params.slug));
   if (!listing) return res.status(404).json({ message: 'Producto no encontrado' });
-  res.json(listing);
+  const plain = toPlainListing(listing);
+  res.json(normalizeListingMedia(plain as any));
 }
 
 export async function listPublicCategoriesController(req: Request, res: Response) {

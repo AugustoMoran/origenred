@@ -38,6 +38,10 @@ export const MarketplaceListingCard: React.FC<Props> = ({ listing }) => {
           alt={listing.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           loading="lazy"
+          onError={(e) => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = '/logooficialdefinitivo.png';
+          }}
         />
         {user && (
           <button

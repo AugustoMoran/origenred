@@ -5,9 +5,9 @@ import fs from 'fs';
 import path from 'path';
 import {
   applyEcommerceFieldsToProductData,
-  applyMainImageToProductData,
   getMainUploadedImage,
 } from '../utils/productFormParser';
+import { applyInventoryImagesToProductData } from '../utils/inventoryImageUpload';
 
 const isHttpUrl = (value?: string) => !!value && /^https?:\/\//i.test(value);
 
@@ -59,7 +59,7 @@ export const createProductController = async (req: Request, res: Response) => {
     }
 
     parseSupplierField(productData);
-    applyMainImageToProductData(req, productData);
+    await applyInventoryImagesToProductData(req, productData);
 
     const product = await inventoryService.createProduct(productData, (req as any).user);
     res.status(201).json(product);
@@ -82,7 +82,7 @@ export const updateProductController = async (req: Request, res: Response) => {
       }
 
       deleteLocalImageFromUrl(oldProduct?.imageUrl);
-      applyMainImageToProductData(req, productData);
+      await applyInventoryImagesToProductData(req, productData);
     }
 
     const product = await inventoryService.updateProduct(id, productData);

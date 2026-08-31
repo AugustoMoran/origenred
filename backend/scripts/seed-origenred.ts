@@ -11,6 +11,7 @@ import {
   syncProductToMarketplaceListing,
   syncAllInventoryProductsToMarketplace,
 } from '../src/modules/marketplace/services/productListingSyncService';
+import { normalizeMediaUrl } from '../src/shared/utils/mediaUrl';
 
 dotenv.config({ path: require('path').resolve(__dirname, '../.env') });
 
@@ -299,8 +300,7 @@ const slugify = (value: string) =>
     .replace(/^-+|-+$/g, '')
     .slice(0, 100);
 
-const fallbackImageUrl = (seed: string) =>
-  `https://picsum.photos/seed/${encodeURIComponent(seed)}/800/600`;
+const fallbackImageUrl = () => 'https://origenred.vercel.app/logooficialdefinitivo.png';
 
 async function clearLegacyMarketplaceListings() {
   const demoSlugs = DEMO_SELLERS.map((s) => s.slug);
@@ -357,6 +357,29 @@ async function seedCategories() {
   console.log(`Categorías: ${DEFAULT_CATEGORIES.length} procesadas`);
 }
 
+async function fixBrokenProductImages() {
+  const products = await Product.find({});
+  let fixed = 0;
+  for (const product of products) {
+    const nextUrl = normalizeMediaUrl(product.imageUrl);
+    const nextGallery = (product.gallery || []).map((g) => ({
+      ...g,
+      url: normalizeMediaUrl(g.url),
+    }));
+
+    const urlChanged = product.imageUrl !== nextUrl;
+    const galleryChanged = JSON.stringify(product.gallery) !== JSON.stringify(nextGallery);
+
+    if (urlChanged || galleryChanged) {
+      product.imageUrl = nextUrl;
+      product.gallery = nextGallery as any;
+      await product.save();
+      fixed += 1;
+    }
+  }
+  console.log(`URLs de imagen corregidas en productos: ${fixed}`);
+}
+
 async function seedInventoryDemoProducts(adminId: mongoose.Types.ObjectId) {
   if (process.env.SEED_DEMO_DATA === 'false') {
     console.log('SEED_DEMO_DATA=false — omitiendo productos demo');
@@ -374,7 +397,7 @@ async function seedInventoryDemoProducts(adminId: mongoose.Types.ObjectId) {
 
   for (const item of allItems) {
     const sku = `DEMO-${slugify(item.title).replace(/-/g, '').slice(0, 16).toUpperCase()}`;
-    const imageUrl = fallbackImageUrl(item.imageSeed);
+    const imageUrl = fallbackImageUrl();
     const productSlug = slugify(item.title);
 
     let product = await Product.findOne({ sku });
@@ -433,6 +456,7 @@ async function seed() {
 
   const { admin } = await ensureAdmin();
   await seedCategories();
+  await fixBrokenProductImages();
   await seedInventoryDemoProducts(admin._id);
 
   const promoteEmail = process.env.SEED_PROMOTE_EMAIL?.trim().toLowerCase();

@@ -52,7 +52,15 @@ export const MarketplaceListingDetail: React.FC = () => {
       <div className="grid lg:grid-cols-2 gap-8">
         <div className="space-y-3">
           <div className="aspect-square bg-white rounded-2xl border border-slate-100 overflow-hidden">
-            <img src={images[0].url} alt={listing.title} className="w-full h-full object-cover" />
+            <img
+              src={images[0].url}
+              alt={listing.title}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                e.currentTarget.onerror = null;
+                e.currentTarget.src = '/logooficialdefinitivo.png';
+              }}
+            />
           </div>
           {images.length > 1 && (
             <div className="flex gap-2 overflow-x-auto">

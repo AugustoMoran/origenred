@@ -44,6 +44,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showFeatured 
             src={product.imageUrl}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+            onError={(e) => {
+              e.currentTarget.onerror = null;
+              e.currentTarget.src = '/logooficialdefinitivo.png';
+            }}
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-slate-600">
