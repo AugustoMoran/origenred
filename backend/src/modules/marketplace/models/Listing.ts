@@ -16,6 +16,7 @@ export interface IListingDimensions {
 
 export interface IListing extends Document {
   seller: mongoose.Types.ObjectId;
+  inventoryProductId?: mongoose.Types.ObjectId;
   title: string;
   slug: string;
   description: string;
@@ -71,6 +72,7 @@ const ListingDimensionsSchema = new Schema(
 const ListingSchema = new Schema<IListing>(
   {
     seller: { type: Schema.Types.ObjectId, ref: 'SellerProfile', required: true, index: true },
+    inventoryProductId: { type: Schema.Types.ObjectId, ref: 'Product', sparse: true, unique: true, index: true },
     title: { type: String, required: true, trim: true },
     slug: { type: String, required: true, unique: true, lowercase: true, trim: true },
     description: { type: String, required: true },

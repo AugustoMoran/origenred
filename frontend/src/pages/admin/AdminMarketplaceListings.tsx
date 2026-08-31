@@ -41,14 +41,14 @@ export const AdminMarketplaceListings: React.FC = () => {
         <div>
           <h1 className="text-2xl font-bold text-white">Productos Marketplace</h1>
           <p className="text-sm text-slate-500 mt-1">
-            Publicaciones de vendedores en OrigenRed (no inventario POS)
+            Publicaciones sincronizadas desde Inventario POS (OrigenRed Oficial)
           </p>
         </div>
         <Link
-          to="/"
+          to="/dashboard/inventory"
           className="text-sm text-brand-400 hover:text-brand-300 hover:underline"
         >
-          Ver en la tienda →
+          Gestionar en Inventario →
         </Link>
       </div>
 

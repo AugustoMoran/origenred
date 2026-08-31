@@ -751,8 +751,11 @@ export const Inventory = () => {
       {isAdmin && (
         <div className="card p-4 border border-brand-500/20 bg-brand-500/5">
           <p className="text-sm text-slate-300">
-            Este inventario es del <strong className="text-white">punto de venta (POS)</strong>, no del marketplace.
-            Para ver publicaciones de vendedores, ir a{' '}
+            Los productos del <strong className="text-white">Inventario POS</strong> se publican automáticamente en el
+            marketplace (home y búsqueda) bajo <strong className="text-white">OrigenRed Oficial</strong> cuando no están
+            pausados. También aparecen en{' '}
+            <Link to="/products" className="text-brand-400 hover:underline">/products</Link> (tienda online).
+            Gestionarlos aquí; ver listado MP en{' '}
             <Link to="/dashboard/admin/marketplace-listings" className="text-brand-400 hover:underline">
               Productos MP
             </Link>

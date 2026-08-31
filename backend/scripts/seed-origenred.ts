@@ -1,15 +1,16 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import dotenv from 'dotenv';
-import axios from 'axios';
 import { User } from '../src/modules/auth/models/User';
 import { MarketplaceCategory } from '../src/modules/marketplace/models/MarketplaceCategory';
 import { SellerProfile } from '../src/modules/marketplace/models/SellerProfile';
 import { Listing } from '../src/modules/marketplace/models/Listing';
-import { computeOrigenRankScore } from '../src/modules/marketplace/services/origenRankService';
+import Product from '../src/modules/inventory/models/Product';
 import { ensureListingsIndex } from '../src/modules/marketplace/services/meilisearchService';
-import { uploadToR2, deleteFromR2, isR2Enabled } from '../src/modules/marketplace/services/r2StorageService';
-import { r2Config } from '../src/config/features';
+import {
+  syncProductToMarketplaceListing,
+  syncAllInventoryProductsToMarketplace,
+} from '../src/modules/marketplace/services/productListingSyncService';
 
 dotenv.config({ path: require('path').resolve(__dirname, '../.env') });
 
@@ -301,90 +302,20 @@ const slugify = (value: string) =>
 const fallbackImageUrl = (seed: string) =>
   `https://picsum.photos/seed/${encodeURIComponent(seed)}/800/600`;
 
-const isR2HostedImage = (url: string) => {
-  if (!url) return false;
-  if (r2Config.publicUrl && url.startsWith(r2Config.publicUrl)) return true;
-  if (url.includes('r2.cloudflarestorage.com')) return true;
-  if (url.includes('.r2.dev')) return true;
-  return false;
-};
+async function clearLegacyMarketplaceListings() {
+  const demoSlugs = DEMO_SELLERS.map((s) => s.slug);
+  const demoSellers = await SellerProfile.find({ slug: { $in: demoSlugs } }).select('_id');
+  const demoSellerIds = demoSellers.map((s) => s._id);
 
-const listingNeedsR2Image = (listing: { images?: { url: string; key?: string }[] }) => {
-  const img = listing.images?.[0];
-  if (!img) return true;
-  if (img.key && isR2HostedImage(img.url)) return false;
-  if (img.url.includes('picsum.photos')) return true;
-  return !isR2HostedImage(img.url);
-};
-
-async function uploadDemoImageToR2(imageSeed: string, alt: string) {
-  const sourceUrl = fallbackImageUrl(imageSeed);
-  const response = await axios.get(sourceUrl, {
-    responseType: 'arraybuffer',
-    timeout: 45000,
-    maxRedirects: 5,
+  const result = await Listing.deleteMany({
+    $or: [
+      { seller: { $in: demoSellerIds } },
+      { inventoryProductId: { $exists: false } },
+      { inventoryProductId: null },
+    ],
   });
-  const buffer = Buffer.from(response.data);
-  const uploaded = await uploadToR2({
-    buffer,
-    originalName: `${imageSeed}.jpg`,
-    mimeType: 'image/jpeg',
-    folder: 'seed/listings',
-  });
-  return { url: uploaded.url, key: uploaded.key, alt };
-}
 
-async function buildListingImage(item: DemoListing) {
-  if (!isR2Enabled()) {
-    return { url: fallbackImageUrl(item.imageSeed), alt: item.title };
-  }
-  return await uploadDemoImageToR2(item.imageSeed, item.title);
-}
-
-async function syncDemoListingImagesToR2() {
-  if (!isR2Enabled()) {
-    console.log('R2 no configurado — imágenes quedan en picsum.photos');
-    return;
-  }
-
-  if (!r2Config.publicUrl) {
-    console.warn(
-      'R2_PUBLIC_URL vacío: las imágenes se suben pero pueden no verse en el browser. ' +
-        'En Cloudflare R2 habilitá Public Access y pegá la URL en R2_PUBLIC_URL.'
-    );
-  }
-
-  let uploaded = 0;
-
-  for (const sellerData of DEMO_SELLERS) {
-    const listings = DEMO_LISTINGS[sellerData.slug] || [];
-    for (const item of listings) {
-      const baseSlug = slugify(item.title);
-      const listing = await Listing.findOne({ slug: baseSlug });
-      if (!listing) continue;
-
-      const force = process.env.SEED_FORCE_R2_IMAGES === 'true';
-      if (!force && !listingNeedsR2Image(listing)) continue;
-
-      const oldKey = listing.images?.[0]?.key;
-      console.log(`R2 upload: ${item.title}`);
-      try {
-        const image = await uploadDemoImageToR2(item.imageSeed, item.title);
-        listing.images = [image];
-        await listing.save();
-
-        if (oldKey && oldKey !== image.key) {
-          await deleteFromR2(oldKey).catch(() => undefined);
-        }
-        uploaded += 1;
-      } catch (err) {
-        console.error(`Error R2 (${item.title}):`, (err as Error).message);
-        console.error('Ejecutá: npm run r2:bootstrap — y verificá permisos del token S3 en Cloudflare R2');
-      }
-    }
-  }
-
-  console.log(`Imágenes en R2 actualizadas: ${uploaded}`);
+  console.log(`Publicaciones MP legacy eliminadas: ${result.deletedCount ?? 0}`);
 }
 
 async function ensureAdmin() {
@@ -426,114 +357,68 @@ async function seedCategories() {
   console.log(`Categorías: ${DEFAULT_CATEGORIES.length} procesadas`);
 }
 
-async function seedDemoMarketplace(adminId: mongoose.Types.ObjectId) {
+async function seedInventoryDemoProducts(adminId: mongoose.Types.ObjectId) {
   if (process.env.SEED_DEMO_DATA === 'false') {
-    console.log('SEED_DEMO_DATA=false — omitiendo vendedores y productos demo');
+    console.log('SEED_DEMO_DATA=false — omitiendo productos demo');
     return;
   }
 
-  const categoryBySlug = new Map(
-    (await MarketplaceCategory.find({ isActive: true })).map((c) => [c.slug, c])
-  );
+  await clearLegacyMarketplaceListings();
 
-  let listingsCreated = 0;
+  const allItems: DemoListing[] = [];
+  for (const sellerSlug of Object.keys(DEMO_LISTINGS)) {
+    allItems.push(...(DEMO_LISTINGS[sellerSlug] || []));
+  }
 
-  for (const sellerData of DEMO_SELLERS) {
-    let user = await User.findOne({ email: sellerData.email });
-    if (!user) {
-      const hash = await bcrypt.hash(sellerData.password, 10);
-      user = await User.create({
-        name: sellerData.name,
-        email: sellerData.email,
-        password: hash,
-        roles: ['vendedor', 'comprador'],
-        permissions: {},
-      });
-      console.log(`Usuario demo: ${sellerData.email} / ${sellerData.password}`);
-    }
+  let productsCreated = 0;
 
-    let seller = await SellerProfile.findOne({ user: user._id });
-    if (!seller) {
-      seller = await SellerProfile.create({
-        user: user._id,
-        businessName: sellerData.businessName,
-        slug: sellerData.slug,
-        description: sellerData.description,
-        status: 'approved',
-        province: sellerData.province,
-        city: sellerData.city,
-        postalCode: sellerData.postalCode,
-        reputationScore: sellerData.reputationScore,
-        mercadoPagoConnected: sellerData.mercadoPagoConnected,
-        approvedAt: new Date(),
-        approvedBy: adminId,
-        listingCount: 0,
-      });
-      console.log(`Vendedor aprobado: ${sellerData.businessName}`);
-    } else if (seller.status !== 'approved') {
-      seller.status = 'approved';
-      seller.approvedAt = new Date();
-      seller.approvedBy = adminId;
-      await seller.save();
-    }
+  for (const item of allItems) {
+    const sku = `DEMO-${slugify(item.title).replace(/-/g, '').slice(0, 16).toUpperCase()}`;
+    const imageUrl = fallbackImageUrl(item.imageSeed);
+    const productSlug = slugify(item.title);
 
-    const listings = DEMO_LISTINGS[sellerData.slug] || [];
-    for (const item of listings) {
-      const category = categoryBySlug.get(item.categorySlug);
-      if (!category) continue;
-
-      const baseSlug = slugify(item.title);
-      const existing = await Listing.findOne({ slug: baseSlug });
-      if (existing) continue;
-
-      const image = await buildListingImage(item);
-
-      const listing = await Listing.create({
-        seller: seller._id,
-        title: item.title,
-        slug: baseSlug,
+    let product = await Product.findOne({ sku });
+    if (!product) {
+      product = await Product.create({
+        name: item.title,
+        sku,
+        slug: productSlug,
         description: item.description,
-        shortDescription: item.description.slice(0, 120),
+        commercialDescription: item.description.slice(0, 120),
         price: item.price,
-        compareAtPrice: item.compareAtPrice,
-        currency: 'ARS',
+        costPrice: Math.round(item.price * 0.55),
+        iva: 21,
+        margin: 30,
         stock: item.stock,
-        category: category._id,
-        brand: item.brand,
-        condition: item.condition,
-        images: [image],
-        freeShipping: item.freeShipping,
-        allowPickup: true,
-        province: sellerData.province,
-        city: sellerData.city,
-        postalCode: sellerData.postalCode,
-        status: 'active',
-        views: item.views ?? 0,
-        salesCount: item.salesCount ?? 0,
-        moderated: false,
-        origenRankScore: 0,
+        minStock: 2,
+        category: item.categorySlug,
+        imageUrl,
+        gallery: [{ url: imageUrl, alt: item.title }],
+        featured: item.freeShipping,
+        paused: false,
+        isActive: true,
+        displayOrder: productsCreated,
       });
-
-      listing.origenRankScore = computeOrigenRankScore({ listing, seller });
-      await listing.save();
-      listingsCreated += 1;
+      productsCreated += 1;
+      console.log(`Producto inventario creado: ${item.title}`);
+    } else {
+      product.paused = false;
+      product.isActive = true;
+      product.stock = item.stock;
+      product.price = item.price;
+      product.category = item.categorySlug;
+      if (!product.imageUrl) product.imageUrl = imageUrl;
+      await product.save();
     }
 
-    const activeCount = await Listing.countDocuments({ seller: seller._id, status: 'active' });
-    await SellerProfile.findByIdAndUpdate(seller._id, { listingCount: activeCount });
+    await syncProductToMarketplaceListing(String(product._id), adminId);
   }
 
-  for (const cat of categoryBySlug.values()) {
-    const count = await Listing.countDocuments({
-      category: cat._id,
-      status: 'active',
-      moderated: { $ne: true },
-    });
-    await MarketplaceCategory.findByIdAndUpdate(cat._id, { listingCount: count });
-  }
+  const syncedExisting = await syncAllInventoryProductsToMarketplace(adminId);
 
-  console.log(`Productos demo creados: ${listingsCreated} (omitidos si ya existían por slug)`);
-  await syncDemoListingImagesToR2();
+  console.log(
+    `Productos inventario nuevos: ${productsCreated} · sincronizados al marketplace: ${syncedExisting}`
+  );
 }
 
 async function seed() {
@@ -548,7 +433,7 @@ async function seed() {
 
   const { admin } = await ensureAdmin();
   await seedCategories();
-  await seedDemoMarketplace(admin._id);
+  await seedInventoryDemoProducts(admin._id);
 
   const promoteEmail = process.env.SEED_PROMOTE_EMAIL?.trim().toLowerCase();
   if (promoteEmail) {

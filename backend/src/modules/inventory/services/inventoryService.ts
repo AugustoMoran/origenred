@@ -1,4 +1,5 @@
 import Product, { IProduct } from '../models/Product';
+import { syncProductToMarketplaceListing, unpublishProductListing } from '../../marketplace/services/productListingSyncService';
 import Branch from '../../branches/models/Branch';
 import BranchStock from '../../stock/models/BranchStock';
 import { adjustStock } from '../../stock/services/stockService';
@@ -336,7 +337,14 @@ export const createProduct = async (productData: Partial<IProduct> & { branchSto
     }
   }
 
-  return await Product.findById(savedProduct._id).populate('supplier', 'name');
+  const populated = await Product.findById(savedProduct._id).populate('supplier', 'name');
+  try {
+    await syncProductToMarketplaceListing(String(savedProduct._id), user?._id as any);
+  } catch (err) {
+    console.error('[inventory] sync marketplace listing:', (err as Error).message);
+  }
+
+  return populated;
 };
 
 export const updateProduct = async (id: string, updateData: Partial<IProduct>) => {
@@ -371,7 +379,15 @@ export const updateProduct = async (id: string, updateData: Partial<IProduct>) =
     (updateData as any).slug = slugify(String(updateData.slug));
   }
 
-  return await Product.findByIdAndUpdate(id, updateData, { new: true }).populate('supplier', 'name');
+  const updated = await Product.findByIdAndUpdate(id, updateData, { new: true }).populate('supplier', 'name');
+
+  try {
+    await syncProductToMarketplaceListing(id);
+  } catch (err) {
+    console.error('[inventory] sync marketplace listing:', (err as Error).message);
+  }
+
+  return updated;
 };
 
 export const updateStock = async (id: string, quantity: number, type: 'add' | 'remove') => {
@@ -380,10 +396,25 @@ export const updateStock = async (id: string, quantity: number, type: 'add' | 'r
     id,
     { $inc: { stock: quantity * multiplier } },
     { new: true }
-  );
+  ).then(async (product) => {
+    if (product) {
+      try {
+        await syncProductToMarketplaceListing(id);
+      } catch (err) {
+        console.error('[inventory] sync marketplace listing:', (err as Error).message);
+      }
+    }
+    return product;
+  });
 };
 
 export const deleteProduct = async (id: string) => {
   // Soft delete para mantener historia de ventas
-  return await Product.findByIdAndUpdate(id, { isActive: false }, { new: true });
+  const product = await Product.findByIdAndUpdate(id, { isActive: false }, { new: true });
+  try {
+    await unpublishProductListing(id);
+  } catch (err) {
+    console.error('[inventory] unpublish marketplace listing:', (err as Error).message);
+  }
+  return product;
 };
