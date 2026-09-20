@@ -1,7 +1,9 @@
 import React from 'react';
 
-/** Logo oficial OrigenRed — archivo en public/logooficialdefinitivo.png */
+/** Logo vertical (PWA / iconos) */
 export const ORIGENRED_LOGO_SRC = '/logooficialdefinitivo.png';
+/** Logo oficial web (fondo claro; archivo ancho — se recorta a la izquierda) */
+export const ORIGENRED_LOGO_WEB_SRC = '/origenred-logo-horizontal.png';
 
 type Props = {
   size?: 'sm' | 'nav' | 'md' | 'lg' | 'xl' | 'hero';
@@ -21,28 +23,11 @@ const sizeMap = {
 
 const OrigenRedTagline: React.FC<{ className?: string }> = ({ className = '' }) => (
   <p
-    className={`font-semibold uppercase tracking-[0.14em] leading-snug text-center sm:text-left ${className}`}
+    className={`font-semibold uppercase tracking-[0.12em] sm:tracking-[0.14em] leading-snug ${className}`}
   >
     <span className="text-slate-600">Conectamos orígenes, creamos </span>
     <span className="text-or-red">oportunidades</span>
   </p>
-);
-
-/** Recorte superior del PNG oficial (ícono + nombre), sin la frase chica del archivo */
-const OfficialLogoCrop: React.FC<{
-  className?: string;
-  boxClassName: string;
-  cropMinHeight?: string;
-}> = ({ className = '', boxClassName, cropMinHeight = '175%' }) => (
-  <div className={`overflow-hidden flex-shrink-0 ${boxClassName}`}>
-    <img
-      src={ORIGENRED_LOGO_SRC}
-      alt="OrigenRed"
-      className={`w-full h-auto max-w-none object-cover object-top ${className}`}
-      style={{ minHeight: cropMinHeight }}
-      decoding="async"
-    />
-  </div>
 );
 
 export const OrigenRedLogo: React.FC<Props> = ({
@@ -53,21 +38,25 @@ export const OrigenRedLogo: React.FC<Props> = ({
 }) => {
   if (variant === 'header') {
     return (
-      <OfficialLogoCrop
-        boxClassName={`h-[3.5rem] sm:h-[4.5rem] w-[11rem] sm:w-[15rem] ${className}`}
-        cropMinHeight="185%"
+      <img
+        src={ORIGENRED_LOGO_WEB_SRC}
+        alt="OrigenRed"
+        className={`h-12 sm:h-14 w-[10.5rem] sm:w-[13rem] object-cover object-[left_12%] block flex-shrink-0 ${className}`}
+        decoding="async"
       />
     );
   }
 
   if (variant === 'footer') {
     return (
-      <div className={`flex flex-col items-center sm:items-start gap-3 ${className}`}>
-        <OfficialLogoCrop
-          boxClassName="h-36 sm:h-44 w-[14rem] sm:w-[18rem]"
-          cropMinHeight="155%"
+      <div className={`flex flex-col items-start gap-3 ${className}`}>
+        <img
+          src={ORIGENRED_LOGO_WEB_SRC}
+          alt="OrigenRed"
+          className="h-[4.75rem] sm:h-24 w-[12rem] sm:w-[15rem] object-cover object-[left_10%]"
+          decoding="async"
         />
-        <OrigenRedTagline className="text-xs sm:text-sm max-w-[18rem]" />
+        <OrigenRedTagline className="text-xs sm:text-sm max-w-[22rem] pl-0.5" />
       </div>
     );
   }

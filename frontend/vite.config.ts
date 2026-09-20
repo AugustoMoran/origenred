@@ -7,7 +7,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['logooficialdefinitivo.png', 'origenred-logo.png'],
+      includeAssets: ['logooficialdefinitivo.png', 'origenred-logo.png', 'origenred-logo-horizontal.png'],
       manifest: {
         name: 'OrigenRed — Marketplace',
         short_name: 'OrigenRed',
