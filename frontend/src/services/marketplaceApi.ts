@@ -185,7 +185,12 @@ export const marketplaceApi = createApi({
       invalidatesTags: ['MyListings', 'Home', 'Listings'],
     }),
     getMercadoPagoConnect: builder.query<
-      { url: string | null; enabled: boolean; mercadoPagoConnected?: boolean },
+      {
+        url: string | null;
+        enabled: boolean;
+        mercadoPagoConnected?: boolean;
+        commissionPercent?: number;
+      },
       void
     >({
       query: () => '/seller/mercadopago/connect',

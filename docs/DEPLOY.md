@@ -16,7 +16,7 @@
 | `MONGO_URI` | MongoDB Atlas connection string |
 | `JWT_ACCESS_TOKEN_SECRET` | Secreto largo aleatorio |
 | `JWT_REFRESH_TOKEN_SECRET` | Secreto largo aleatorio |
-| `FRONTEND_URL` | URL Vercel, ej. `https://origenred.vercel.app` |
+| `FRONTEND_URL` | URL del sitio, ej. `https://origenred.com` |
 | `CORS_ALLOWED_ORIGINS` | Misma URL + dominio custom si aplica |
 | `R2_*` | Cloudflare R2 (imágenes) |
 | `MERCADOPAGO_*` | Pagos + webhook |

@@ -259,6 +259,7 @@ export const getMercadoPagoConnect = (token: string) =>
     enabled: boolean;
     mercadoPagoConnected?: boolean;
     redirectUri?: string;
+    commissionPercent?: number;
   }>('/marketplace/seller/mercadopago/connect', { token, mobile: true });
 
 export const completeMercadoPagoConnect = (

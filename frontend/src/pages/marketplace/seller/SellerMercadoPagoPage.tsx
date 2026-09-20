@@ -8,14 +8,16 @@ export const SellerMercadoPagoPage: React.FC = () => {
   if (isLoading) return <p className="text-slate-400">Cargando...</p>;
 
   const connected = profile?.mercadoPagoConnected || data?.mercadoPagoConnected;
+  const commissionPercent = data?.commissionPercent ?? 5;
+  const sellerSharePercent = Math.max(0, 100 - commissionPercent);
 
   return (
     <div className="max-w-lg space-y-6">
       <h2 className="text-2xl font-bold text-or-navy">Mercado Pago</h2>
       <div className="bg-white rounded-2xl border border-slate-100 p-6 space-y-4">
         <p className="text-sm text-slate-500">
-          Vinculá tu cuenta de Mercado Pago para recibir el 95% de cada venta automáticamente.
-          OrigenRed retiene el 5% de comisión sobre el producto (sin incluir envío).
+          Vinculá tu cuenta de Mercado Pago para recibir el {sellerSharePercent}% de cada venta automáticamente.
+          OrigenRed retiene el {commissionPercent}% de comisión sobre el producto (sin incluir envío).
         </p>
 
         {connected ? (

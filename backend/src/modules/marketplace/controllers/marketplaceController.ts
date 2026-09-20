@@ -302,11 +302,13 @@ export async function getMercadoPagoConnectController(req: Request, res: Respons
   const returnClient =
     req.headers['x-origenred-client'] === 'mobile' ? 'mobile' : 'web';
   const url = getMercadoPagoConnectUrl(String(profile._id), returnClient);
+  const mpConfig = getMercadoPagoPublicConfig();
   res.json({
     url,
     enabled: Boolean(url),
     mercadoPagoConnected: profile.mercadoPagoConnected,
     redirectUri: getMercadoPagoConnectRedirectUri(returnClient),
+    commissionPercent: mpConfig.commissionPercent,
   });
 }
 

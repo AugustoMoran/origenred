@@ -24,6 +24,7 @@ export default function SellerMercadoPagoScreen() {
   const [connectUrl, setConnectUrl] = useState<string | null>(null);
   const [redirectUri, setRedirectUri] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
+  const [commissionPercent, setCommissionPercent] = useState(5);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -35,6 +36,9 @@ export default function SellerMercadoPagoScreen() {
         setConnectUrl(mp.url);
         setRedirectUri(mp.redirectUri || null);
         setEnabled(mp.enabled);
+        if (typeof mp.commissionPercent === 'number') {
+          setCommissionPercent(mp.commissionPercent);
+        }
         if (mp.mercadoPagoConnected) setConnected(true);
       } catch {
         // no-op
@@ -86,8 +90,8 @@ export default function SellerMercadoPagoScreen() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Mercado Pago</Text>
       <Text style={styles.body}>
-        Vinculá tu cuenta para recibir el 95% de cada venta. OrigenRed retiene 5% de comisión sobre el
-        producto.
+        Vinculá tu cuenta para recibir el {Math.max(0, 100 - commissionPercent)}% de cada venta. OrigenRed
+        retiene {commissionPercent}% de comisión sobre el producto.
       </Text>
 
       {connected ? (

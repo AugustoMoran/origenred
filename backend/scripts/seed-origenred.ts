@@ -300,7 +300,7 @@ const slugify = (value: string) =>
     .replace(/^-+|-+$/g, '')
     .slice(0, 100);
 
-const fallbackImageUrl = () => 'https://origenred.vercel.app/logooficialdefinitivo.png';
+const fallbackImageUrl = () => 'https://origenred.com/logooficialdefinitivo.png';
 
 async function clearLegacyMarketplaceListings() {
   const demoSlugs = DEMO_SELLERS.map((s) => s.slug);

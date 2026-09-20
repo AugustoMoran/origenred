@@ -1,6 +1,6 @@
 import { Request } from 'express';
 
-const DEFAULT_PLACEHOLDER = 'https://origenred.vercel.app/logooficialdefinitivo.png';
+const DEFAULT_PLACEHOLDER = 'https://origenred.com/logooficialdefinitivo.png';
 
 export const getPublicApiBaseUrl = (req?: Request) => {
   const fromEnv = process.env.PUBLIC_API_URL || process.env.API_PUBLIC_URL;
@@ -33,7 +33,7 @@ export const normalizeMediaUrl = (url?: string | null): string => {
   }
 
   if (normalized.startsWith('/')) {
-    return `https://origenred.vercel.app${normalized}`;
+    return `https://origenred.com${normalized}`;
   }
 
   normalized = normalized.replace(/^http:/i, 'https:');

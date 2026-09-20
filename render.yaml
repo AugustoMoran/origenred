@@ -25,6 +25,6 @@ services:
       - key: CORS_ALLOWED_ORIGINS
         sync: false
       - key: MARKETPLACE_COMMISSION_PERCENT
-        value: "5"
+        sync: false
       - key: MERCADOPAGO_WEBHOOK_URL
         sync: false
