@@ -2,7 +2,6 @@ import React from 'react';
 
 /** Logo oficial OrigenRed — archivo en public/logooficialdefinitivo.png */
 export const ORIGENRED_LOGO_SRC = '/logooficialdefinitivo.png';
-const HEADER_ICON_SRC = '/origenred-logo.svg';
 
 type Props = {
   size?: 'sm' | 'nav' | 'md' | 'lg' | 'xl' | 'hero';
@@ -22,20 +21,28 @@ const sizeMap = {
 
 const OrigenRedTagline: React.FC<{ className?: string }> = ({ className = '' }) => (
   <p
-    className={`font-semibold uppercase tracking-[0.14em] leading-snug text-center ${className}`}
+    className={`font-semibold uppercase tracking-[0.14em] leading-snug text-center sm:text-left ${className}`}
   >
     <span className="text-slate-600">Conectamos orígenes, creamos </span>
     <span className="text-or-red">oportunidades</span>
   </p>
 );
 
-const HeaderWordmark: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <span
-    className={`font-extrabold tracking-tight leading-none whitespace-nowrap ${className}`}
-  >
-    <span className="text-or-navy">Origen</span>
-    <span className="text-or-red">Red</span>
-  </span>
+/** Recorte superior del PNG oficial (ícono + nombre), sin la frase chica del archivo */
+const OfficialLogoCrop: React.FC<{
+  className?: string;
+  boxClassName: string;
+  cropMinHeight?: string;
+}> = ({ className = '', boxClassName, cropMinHeight = '175%' }) => (
+  <div className={`overflow-hidden flex-shrink-0 ${boxClassName}`}>
+    <img
+      src={ORIGENRED_LOGO_SRC}
+      alt="OrigenRed"
+      className={`w-full h-auto max-w-none object-cover object-top ${className}`}
+      style={{ minHeight: cropMinHeight }}
+      decoding="async"
+    />
+  </div>
 );
 
 export const OrigenRedLogo: React.FC<Props> = ({
@@ -46,31 +53,21 @@ export const OrigenRedLogo: React.FC<Props> = ({
 }) => {
   if (variant === 'header') {
     return (
-      <div className={`flex items-center gap-2.5 sm:gap-3 min-w-0 ${className}`}>
-        <img
-          src={HEADER_ICON_SRC}
-          alt=""
-          className="h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0 drop-shadow-sm"
-          decoding="async"
-        />
-        <HeaderWordmark className="text-[1.45rem] sm:text-[1.75rem]" />
-      </div>
+      <OfficialLogoCrop
+        boxClassName={`h-[3.5rem] sm:h-[4.5rem] w-[11rem] sm:w-[15rem] ${className}`}
+        cropMinHeight="185%"
+      />
     );
   }
 
   if (variant === 'footer') {
     return (
       <div className={`flex flex-col items-center sm:items-start gap-3 ${className}`}>
-        <div className="flex items-center gap-3">
-          <img
-            src={HEADER_ICON_SRC}
-            alt=""
-            className="h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0"
-            decoding="async"
-          />
-          <HeaderWordmark className="text-3xl sm:text-4xl" />
-        </div>
-        <OrigenRedTagline className="text-xs sm:text-sm max-w-[20rem]" />
+        <OfficialLogoCrop
+          boxClassName="h-36 sm:h-44 w-[14rem] sm:w-[18rem]"
+          cropMinHeight="155%"
+        />
+        <OrigenRedTagline className="text-xs sm:text-sm max-w-[18rem]" />
       </div>
     );
   }
@@ -82,7 +79,12 @@ export const OrigenRedLogo: React.FC<Props> = ({
         alt="OrigenRed"
         className={`${sizeMap[size]} object-contain object-left drop-shadow-md`}
       />
-      {showWordmark && <HeaderWordmark className="text-2xl sm:text-3xl" />}
+      {showWordmark && (
+        <span className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+          <span className="text-or-navy">Origen</span>
+          <span className="text-or-red">Red</span>
+        </span>
+      )}
     </div>
   );
 };
