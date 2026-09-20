@@ -1,9 +1,9 @@
 import React from 'react';
 
-/** Logo vertical (PWA / favicon) */
+/** Logo completo vertical (PWA / fallback) */
 export const ORIGENRED_LOGO_SRC = '/logooficialdefinitivo.png';
-/** Logo oficial web (fondo claro; archivo ancho — usar solo para recorte del ícono) */
-export const ORIGENRED_LOGO_WEB_SRC = '/origenred-logo-horizontal.png';
+/** Ícono oficial sin tipografía */
+export const ORIGENRED_ICON_SRC = '/origenred-icon.png';
 
 type Props = {
   size?: 'sm' | 'nav' | 'md' | 'lg' | 'xl' | 'hero';
@@ -40,24 +40,14 @@ const OrigenRedWordmark: React.FC<{ className?: string }> = ({ className = '' })
   </span>
 );
 
-/**
- * Ícono “O” del logo oficial (recorte superior izquierdo del PNG ancho).
- * `imageHeight` controla el zoom; el contenedor recorta a un cuadrado.
- */
-const OfficialIconMark: React.FC<{
-  boxClass: string;
-  imageHeight: string;
-  className?: string;
-}> = ({ boxClass, imageHeight, className = '' }) => (
-  <div className={`relative overflow-hidden shrink-0 ${boxClass} ${className}`}>
-    <img
-      src={ORIGENRED_LOGO_WEB_SRC}
-      alt=""
-      className={`absolute top-0 left-0 max-w-none w-auto ${imageHeight}`}
-      decoding="async"
-      aria-hidden
-    />
-  </div>
+const OfficialIconMark: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <img
+    src={ORIGENRED_ICON_SRC}
+    alt=""
+    className={`object-contain shrink-0 ${className}`}
+    decoding="async"
+    aria-hidden
+  />
 );
 
 export const OrigenRedLogo: React.FC<Props> = ({
@@ -72,10 +62,7 @@ export const OrigenRedLogo: React.FC<Props> = ({
         className={`flex items-center gap-2.5 sm:gap-3 min-w-0 ${className}`}
         aria-label="OrigenRed"
       >
-        <OfficialIconMark
-          boxClass="w-12 h-12 sm:w-14 sm:h-14"
-          imageHeight="h-[10.5rem] sm:h-[12.5rem]"
-        />
+        <OfficialIconMark className="w-11 h-11 sm:w-[3.25rem] sm:h-[3.25rem]" />
         <OrigenRedWordmark className="text-[1.35rem] sm:text-[1.75rem] md:text-[1.9rem]" />
       </div>
     );
@@ -83,12 +70,9 @@ export const OrigenRedLogo: React.FC<Props> = ({
 
   if (variant === 'footer') {
     return (
-      <div className={`flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-5 ${className}`}>
+      <div className={`flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6 ${className}`}>
         <div className="flex items-center gap-3 sm:gap-4">
-          <OfficialIconMark
-            boxClass="w-[4.5rem] h-[4.5rem] sm:w-20 sm:h-20"
-            imageHeight="h-[14rem] sm:h-[16rem]"
-          />
+          <OfficialIconMark className="w-16 h-16 sm:w-20 sm:h-20" />
           <OrigenRedWordmark className="text-3xl sm:text-4xl" />
         </div>
         <OrigenRedTagline className="text-xs sm:text-sm max-w-md sm:max-w-sm sm:pt-1" />

@@ -118,7 +118,7 @@ export const PwaInstallBanner: React.FC = () => {
       <div className="max-w-lg mx-auto rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/20 overflow-hidden">
         <div className="flex items-start gap-3 p-4">
           <img
-            src="/logooficialdefinitivo.png"
+            src="/origenred-icon.png"
             alt=""
             className="w-12 h-12 rounded-xl flex-shrink-0"
           />
