@@ -88,6 +88,12 @@ export const inventoryApi = createApi({
       }),
       invalidatesTags: ['Product'],
     }),
+    syncMarketplace: builder.mutation<{ message: string; synced: number }, void>({
+      query: () => ({
+        url: '/sync-marketplace',
+        method: 'POST',
+      }),
+    }),
   }),
 });
 
@@ -101,4 +107,5 @@ export const {
   useGetProductStockByBranchQuery,
   usePreviewBulkCostUpdateMutation,
   useApplyBulkCostUpdateMutation,
+  useSyncMarketplaceMutation,
 } = inventoryApi;

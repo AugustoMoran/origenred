@@ -347,7 +347,11 @@ export const createProduct = async (productData: Partial<IProduct> & { branchSto
   return populated;
 };
 
-export const updateProduct = async (id: string, updateData: Partial<IProduct>) => {
+export const updateProduct = async (
+  id: string,
+  updateData: Partial<IProduct>,
+  actingUser?: { _id?: unknown; roles?: string[] }
+) => {
   if ('sku' in updateData) {
     const normalizedSku = (updateData.sku || '').toString().trim().toUpperCase();
     if (normalizedSku) {
@@ -382,7 +386,7 @@ export const updateProduct = async (id: string, updateData: Partial<IProduct>) =
   const updated = await Product.findByIdAndUpdate(id, updateData, { new: true }).populate('supplier', 'name');
 
   try {
-    await syncProductToMarketplaceListing(id);
+    await syncProductToMarketplaceListing(id, actingUser?._id as any);
   } catch (err) {
     console.error('[inventory] sync marketplace listing:', (err as Error).message);
   }
@@ -390,7 +394,12 @@ export const updateProduct = async (id: string, updateData: Partial<IProduct>) =
   return updated;
 };
 
-export const updateStock = async (id: string, quantity: number, type: 'add' | 'remove') => {
+export const updateStock = async (
+  id: string,
+  quantity: number,
+  type: 'add' | 'remove',
+  actingUser?: { _id?: unknown }
+) => {
   const multiplier = type === 'add' ? 1 : -1;
   return await Product.findByIdAndUpdate(
     id,
@@ -399,13 +408,25 @@ export const updateStock = async (id: string, quantity: number, type: 'add' | 'r
   ).then(async (product) => {
     if (product) {
       try {
-        await syncProductToMarketplaceListing(id);
+        await syncProductToMarketplaceListing(id, actingUser?._id as any);
       } catch (err) {
         console.error('[inventory] sync marketplace listing:', (err as Error).message);
       }
     }
     return product;
   });
+};
+
+export const resyncInventoryToMarketplace = async (actingUser: { _id?: unknown; roles?: string[] }) => {
+  const isAdmin = Array.isArray(actingUser?.roles) && actingUser.roles.includes('admin');
+  if (!isAdmin) {
+    throw new Error('Solo administradores pueden resincronizar el marketplace');
+  }
+  const { syncAllInventoryProductsToMarketplace } = await import(
+    '../../marketplace/services/productListingSyncService'
+  );
+  const synced = await syncAllInventoryProductsToMarketplace(actingUser._id as any);
+  return { synced };
 };
 
 export const deleteProduct = async (id: string) => {

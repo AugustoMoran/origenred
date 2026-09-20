@@ -84,6 +84,29 @@ export async function ensureOfficialSellerProfile(adminUserId: mongoose.Types.Ob
   return seller;
 }
 
+/**
+ * Inventario del panel admin: si el admin tiene perfil de vendedor aprobado, publica ahí
+ * (misma cuenta que Mercado Pago). Si no, usa la tienda OrigenRed Oficial.
+ */
+export async function resolveSellerForInventorySync(
+  actingUserId: mongoose.Types.ObjectId
+) {
+  const user = await User.findById(actingUserId);
+  if (user?.roles?.includes('admin')) {
+    const ownApproved = await SellerProfile.findOne({
+      user: actingUserId,
+      status: 'approved',
+    }).sort({ updatedAt: -1 });
+    if (ownApproved) return ownApproved;
+  }
+  return ensureOfficialSellerProfile(actingUserId);
+}
+
+async function refreshSellerListingCount(sellerId: mongoose.Types.ObjectId | string) {
+  const count = await Listing.countDocuments({ seller: sellerId, status: 'active' });
+  await SellerProfile.findByIdAndUpdate(sellerId, { listingCount: count });
+}
+
 async function getDefaultAdminId(): Promise<mongoose.Types.ObjectId> {
   const admin = await User.findOne({ roles: { $in: ['admin'] } }).sort({ createdAt: 1 });
   if (!admin) throw new Error('No hay usuario admin para publicar en marketplace');
@@ -148,7 +171,7 @@ export async function syncProductToMarketplaceListing(
   }
 
   const adminId = adminUserId || (await getDefaultAdminId());
-  const seller = await ensureOfficialSellerProfile(adminId);
+  const seller = await resolveSellerForInventorySync(adminId);
   const category = await resolveMarketplaceCategory(product.category);
   if (!category) {
     console.warn(`[sync] Sin categoría marketplace para producto ${product.sku}`);
@@ -189,6 +212,7 @@ export async function syncProductToMarketplaceListing(
 
   let listing = await Listing.findOne({ inventoryProductId: product._id });
   const wasActive = listing?.status === 'active';
+  const previousSellerId = listing?.seller ? String(listing.seller) : null;
 
   if (listing) {
     const slug = product.slug
@@ -208,16 +232,15 @@ export async function syncProductToMarketplaceListing(
     });
     listing.origenRankScore = computeOrigenRankScore({ listing, seller });
     await listing.save();
-    await SellerProfile.findByIdAndUpdate(seller._id, { $inc: { listingCount: 1 } });
+  }
+
+  if (previousSellerId && previousSellerId !== String(seller._id)) {
+    await refreshSellerListingCount(previousSellerId);
   }
 
   if (listing.status === 'active') {
     await indexListing(listing);
-    if (!wasActive && listing.inventoryProductId) {
-      // listing reactivated
-      const count = await Listing.countDocuments({ seller: seller._id, status: 'active' });
-      await SellerProfile.findByIdAndUpdate(seller._id, { listingCount: count });
-    }
+    await refreshSellerListingCount(seller._id);
   }
 
   const activeCount = await Listing.countDocuments({

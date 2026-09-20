@@ -11,6 +11,7 @@ import {
   useGetProductStockByBranchQuery,
   usePreviewBulkCostUpdateMutation,
   useApplyBulkCostUpdateMutation,
+  useSyncMarketplaceMutation,
 } from '../services/inventoryApi';
 import { useGetBranchesQuery } from '../services/branchApi';
 import { useGetCategoriesQuery } from '../services/categoryApi';
@@ -187,6 +188,8 @@ export const Inventory = () => {
   const [manualAdjust] = useManualAdjustMutation();
   const [previewBulkCostUpdate, { isLoading: isPreviewingBulk }] = usePreviewBulkCostUpdateMutation();
   const [applyBulkCostUpdate, { isLoading: isApplyingBulk }] = useApplyBulkCostUpdateMutation();
+  const [syncMarketplace, { isLoading: isSyncingMp }] = useSyncMarketplaceMutation();
+  const [mpSyncMsg, setMpSyncMsg] = useState('');
   const { user } = useSelector((state: any) => state.auth);
   
   const isAdmin = Array.isArray(user?.roles) ? user.roles.includes('admin') : user?.role === 'admin';
@@ -749,18 +752,37 @@ export const Inventory = () => {
   return (
     <div className="space-y-6 animate-slide-up">
       {isAdmin && (
-        <div className="card p-4 border border-brand-500/20 bg-brand-500/5">
+        <div className="card p-4 border border-brand-500/20 bg-brand-500/5 space-y-3">
           <p className="text-sm text-slate-300">
-            Los productos del <strong className="text-white">Inventario POS</strong> se publican automáticamente en el
-            marketplace (home y búsqueda) bajo <strong className="text-white">OrigenRed Oficial</strong> cuando no están
-            pausados. También aparecen en{' '}
-            <Link to="/products" className="text-brand-400 hover:underline">/products</Link> (tienda online).
-            Gestionarlos aquí; ver listado MP en{' '}
+            Los productos del <strong className="text-white">Inventario POS</strong> se publican en el marketplace bajo{' '}
+            <strong className="text-white">tu perfil de vendedor aprobado</strong> (el mismo con Mercado Pago vinculado).
+            Si no tenés perfil aprobado, se usa OrigenRed Oficial. También en{' '}
+            <Link to="/products" className="text-brand-400 hover:underline">/products</Link> ·{' '}
+            <Link to="/vendedor/productos" className="text-brand-400 hover:underline">Mis productos (vendedor)</Link> ·{' '}
             <Link to="/dashboard/admin/marketplace-listings" className="text-brand-400 hover:underline">
-              Productos MP
+              Productos MP (admin)
             </Link>
             .
           </p>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              disabled={isSyncingMp}
+              onClick={async () => {
+                setMpSyncMsg('');
+                try {
+                  const res = await syncMarketplace().unwrap();
+                  setMpSyncMsg(res.message);
+                } catch (e: any) {
+                  setMpSyncMsg(e?.data?.message || 'Error al sincronizar');
+                }
+              }}
+              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-500 disabled:opacity-50"
+            >
+              {isSyncingMp ? 'Sincronizando…' : 'Unificar inventario con mi tienda MP'}
+            </button>
+            {mpSyncMsg && <span className="text-xs text-slate-400">{mpSyncMsg}</span>}
+          </div>
         </div>
       )}
 

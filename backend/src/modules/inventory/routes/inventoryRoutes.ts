@@ -5,7 +5,8 @@ import {
   updateProductController, 
   deleteProductController,
   adjustStockController,
-  bulkCostUpdateController
+  bulkCostUpdateController,
+  resyncMarketplaceController,
 } from '../controllers/inventoryController';
 import { authenticate, authorize } from '../../../middleware/authMiddleware';
 import { upload } from '../../../middleware/uploadMiddleware';
@@ -38,5 +39,6 @@ router.delete('/:id', authenticate, authorize(PERMISSIONS.INVENTORY_EDIT), delet
 // Ajuste rápido de stock (entradas/salidas)
 router.patch('/:id/stock', authenticate, authorize(PERMISSIONS.INVENTORY_EDIT), adjustStockController);
 router.post('/bulk/cost-update', authenticate, authorize(PERMISSIONS.INVENTORY_EDIT), bulkCostUpdateController);
+router.post('/sync-marketplace', authenticate, resyncMarketplaceController);
 
 export default router;

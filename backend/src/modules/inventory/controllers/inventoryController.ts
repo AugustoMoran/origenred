@@ -85,7 +85,7 @@ export const updateProductController = async (req: Request, res: Response) => {
       await applyInventoryImagesToProductData(req, productData);
     }
 
-    const product = await inventoryService.updateProduct(id, productData);
+    const product = await inventoryService.updateProduct(id, productData, (req as any).user);
     if (!product) return res.status(404).json({ message: 'Producto no encontrado' });
     res.json(product);
   } catch (error: any) {
@@ -107,10 +107,23 @@ export const adjustStockController = async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { quantity, type } = req.body;
-    const product = await inventoryService.updateStock(id, quantity, type);
+    const product = await inventoryService.updateStock(id, quantity, type, (req as any).user);
     res.json(product);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
+  }
+};
+
+export const resyncMarketplaceController = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const result = await inventoryService.resyncInventoryToMarketplace(user);
+    res.json({
+      message: `Se sincronizaron ${result.synced} productos del inventario con el marketplace.`,
+      ...result,
+    });
+  } catch (error: any) {
+    res.status(error.message?.includes('Solo administradores') ? 403 : 400).json({ message: error.message });
   }
 };
 
