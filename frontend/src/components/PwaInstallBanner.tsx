@@ -1,12 +1,12 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import {
+  clearDeferredPwaPrompt,
+  getDeferredPwaPrompt,
+  onPwaInstallReady,
+} from '../utils/pwaInstallCapture';
 
 const DISMISS_KEY = 'origenred-pwa-install-dismiss-until-v2';
 const DISMISS_DAYS = 7;
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
-}
 
 export const isMobileUserAgent = () => {
   if (typeof window === 'undefined') return false;
@@ -57,7 +57,8 @@ export const PwaInstallBanner: React.FC = () => {
   const [visible, setVisible] = useState(() => shouldOfferPwaInstall());
   const [iosHints, setIosHints] = useState(false);
   const [androidHints, setAndroidHints] = useState(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
+  const [canNativeInstall, setCanNativeInstall] = useState(() => Boolean(getDeferredPwaPrompt()));
+  const [installTried, setInstallTried] = useState(false);
 
   useEffect(() => {
     if (!shouldOfferPwaInstall()) {
@@ -65,15 +66,12 @@ export const PwaInstallBanner: React.FC = () => {
       return;
     }
     setVisible(true);
+    setCanNativeInstall(Boolean(getDeferredPwaPrompt()));
 
-    const onBeforeInstall = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    return onPwaInstallReady(() => {
+      setCanNativeInstall(true);
       setVisible(true);
-    };
-
-    window.addEventListener('beforeinstallprompt', onBeforeInstall);
-    return () => window.removeEventListener('beforeinstallprompt', onBeforeInstall);
+    });
   }, []);
 
   const handleDismiss = useCallback(() => {
@@ -81,33 +79,55 @@ export const PwaInstallBanner: React.FC = () => {
     setVisible(false);
   }, []);
 
-  const handleInstall = useCallback(async () => {
+  const handleInstall = useCallback(() => {
+    setInstallTried(true);
+
     if (isIos()) {
       setIosHints(true);
       return;
     }
-    if (deferredPrompt) {
+
+    const promptEvent = getDeferredPwaPrompt();
+    if (promptEvent) {
       try {
-        await deferredPrompt.prompt();
-        const { outcome } = await deferredPrompt.userChoice;
-        if (outcome === 'accepted') {
-          dismissBanner();
-          setVisible(false);
-        }
+        // Debe ejecutarse en el mismo gesto del usuario (sin await antes de prompt).
+        void promptEvent.prompt();
+        void promptEvent.userChoice
+          .then((choice) => {
+            if (choice.outcome === 'accepted') {
+              dismissBanner();
+              setVisible(false);
+            } else {
+              setAndroidHints(true);
+            }
+          })
+          .catch(() => setAndroidHints(true))
+          .finally(() => {
+            clearDeferredPwaPrompt();
+            setCanNativeInstall(false);
+          });
       } catch {
+        clearDeferredPwaPrompt();
+        setCanNativeInstall(false);
         setAndroidHints(true);
-      } finally {
-        setDeferredPrompt(null);
       }
       return;
     }
+
     setAndroidHints(true);
-  }, [deferredPrompt]);
+  }, []);
 
   if (!visible) return null;
 
   const onIos = isIos();
   const onAndroid = /android/i.test(navigator.userAgent || '');
+  const showAndroidSteps = onAndroid && (androidHints || installTried || !canNativeInstall);
+
+  const installLabel = onIos
+    ? 'Ver cómo instalar'
+    : canNativeInstall
+      ? 'Instalar ahora'
+      : 'Ver pasos en Chrome';
 
   return (
     <div
@@ -117,27 +137,28 @@ export const PwaInstallBanner: React.FC = () => {
     >
       <div className="max-w-lg mx-auto rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-900/20 overflow-hidden">
         <div className="flex items-start gap-3 p-4">
-          <img
-            src="/origenred-icon.png"
-            alt=""
-            className="w-12 h-12 rounded-xl flex-shrink-0"
-          />
+          <img src="/origenred-icon.png" alt="" className="w-12 h-12 rounded-xl flex-shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-base font-semibold text-or-navy">Instalá OrigenRed</p>
             <p className="text-sm text-slate-600 mt-1 leading-snug">
-              Accedé más rápido desde tu pantalla de inicio.
+              {canNativeInstall
+                ? 'Chrome puede instalarla en un toque.'
+                : 'Seguí los pasos para agregarla a tu pantalla de inicio.'}
             </p>
             {iosHints && onIos && (
-              <ol className="mt-3 text-sm text-slate-700 space-y-1.5 list-decimal list-inside">
-                <li>En Safari: tocá <strong>Compartir</strong></li>
-                <li>Elegí <strong>Agregar a inicio</strong></li>
+              <ol className="mt-3 text-sm text-slate-700 space-y-1.5 list-decimal list-inside bg-slate-50 rounded-xl p-3">
+                <li>En Safari: tocá <strong>Compartir</strong> (cuadrado con flecha)</li>
+                <li>Elegí <strong>Agregar a inicio</strong> y confirmá</li>
               </ol>
             )}
-            {(androidHints || (onAndroid && !deferredPrompt)) && onAndroid && (
-              <p className="mt-3 text-sm text-slate-700">
-                En Chrome: menú <strong>⋮</strong> (arriba a la derecha) →{' '}
-                <strong>Instalar aplicación</strong> o <strong>Agregar a pantalla de inicio</strong>.
-              </p>
+            {showAndroidSteps && (
+              <ol className="mt-3 text-sm text-slate-700 space-y-1.5 list-decimal list-inside bg-amber-50 border border-amber-100 rounded-xl p-3">
+                <li>Abrí el menú <strong>⋮</strong> arriba a la derecha en Chrome</li>
+                <li>
+                  Tocá <strong>Instalar aplicación</strong> o <strong>Agregar a pantalla de inicio</strong>
+                </li>
+                <li>Confirmá con <strong>Instalar</strong></li>
+              </ol>
             )}
           </div>
           <button
@@ -153,9 +174,9 @@ export const PwaInstallBanner: React.FC = () => {
           <button
             type="button"
             onClick={handleInstall}
-            className="flex-1 py-3 px-4 rounded-xl bg-or-red text-white text-sm font-semibold"
+            className="flex-1 py-3 px-4 rounded-xl bg-or-red text-white text-sm font-semibold active:scale-[0.98] transition-transform"
           >
-            {onIos ? 'Ver cómo instalar' : 'Instalar app'}
+            {installLabel}
           </button>
           <button
             type="button"

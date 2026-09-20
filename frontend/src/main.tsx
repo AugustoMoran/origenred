@@ -7,6 +7,9 @@ import { AuthBootstrap } from './components/AuthBootstrap';
 import { MarketingScripts } from './components/MarketingScripts';
 import './styles/index.css';
 import { registerSW } from 'virtual:pwa-register';
+import { capturePwaInstallPromptEarly } from './utils/pwaInstallCapture';
+
+capturePwaInstallPromptEarly();
 
 if (import.meta.env.PROD) {
   registerSW({ immediate: true });
