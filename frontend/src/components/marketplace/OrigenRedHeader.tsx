@@ -23,7 +23,7 @@ export const OrigenRedHeader: React.FC = () => {
         <div className="min-h-[4.5rem] sm:min-h-[5rem] py-2 flex items-center justify-between gap-2 sm:gap-4">
           <Link
             to="/"
-            className="flex items-center h-full py-1 min-w-0 flex-shrink-0 group"
+            className="flex items-center h-full py-0.5 min-w-0 flex-shrink-0 group -ml-0.5 sm:ml-0"
           >
             <OrigenRedLogo variant="header" className="group-hover:opacity-90 transition-opacity" />
           </Link>

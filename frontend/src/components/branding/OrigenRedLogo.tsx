@@ -2,7 +2,7 @@ import React from 'react';
 
 /** Logo vertical (PWA / iconos) */
 export const ORIGENRED_LOGO_SRC = '/logooficialdefinitivo.png';
-/** Logo oficial web (fondo claro; archivo ancho — se recorta a la izquierda) */
+/** Logo oficial web (fondo claro) */
 export const ORIGENRED_LOGO_WEB_SRC = '/origenred-logo-horizontal.png';
 
 type Props = {
@@ -30,6 +30,25 @@ const OrigenRedTagline: React.FC<{ className?: string }> = ({ className = '' }) 
   </p>
 );
 
+/**
+ * El PNG oficial es muy ancho (logo a la izquierda + margen vacío).
+ * Ampliamos la imagen y recortamos el contenedor para ver ícono + nombre nítidos.
+ */
+const WebLogoMark: React.FC<{
+  frameClass: string;
+  imageClass: string;
+  className?: string;
+}> = ({ frameClass, imageClass, className = '' }) => (
+  <div className={`overflow-hidden ${frameClass} ${className}`}>
+    <img
+      src={ORIGENRED_LOGO_WEB_SRC}
+      alt="OrigenRed"
+      className={`block max-w-none w-auto object-left ${imageClass}`}
+      decoding="async"
+    />
+  </div>
+);
+
 export const OrigenRedLogo: React.FC<Props> = ({
   size = 'md',
   variant = 'default',
@@ -38,11 +57,10 @@ export const OrigenRedLogo: React.FC<Props> = ({
 }) => {
   if (variant === 'header') {
     return (
-      <img
-        src={ORIGENRED_LOGO_WEB_SRC}
-        alt="OrigenRed"
-        className={`h-12 sm:h-14 w-[10.5rem] sm:w-[13rem] object-cover object-[left_12%] block flex-shrink-0 ${className}`}
-        decoding="async"
+      <WebLogoMark
+        frameClass="h-[3.75rem] sm:h-[4.5rem] w-[8.25rem] sm:w-[10rem] shrink-0"
+        imageClass="h-[11.5rem] sm:h-[14rem]"
+        className={className}
       />
     );
   }
@@ -50,13 +68,11 @@ export const OrigenRedLogo: React.FC<Props> = ({
   if (variant === 'footer') {
     return (
       <div className={`flex flex-col items-start gap-3 ${className}`}>
-        <img
-          src={ORIGENRED_LOGO_WEB_SRC}
-          alt="OrigenRed"
-          className="h-[4.75rem] sm:h-24 w-[12rem] sm:w-[15rem] object-cover object-[left_10%]"
-          decoding="async"
+        <WebLogoMark
+          frameClass="h-[5.25rem] sm:h-[6.25rem] w-[10rem] sm:w-[12rem]"
+          imageClass="h-[13rem] sm:h-[15.5rem]"
         />
-        <OrigenRedTagline className="text-xs sm:text-sm max-w-[22rem] pl-0.5" />
+        <OrigenRedTagline className="text-xs sm:text-sm max-w-[22rem]" />
       </div>
     );
   }
