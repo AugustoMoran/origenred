@@ -2,10 +2,10 @@ import React from 'react';
 
 /** Logo oficial OrigenRed — archivo en public/logooficialdefinitivo.png */
 export const ORIGENRED_LOGO_SRC = '/logooficialdefinitivo.png';
+const HEADER_ICON_SRC = '/origenred-logo.svg';
 
 type Props = {
   size?: 'sm' | 'nav' | 'md' | 'lg' | 'xl' | 'hero';
-  /** Header: solo ícono + nombre (sin tagline del PNG). Footer: logo grande + tagline HTML */
   variant?: 'default' | 'header' | 'footer';
   showWordmark?: boolean;
   className?: string;
@@ -22,11 +22,20 @@ const sizeMap = {
 
 const OrigenRedTagline: React.FC<{ className?: string }> = ({ className = '' }) => (
   <p
-    className={`font-semibold uppercase tracking-[0.12em] leading-snug text-center ${className}`}
+    className={`font-semibold uppercase tracking-[0.14em] leading-snug text-center ${className}`}
   >
     <span className="text-slate-600">Conectamos orígenes, creamos </span>
     <span className="text-or-red">oportunidades</span>
   </p>
+);
+
+const HeaderWordmark: React.FC<{ className?: string }> = ({ className = '' }) => (
+  <span
+    className={`font-extrabold tracking-tight leading-none whitespace-nowrap ${className}`}
+  >
+    <span className="text-or-navy">Origen</span>
+    <span className="text-or-red">Red</span>
+  </span>
 );
 
 export const OrigenRedLogo: React.FC<Props> = ({
@@ -37,31 +46,31 @@ export const OrigenRedLogo: React.FC<Props> = ({
 }) => {
   if (variant === 'header') {
     return (
-      <div className={`flex flex-col items-start justify-center ${className}`}>
-        <div className="h-11 sm:h-[3.25rem] w-[7.5rem] sm:w-[9.5rem] overflow-hidden flex-shrink-0">
-          <img
-            src={ORIGENRED_LOGO_SRC}
-            alt="OrigenRed"
-            className="w-full h-auto min-h-[168%] max-w-none object-cover object-top"
-            decoding="async"
-          />
-        </div>
+      <div className={`flex items-center gap-2.5 sm:gap-3 min-w-0 ${className}`}>
+        <img
+          src={HEADER_ICON_SRC}
+          alt=""
+          className="h-12 w-12 sm:h-14 sm:w-14 flex-shrink-0 drop-shadow-sm"
+          decoding="async"
+        />
+        <HeaderWordmark className="text-[1.45rem] sm:text-[1.75rem]" />
       </div>
     );
   }
 
   if (variant === 'footer') {
     return (
-      <div className={`flex flex-col items-center sm:items-start gap-2 ${className}`}>
-        <div className="h-28 sm:h-36 w-[11rem] sm:w-[14rem] overflow-hidden">
+      <div className={`flex flex-col items-center sm:items-start gap-3 ${className}`}>
+        <div className="flex items-center gap-3">
           <img
-            src={ORIGENRED_LOGO_SRC}
-            alt="OrigenRed"
-            className="w-full h-auto min-h-[155%] max-w-none object-cover object-top"
+            src={HEADER_ICON_SRC}
+            alt=""
+            className="h-16 w-16 sm:h-20 sm:w-20 flex-shrink-0"
             decoding="async"
           />
+          <HeaderWordmark className="text-3xl sm:text-4xl" />
         </div>
-        <OrigenRedTagline className="text-[11px] sm:text-xs max-w-[16rem]" />
+        <OrigenRedTagline className="text-xs sm:text-sm max-w-[20rem]" />
       </div>
     );
   }
@@ -73,12 +82,7 @@ export const OrigenRedLogo: React.FC<Props> = ({
         alt="OrigenRed"
         className={`${sizeMap[size]} object-contain object-left drop-shadow-md`}
       />
-      {showWordmark && (
-        <span className="text-2xl sm:text-3xl font-extrabold tracking-tight">
-          <span className="text-or-navy">Origen</span>
-          <span className="text-or-red">Red</span>
-        </span>
-      )}
+      {showWordmark && <HeaderWordmark className="text-2xl sm:text-3xl" />}
     </div>
   );
 };

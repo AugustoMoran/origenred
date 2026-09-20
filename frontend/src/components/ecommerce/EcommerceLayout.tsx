@@ -5,8 +5,6 @@ import { MarketplaceCartDrawer } from '../marketplace/MarketplaceCartDrawer';
 import { RouteChangeTracker } from '../RouteChangeTracker';
 import { NetworkBackdrop } from '../branding/NetworkBackdrop';
 import { OrigenRedLogo } from '../branding/OrigenRedLogo';
-import { PwaInstallBanner } from '../PwaInstallBanner';
-import { PwaInstallBanner } from '../PwaInstallBanner';
 
 export const EcommerceLayout: React.FC = () => {
   return (
@@ -31,7 +29,6 @@ export const EcommerceLayout: React.FC = () => {
           </div>
         </footer>
         <MarketplaceCartDrawer />
-        <PwaInstallBanner />
       </div>
     </div>
   );

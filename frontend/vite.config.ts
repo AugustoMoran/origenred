@@ -19,9 +19,9 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: '/logooficialdefinitivo.png',
-            sizes: '192x192',
-            type: 'image/png',
+            src: '/origenred-logo.svg',
+            sizes: '120x120',
+            type: 'image/svg+xml',
             purpose: 'any',
           },
           {

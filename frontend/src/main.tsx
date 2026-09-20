@@ -6,6 +6,11 @@ import { store } from './store';
 import { AuthBootstrap } from './components/AuthBootstrap';
 import { MarketingScripts } from './components/MarketingScripts';
 import './styles/index.css';
+import { registerSW } from 'virtual:pwa-register';
+
+if (import.meta.env.PROD) {
+  registerSW({ immediate: true });
+}
 
 createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

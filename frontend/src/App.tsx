@@ -50,6 +50,7 @@ import { StoreWhatsAppSent } from './pages/store/StoreWhatsAppSent';
 import { StoreRegister } from './pages/store/StoreRegister';
 import { Maintenance } from './pages/store/Maintenance';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { PwaInstallBanner } from './components/PwaInstallBanner';
 
 const AdminUsers = React.lazy(() => import('./pages/admin').then((m) => ({ default: m.AdminUsers })));
 const AdminCatalog = React.lazy(() => import('./pages/admin').then((m) => ({ default: m.AdminCatalog })));
@@ -247,5 +248,10 @@ const router = createBrowserRouter([
 } as any);
 
 export default function App() {
-  return <RouterProvider router={router} future={{ v7_startTransition: true }} />;
+  return (
+    <>
+      <RouterProvider router={router} future={{ v7_startTransition: true }} />
+      <PwaInstallBanner />
+    </>
+  );
 }
