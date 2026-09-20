@@ -341,6 +341,8 @@ export async function getMercadoPagoConnectController(req: Request, res: Respons
 
   const url = getMercadoPagoConnectUrl(String(profile._id), returnClient);
 
+  const redirectUri = getMercadoPagoConnectRedirectUri(returnClient);
+
   res.json({
     url,
     enabled: Boolean(url),
@@ -348,8 +350,10 @@ export async function getMercadoPagoConnectController(req: Request, res: Respons
     needsSellerProfile: false,
     missingConnect,
     mercadoPagoConnected: profile.mercadoPagoConnected,
-    redirectUri: getMercadoPagoConnectRedirectUri(returnClient),
+    redirectUri,
     commissionPercent: mpConfig.commissionPercent,
+    oauthSetupHint:
+      'En developers.mercadopago.com → tu aplicación → URLs de redireccionamiento: agregá exactamente redirectUri. MERCADOPAGO_CLIENT_ID debe ser el número de aplicación (App ID), no la Public Key.',
   });
 }
 

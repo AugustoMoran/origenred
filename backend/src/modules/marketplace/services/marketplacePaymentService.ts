@@ -1,6 +1,10 @@
 import axios from 'axios';
 import { features, marketplaceConfig } from '../../../config/features';
-import { mercadoPagoEnv, isMercadoPagoConnectConfigured } from '../../../config/mercadoPagoEnv';
+import {
+  mercadoPagoEnv,
+  isMercadoPagoConnectConfigured,
+  getMercadoPagoOAuthRedirectUri,
+} from '../../../config/mercadoPagoEnv';
 
 const MP_API_BASE = 'https://api.mercadopago.com';
 
@@ -14,25 +18,25 @@ export const getMercadoPagoPublicConfig = () => ({
   commissionPercent: marketplaceConfig.commissionPercent,
 });
 
-const getMercadoPagoRedirectUri = (returnClient?: 'mobile' | 'web') => {
-  if (returnClient === 'mobile') {
-    const scheme = process.env.MOBILE_APP_SCHEME || 'origenred';
-    return `${scheme}://mercadopago/callback`;
-  }
-  return `${process.env.FRONTEND_URL || 'http://localhost:5173'}/vendedor/mercadopago/callback`;
-};
-
-/** OAuth Connect — URL de vinculación (requiere MERCADOPAGO_CLIENT_ID) */
+/** OAuth Connect — URL de vinculación (requiere MERCADOPAGO_CLIENT_ID = App ID numérico) */
 export const getMercadoPagoConnectUrl = (sellerId: string, returnClient?: 'mobile' | 'web') => {
   const clientId = mercadoPagoEnv.clientId;
-  const redirectUri = getMercadoPagoRedirectUri(returnClient);
+  const redirectUri = getMercadoPagoOAuthRedirectUri(returnClient);
   if (!clientId) return null;
 
-  return `https://auth.mercadopago.com.ar/authorization?client_id=${clientId}&response_type=code&platform_id=mp&state=${sellerId}&redirect_uri=${encodeURIComponent(redirectUri)}`;
+  const params = new URLSearchParams({
+    client_id: clientId,
+    response_type: 'code',
+    platform_id: 'mp',
+    state: sellerId,
+    redirect_uri: redirectUri,
+  });
+
+  return `https://auth.mercadopago.com/authorization?${params.toString()}`;
 };
 
 export const getMercadoPagoConnectRedirectUri = (returnClient?: 'mobile' | 'web') =>
-  getMercadoPagoRedirectUri(returnClient);
+  getMercadoPagoOAuthRedirectUri(returnClient);
 
 /** Intercambia el código OAuth por credenciales del vendedor en MP */
 export const exchangeMercadoPagoConnectCode = async (
@@ -41,7 +45,7 @@ export const exchangeMercadoPagoConnectCode = async (
 ) => {
   const clientId = mercadoPagoEnv.clientId;
   const clientSecret = mercadoPagoEnv.clientSecret;
-  const redirectUri = getMercadoPagoRedirectUri(returnClient);
+  const redirectUri = getMercadoPagoOAuthRedirectUri(returnClient);
 
   if (!clientId || !clientSecret) {
     throw new Error('Mercado Pago Connect no configurado en el servidor');

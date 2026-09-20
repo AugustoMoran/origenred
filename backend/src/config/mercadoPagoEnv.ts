@@ -35,3 +35,18 @@ export function isMercadoPagoConnectConfigured(): boolean {
 export function isMercadoPagoPaymentsConfigured(): boolean {
   return Boolean(mercadoPagoEnv.accessToken && mercadoPagoEnv.publicKey);
 }
+
+/** URL de callback OAuth — debe coincidir carácter a carácter con Mercado Pago Developers. */
+export function getMercadoPagoOAuthRedirectUri(returnClient?: 'mobile' | 'web'): string {
+  const explicit = readEnv('MERCADOPAGO_OAUTH_REDIRECT_URI', 'MP_OAUTH_REDIRECT_URI');
+  if (explicit) return explicit.replace(/\/+$/, '');
+
+  if (returnClient === 'mobile') {
+    const scheme = readEnv('MOBILE_APP_SCHEME') || 'origenred';
+    return `${scheme}://mercadopago/callback`;
+  }
+
+  const frontend = readEnv('FRONTEND_URL') || 'http://localhost:5173';
+  const base = frontend.replace(/\/+$/, '');
+  return `${base}/vendedor/mercadopago/callback`;
+}

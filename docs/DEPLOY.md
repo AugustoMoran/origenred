@@ -19,7 +19,8 @@
 | `FRONTEND_URL` | URL del sitio, ej. `https://origenred.com` |
 | `CORS_ALLOWED_ORIGINS` | Misma URL + dominio custom si aplica |
 | `R2_*` | Cloudflare R2 (imágenes) |
-| `MERCADOPAGO_*` | Pagos + webhook |
+| `MERCADOPAGO_*` | Pagos + OAuth Connect (`CLIENT_ID` = App ID numérico, no Public Key) |
+| `MERCADOPAGO_OAUTH_REDIRECT_URI` | (recomendado) `https://origenred.com/vendedor/mercadopago/callback` — misma URL en MP Developers → URLs de redireccionamiento |
 | `MERCADOPAGO_WEBHOOK_URL` | `https://<render-api>/api/marketplace/checkout/webhook` |
 | `RESEND_API_KEY` | (opcional) Email aprobación vendedores |
 | `EMAIL_FROM` | Remitente, ej. `OrigenRed <noreply@origenred.com.ar>` |
