@@ -20,9 +20,9 @@ export const EcommerceLayout: React.FC = () => {
         </main>
         <footer className="border-t border-slate-200/80 bg-white/90 backdrop-blur-sm py-12 mt-auto">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex flex-col sm:flex-row items-center justify-between gap-8">
+            <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
               <OrigenRedLogo variant="footer" />
-              <p className="text-sm text-slate-500 text-center sm:text-right max-w-md">
+              <p className="text-sm text-slate-500 lg:text-right max-w-md lg:pt-2">
                 © {new Date().getFullYear()} OrigenRed. Conectamos orígenes, creamos oportunidades.
               </p>
             </div>
