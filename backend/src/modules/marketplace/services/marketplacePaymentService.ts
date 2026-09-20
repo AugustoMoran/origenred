@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { features, marketplaceConfig } from '../../../config/features';
+import { mercadoPagoEnv, isMercadoPagoConnectConfigured } from '../../../config/mercadoPagoEnv';
 
 const MP_API_BASE = 'https://api.mercadopago.com';
 
@@ -8,8 +9,8 @@ export const isMercadoPagoConnectEnabled = () => features.mercadoPagoConnect;
 
 export const getMercadoPagoPublicConfig = () => ({
   enabled: features.mercadoPago,
-  connectEnabled: features.mercadoPagoConnect,
-  publicKey: process.env.MERCADOPAGO_PUBLIC_KEY || '',
+  connectEnabled: isMercadoPagoConnectConfigured(),
+  publicKey: mercadoPagoEnv.publicKey,
   commissionPercent: marketplaceConfig.commissionPercent,
 });
 
@@ -23,7 +24,7 @@ const getMercadoPagoRedirectUri = (returnClient?: 'mobile' | 'web') => {
 
 /** OAuth Connect — URL de vinculación (requiere MERCADOPAGO_CLIENT_ID) */
 export const getMercadoPagoConnectUrl = (sellerId: string, returnClient?: 'mobile' | 'web') => {
-  const clientId = process.env.MERCADOPAGO_CLIENT_ID;
+  const clientId = mercadoPagoEnv.clientId;
   const redirectUri = getMercadoPagoRedirectUri(returnClient);
   if (!clientId) return null;
 
@@ -38,8 +39,8 @@ export const exchangeMercadoPagoConnectCode = async (
   code: string,
   returnClient?: 'mobile' | 'web'
 ) => {
-  const clientId = process.env.MERCADOPAGO_CLIENT_ID;
-  const clientSecret = process.env.MERCADOPAGO_CLIENT_SECRET;
+  const clientId = mercadoPagoEnv.clientId;
+  const clientSecret = mercadoPagoEnv.clientSecret;
   const redirectUri = getMercadoPagoRedirectUri(returnClient);
 
   if (!clientId || !clientSecret) {
@@ -75,7 +76,7 @@ export const createMarketplacePreference = async (input: {
   collectorId?: string;
   returnClient?: 'mobile' | 'web';
 }) => {
-  const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  const accessToken = mercadoPagoEnv.accessToken;
   if (!accessToken) {
     throw new Error('Mercado Pago no configurado. Completá MERCADOPAGO_* en .env');
   }
@@ -135,7 +136,7 @@ export const createMarketplacePreference = async (input: {
 };
 
 export const verifyMercadoPagoPayment = async (paymentId: string) => {
-  const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  const accessToken = mercadoPagoEnv.accessToken;
   if (!accessToken) throw new Error('Mercado Pago no configurado');
 
   const response = await axios.get(`${MP_API_BASE}/v1/payments/${paymentId}`, {
@@ -156,7 +157,7 @@ export const refundMercadoPagoPayment = async (
   paymentId: string,
   amount?: number
 ): Promise<MercadoPagoRefundResult> => {
-  const accessToken = process.env.MERCADOPAGO_ACCESS_TOKEN;
+  const accessToken = mercadoPagoEnv.accessToken;
   if (!accessToken) throw new Error('Mercado Pago no configurado');
 
   const payment = await verifyMercadoPagoPayment(paymentId);

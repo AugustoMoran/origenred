@@ -1,4 +1,5 @@
 import dotenv from 'dotenv';
+import { isMercadoPagoConnectConfigured, isMercadoPagoPaymentsConfigured } from './mercadoPagoEnv';
 
 dotenv.config();
 
@@ -12,12 +13,8 @@ export const features = {
       process.env.R2_BUCKET_NAME
   ),
   meilisearch: Boolean(process.env.MEILISEARCH_HOST && process.env.MEILISEARCH_API_KEY),
-  mercadoPago: Boolean(process.env.MERCADOPAGO_ACCESS_TOKEN && process.env.MERCADOPAGO_PUBLIC_KEY),
-  mercadoPagoConnect: Boolean(
-    process.env.MERCADOPAGO_CLIENT_ID &&
-      process.env.MERCADOPAGO_CLIENT_SECRET &&
-      process.env.MERCADOPAGO_ACCESS_TOKEN
-  ),
+  mercadoPago: isMercadoPagoPaymentsConfigured(),
+  mercadoPagoConnect: isMercadoPagoConnectConfigured(),
   envioPack: Boolean(process.env.ENVIOPACK_API_KEY && process.env.ENVIOPACK_SECRET),
   redis: Boolean(process.env.REDIS_URL),
   afipQueue: truthy(process.env.ENABLE_AFIP_QUEUE),

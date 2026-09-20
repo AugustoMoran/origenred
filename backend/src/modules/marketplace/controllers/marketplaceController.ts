@@ -1,4 +1,5 @@
 import { Request, Response } from 'express';
+import { getMercadoPagoConnectMissingKeys } from '../../../config/mercadoPagoEnv';
 import {
   registerSeller,
   applySellerAsExistingUser,
@@ -317,22 +318,34 @@ export async function deleteListingController(req: Request, res: Response) {
 
 export async function getMercadoPagoConnectController(req: Request, res: Response) {
   const userId = String((req as any).user._id);
-  const profile = await getSellerByUserId(userId);
-  if (!profile) return res.status(404).json({ message: 'Perfil de vendedor no encontrado' });
-
   const returnClient =
     req.headers['x-origenred-client'] === 'mobile' ? 'mobile' : 'web';
-  const url = getMercadoPagoConnectUrl(String(profile._id), returnClient);
   const mpConfig = getMercadoPagoPublicConfig();
-  const missingConnect: string[] = [];
-  if (!process.env.MERCADOPAGO_CLIENT_ID) missingConnect.push('MERCADOPAGO_CLIENT_ID');
-  if (!process.env.MERCADOPAGO_CLIENT_SECRET) missingConnect.push('MERCADOPAGO_CLIENT_SECRET');
-  if (!process.env.MERCADOPAGO_ACCESS_TOKEN) missingConnect.push('MERCADOPAGO_ACCESS_TOKEN');
+  const missingConnect = mpConfig.connectEnabled ? [] : getMercadoPagoConnectMissingKeys();
+
+  const profile = await getSellerByUserId(userId);
+  if (!profile) {
+    return res.json({
+      url: null,
+      enabled: false,
+      connectEnabled: mpConfig.connectEnabled,
+      needsSellerProfile: true,
+      missingConnect,
+      mercadoPagoConnected: false,
+      redirectUri: getMercadoPagoConnectRedirectUri(returnClient),
+      commissionPercent: mpConfig.commissionPercent,
+      message:
+        'No hay perfil de vendedor asociado a tu usuario. Solicitá uno en /vender y esperá la aprobación del admin.',
+    });
+  }
+
+  const url = getMercadoPagoConnectUrl(String(profile._id), returnClient);
 
   res.json({
     url,
     enabled: Boolean(url),
     connectEnabled: mpConfig.connectEnabled,
+    needsSellerProfile: false,
     missingConnect,
     mercadoPagoConnected: profile.mercadoPagoConnected,
     redirectUri: getMercadoPagoConnectRedirectUri(returnClient),

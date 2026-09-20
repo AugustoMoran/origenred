@@ -203,6 +203,8 @@ export const marketplaceApi = createApi({
         url: string | null;
         enabled: boolean;
         connectEnabled?: boolean;
+        needsSellerProfile?: boolean;
+        message?: string;
         missingConnect?: string[];
         redirectUri?: string;
         mercadoPagoConnected?: boolean;
