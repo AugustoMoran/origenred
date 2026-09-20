@@ -23,6 +23,12 @@ const ensureSellerFulfillment = (order: IMarketplaceOrder) => {
       status: entry.status || 'processing',
       trackingCode: entry.trackingCode,
       shippedAt: entry.shippedAt,
+      envioPackProofUrl: entry.envioPackProofUrl,
+      envioPackProofKey: entry.envioPackProofKey,
+      envioPackProofFileName: entry.envioPackProofFileName,
+      envioPackProofStatus: entry.envioPackProofStatus,
+      envioPackProofUploadedAt: entry.envioPackProofUploadedAt,
+      envioPackProofConfirmedAt: entry.envioPackProofConfirmedAt,
     }));
     return;
   }

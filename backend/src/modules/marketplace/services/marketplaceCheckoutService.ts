@@ -1,5 +1,6 @@
 import { Listing } from '../models/Listing';
 import { SellerProfile } from '../models/SellerProfile';
+import { User } from '../../auth/models/User';
 import { MarketplaceOrder } from '../models/MarketplaceOrder';
 import { Conversation } from '../models/Chat';
 import { initOrderFulfillmentOnPayment } from './marketplaceOrderService';
@@ -11,6 +12,17 @@ import { quoteShippingByPostalCode } from './marketplaceShippingService';
 import { createMarketplacePreference, verifyMercadoPagoPayment, isMercadoPagoEnabled, isMercadoPagoConnectEnabled } from './marketplacePaymentService';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/** Ventas del admin en su propio perfil: sin comisión (la comisión es ingreso de plataforma en terceros). */
+export const computeCommissionForSeller = async (sellerId: string, productSubtotal: number) => {
+  const profile = await SellerProfile.findById(sellerId).select('user');
+  if (!profile?.user) {
+    return round2(productSubtotal * (marketplaceConfig.commissionPercent / 100));
+  }
+  const user = await User.findById(profile.user).select('roles');
+  if (user?.roles?.includes('admin')) return 0;
+  return round2(productSubtotal * (marketplaceConfig.commissionPercent / 100));
+};
 
 export interface CheckoutItemInput {
   listingId: string;
@@ -142,7 +154,12 @@ export const previewCheckout = async (input: {
 
   const subtotal = round2(orderItems.reduce((acc, i) => acc + i.subtotal, 0));
   const commissionPercent = marketplaceConfig.commissionPercent;
-  const commissionTotal = round2(subtotal * (commissionPercent / 100));
+  let commissionTotal = 0;
+  for (const group of bySeller) {
+    commissionTotal = round2(
+      commissionTotal + (await computeCommissionForSeller(group.sellerId, group.productSubtotal))
+    );
+  }
   const total = round2(subtotal + shippingTotal);
 
   return {
@@ -227,6 +244,10 @@ const createOneCheckoutOrder = async (
         seller: group.sellerId,
         sellerName: group.sellerName,
         shippingCost: group.shippingCost,
+        envioPackProofStatus:
+          (input.shippingMethod || 'delivery') === 'delivery' && group.shippingCost > 0
+            ? 'pending_transfer'
+            : undefined,
       },
     ],
     chatEnabled: false,
@@ -314,7 +335,7 @@ export const createMarketplaceCheckout = async (input: {
       const groupItems = fullPreview.items.filter((i) => i.seller === group.sellerId);
       const subtotal = group.productSubtotal;
       const shippingTotal = group.shippingCost;
-      const commissionTotal = round2(subtotal * (fullPreview.commissionPercent / 100));
+      const commissionTotal = await computeCommissionForSeller(group.sellerId, subtotal);
       const total = round2(subtotal + shippingTotal);
       const slice: PreviewSlice = {
         items: groupItems,

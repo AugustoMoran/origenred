@@ -45,6 +45,12 @@ export interface IMarketplaceOrder extends Document {
     status?: 'processing' | 'shipped' | 'delivered';
     trackingCode?: string;
     shippedAt?: Date;
+    envioPackProofUrl?: string;
+    envioPackProofKey?: string;
+    envioPackProofFileName?: string;
+    envioPackProofStatus?: 'pending_transfer' | 'uploaded' | 'confirmed';
+    envioPackProofUploadedAt?: Date;
+    envioPackProofConfirmedAt?: Date;
   }>;
   envioPackShipmentId?: string;
   trackingCode?: string;
@@ -107,6 +113,15 @@ const MarketplaceOrderSchema = new Schema<IMarketplaceOrder>(
         status: { type: String, enum: ['processing', 'shipped', 'delivered'], default: 'processing' },
         trackingCode: String,
         shippedAt: Date,
+        envioPackProofUrl: String,
+        envioPackProofKey: String,
+        envioPackProofFileName: String,
+        envioPackProofStatus: {
+          type: String,
+          enum: ['pending_transfer', 'uploaded', 'confirmed'],
+        },
+        envioPackProofUploadedAt: Date,
+        envioPackProofConfirmedAt: Date,
       },
     ],
     envioPackShipmentId: { type: String },

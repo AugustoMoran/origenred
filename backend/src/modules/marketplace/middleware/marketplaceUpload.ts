@@ -17,12 +17,24 @@ const diskStorage = multer.diskStorage({
   },
 });
 
+const imageOrPdf = (mimetype: string) =>
+  /^image\/(jpeg|jpg|png|webp)$/i.test(mimetype) || mimetype === 'application/pdf';
+
 export const marketplaceUpload = multer({
   storage: isR2Enabled() ? memoryStorage : diskStorage,
   limits: { fileSize: 8 * 1024 * 1024, files: 10 },
   fileFilter: (_req, file, cb) => {
-    if (/^image\/(jpeg|jpg|png|webp)$/i.test(file.mimetype)) cb(null, true);
-    else cb(new Error('Solo imágenes JPG, PNG o WebP'));
+    if (imageOrPdf(file.mimetype)) cb(null, true);
+    else cb(new Error('Solo imágenes JPG, PNG, WebP o PDF'));
+  },
+});
+
+export const envioPackProofUpload = multer({
+  storage: isR2Enabled() ? memoryStorage : diskStorage,
+  limits: { fileSize: 10 * 1024 * 1024, files: 1 },
+  fileFilter: (_req, file, cb) => {
+    if (imageOrPdf(file.mimetype)) cb(null, true);
+    else cb(new Error('Comprobante: JPG, PNG, WebP o PDF'));
   },
 });
 

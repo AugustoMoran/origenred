@@ -199,7 +199,7 @@ export async function syncProductToMarketplaceListing(
     images: buildListingImages(product),
     weight: product.weight,
     dimensions: product.dimensions,
-    freeShipping: Boolean(product.featured),
+    freeShipping: false,
     allowPickup: true,
     province: seller.province,
     city: seller.city,

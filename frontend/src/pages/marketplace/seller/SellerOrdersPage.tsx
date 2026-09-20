@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import {
   useGetSellerOrdersQuery,
   useUpdateSellerOrderMutation,
+  useGetEnvioPackTransferInfoQuery,
+  useUploadEnvioPackProofMutation,
 } from '../../../services/marketplaceApi';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -23,12 +25,26 @@ const format = (n: number) =>
 
 export const SellerOrdersPage: React.FC = () => {
   const { data: orders = [], isLoading, refetch } = useGetSellerOrdersQuery();
+  const { data: transferInfo } = useGetEnvioPackTransferInfoQuery();
   const [updateOrder, { isLoading: updating }] = useUpdateSellerOrderMutation();
+  const [uploadProof, { isLoading: uploading }] = useUploadEnvioPackProofMutation();
   const [trackingByOrder, setTrackingByOrder] = useState<Record<string, string>>({});
+  const [uploadMsg, setUploadMsg] = useState<Record<string, string>>({});
 
   const handleStatus = async (orderNumber: string, status: 'shipped' | 'delivered', trackingCode?: string) => {
     await updateOrder({ orderNumber, status, trackingCode });
     refetch();
+  };
+
+  const handleProof = async (orderNumber: string, file: File) => {
+    setUploadMsg((m) => ({ ...m, [orderNumber]: '' }));
+    try {
+      const res = await uploadProof({ orderNumber, file }).unwrap();
+      setUploadMsg((m) => ({ ...m, [orderNumber]: res.message }));
+      refetch();
+    } catch (e: any) {
+      setUploadMsg((m) => ({ ...m, [orderNumber]: e?.data?.message || 'Error al subir' }));
+    }
   };
 
   return (
@@ -50,6 +66,12 @@ export const SellerOrdersPage: React.FC = () => {
               (s: any) => myItems.some((i: any) => String(i.seller) === String(s.seller))
             );
             const fulfillmentStatus = myFulfillment?.status || 'processing';
+            const shippingCost = myFulfillment?.shippingCost ?? 0;
+            const needsEnvioPack =
+              shippingCost > 0 &&
+              order.shippingMethod !== 'pickup' &&
+              myFulfillment?.envioPackProofStatus !== 'confirmed';
+            const proofStatus = myFulfillment?.envioPackProofStatus;
 
             return (
               <div key={order._id} className="bg-white rounded-2xl border border-slate-100 p-5 space-y-3">
@@ -75,6 +97,54 @@ export const SellerOrdersPage: React.FC = () => {
                     <span>{format(item.subtotal)}</span>
                   </div>
                 ))}
+
+                {needsEnvioPack && transferInfo && (
+                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-950 space-y-2">
+                    <p className="font-semibold">Envío: transferí {format(shippingCost)} a EnvíoPack</p>
+                    <p className="text-xs text-amber-900">{transferInfo.notes}</p>
+                    <ul className="text-xs space-y-0.5 font-mono">
+                      <li>{transferInfo.companyName} · CUIT {transferInfo.cuit}</li>
+                      <li>{transferInfo.bank} · CC {transferInfo.account}</li>
+                      <li>CBU: {transferInfo.cbu}</li>
+                      {transferInfo.alias ? <li>Alias: {transferInfo.alias}</li> : null}
+                    </ul>
+                    {proofStatus === 'uploaded' ? (
+                      <p className="text-xs text-emerald-800 font-medium">
+                        Comprobante enviado — OrigenRed lo cargará en EnvíoPack.
+                        {myFulfillment?.envioPackProofUrl && (
+                          <>
+                            {' '}
+                            <a
+                              href={myFulfillment.envioPackProofUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="underline"
+                            >
+                              Ver archivo
+                            </a>
+                          </>
+                        )}
+                      </p>
+                    ) : (
+                      <label className="inline-flex items-center gap-2 cursor-pointer text-xs font-semibold text-or-navy">
+                        <input
+                          type="file"
+                          accept=".pdf,image/*"
+                          className="text-xs"
+                          disabled={uploading}
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) handleProof(order.orderNumber, f);
+                          }}
+                        />
+                        Subir comprobante (PDF o imagen)
+                      </label>
+                    )}
+                    {uploadMsg[order.orderNumber] && (
+                      <p className="text-xs">{uploadMsg[order.orderNumber]}</p>
+                    )}
+                  </div>
+                )}
 
                 {myFulfillment?.trackingCode && (
                   <p className="text-xs text-slate-500">

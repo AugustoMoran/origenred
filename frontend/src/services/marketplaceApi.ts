@@ -580,6 +580,57 @@ export const marketplaceApi = createApi({
       }),
       invalidatesTags: ['Orders'],
     }),
+    getEnvioPackTransferInfo: builder.query<
+      {
+        companyName: string;
+        cuit: string;
+        bank: string;
+        account: string;
+        cbu: string;
+        alias?: string;
+        notes: string;
+      },
+      void
+    >({
+      query: () => '/seller/enviopack/transfer-info',
+    }),
+    uploadEnvioPackProof: builder.mutation<
+      { message: string },
+      { orderNumber: string; file: File }
+    >({
+      query: ({ orderNumber, file }) => {
+        const body = new FormData();
+        body.append('proof', file);
+        return {
+          url: `/seller/orders/${orderNumber}/enviopack-proof`,
+          method: 'POST',
+          body,
+          formData: true,
+        };
+      },
+      invalidatesTags: ['Orders'],
+    }),
+    getAdminEnvioPackProofs: builder.query<
+      Array<{
+        orderNumber: string;
+        sellerName: string;
+        shippingCost: number;
+        proofUrl?: string;
+        proofFileName?: string;
+        proofStatus?: string;
+        uploadedAt?: string;
+      }>,
+      void
+    >({
+      query: () => '/admin/enviopack-proofs',
+    }),
+    confirmAdminEnvioPackProof: builder.mutation<{ message: string }, string>({
+      query: (orderNumber) => ({
+        url: `/admin/enviopack-proofs/${orderNumber}/confirm`,
+        method: 'PATCH',
+      }),
+      invalidatesTags: ['Orders'],
+    }),
   }),
 });
 
@@ -642,4 +693,8 @@ export const {
   useSendMessageMutation,
   useGetSellerOrdersQuery,
   useUpdateSellerOrderMutation,
+  useGetEnvioPackTransferInfoQuery,
+  useUploadEnvioPackProofMutation,
+  useGetAdminEnvioPackProofsQuery,
+  useConfirmAdminEnvioPackProofMutation,
 } = marketplaceApi;

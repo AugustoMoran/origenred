@@ -60,6 +60,9 @@ const AdminStoreSettings = React.lazy(() => import('./pages/admin').then((m) => 
 const AdminMarketplaceSellers = React.lazy(() =>
   import('./pages/admin').then((m) => ({ default: m.AdminMarketplaceSellers }))
 );
+const AdminEnvioPackProofs = React.lazy(() =>
+  import('./pages/admin').then((m) => ({ default: m.AdminEnvioPackProofs }))
+);
 const AdminMarketplaceReports = React.lazy(() =>
   import('./pages/admin').then((m) => ({ default: m.AdminMarketplaceReports }))
 );
@@ -197,6 +200,10 @@ const router = createBrowserRouter([
   {
     path: '/dashboard/admin/marketplace-sellers',
     element: <DashboardLayout adminOnly><LazyAdmin><AdminMarketplaceSellers /></LazyAdmin></DashboardLayout>,
+  },
+  {
+    path: '/dashboard/admin/enviopack-proofs',
+    element: <DashboardLayout adminOnly><LazyAdmin><AdminEnvioPackProofs /></LazyAdmin></DashboardLayout>,
   },
   {
     path: '/dashboard/admin/marketplace-categories',

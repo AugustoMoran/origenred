@@ -26,7 +26,13 @@ import { MarketplaceCategory } from '../models/MarketplaceCategory';
 import { Favorite } from '../models/Favorite';
 import { getMercadoPagoPublicConfig, getMercadoPagoConnectUrl, getMercadoPagoConnectRedirectUri } from '../services/marketplacePaymentService';
 import { quoteShippingByPostalCode, getEnvioPackConfig } from '../services/marketplaceShippingService';
-import { processUploadedImages, marketplaceUpload } from '../middleware/marketplaceUpload';
+import { processUploadedImages, marketplaceUpload, envioPackProofUpload } from '../middleware/marketplaceUpload';
+import {
+  getEnvioPackTransferInfo,
+  uploadEnvioPackProofForOrder,
+  listEnvioPackProofsForAdmin,
+  confirmEnvioPackProofForAdmin,
+} from '../services/envioPackProofService';
 import { deleteFromR2 } from '../services/r2StorageService';
 import { features } from '../../../config/features';
 import {
@@ -694,6 +700,46 @@ export async function getSellerOrdersController(req: Request, res: Response) {
   const userId = String((req as any).user._id);
   const orders = await getSellerOrders(userId);
   res.json(orders);
+}
+
+export async function getEnvioPackTransferInfoController(_req: Request, res: Response) {
+  res.json(getEnvioPackTransferInfo());
+}
+
+export const uploadEnvioPackProofMiddleware = envioPackProofUpload.single('proof');
+
+export async function uploadEnvioPackProofController(req: Request, res: Response) {
+  try {
+    const userId = String((req as any).user._id);
+    const file = req.file;
+    if (!file) return res.status(400).json({ message: 'Adjuntá un comprobante (PDF o imagen)' });
+    const result = await uploadEnvioPackProofForOrder(
+      userId,
+      String(req.params.orderNumber),
+      file
+    );
+    res.json({
+      message: 'Comprobante recibido. OrigenRed lo cargará en EnvíoPack para generar la etiqueta.',
+      orderNumber: result.order.orderNumber,
+      proofUrl: result.order.shippingBySeller?.find((s) => s.envioPackProofUrl)?.envioPackProofUrl,
+    });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
+export async function listEnvioPackProofsAdminController(_req: Request, res: Response) {
+  const rows = await listEnvioPackProofsForAdmin();
+  res.json(rows);
+}
+
+export async function confirmEnvioPackProofAdminController(req: Request, res: Response) {
+  try {
+    const order = await confirmEnvioPackProofForAdmin(String(req.params.orderNumber));
+    res.json({ message: 'Comprobante marcado como cargado en EnvíoPack', orderNumber: order.orderNumber });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
 }
 
 export async function updateSellerOrderController(req: Request, res: Response) {

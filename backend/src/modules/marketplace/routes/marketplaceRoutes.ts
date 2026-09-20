@@ -49,6 +49,11 @@ import {
   getChatByOrderController,
   getSellerOrdersController,
   updateSellerOrderController,
+  getEnvioPackTransferInfoController,
+  uploadEnvioPackProofMiddleware,
+  uploadEnvioPackProofController,
+  listEnvioPackProofsAdminController,
+  confirmEnvioPackProofAdminController,
   getSitemapController,
   getMarketplaceAnalyticsController,
   createReturnRequestController,
@@ -107,6 +112,14 @@ router.get('/chat/order/:orderNumber', authenticate, getChatByOrderController);
 // Vendedor — ventas
 router.get('/seller/orders', authenticate, requireSeller, getSellerOrdersController);
 router.patch('/seller/orders/:orderNumber', authenticate, requireSeller, updateSellerOrderController);
+router.get('/seller/enviopack/transfer-info', authenticate, requireSeller, getEnvioPackTransferInfoController);
+router.post(
+  '/seller/orders/:orderNumber/enviopack-proof',
+  authenticate,
+  requireSeller,
+  uploadEnvioPackProofMiddleware,
+  uploadEnvioPackProofController
+);
 
 // Checkout
 router.post('/checkout/preview', optionalAuthenticate, previewCheckoutController);
@@ -142,6 +155,13 @@ router.post('/admin/search/reindex', authenticate, requireAdmin, reindexListings
 router.get('/admin/reports', authenticate, requireAdmin, listReportsController);
 router.patch('/admin/reports/:id', authenticate, requireAdmin, resolveReportController);
 router.get('/admin/analytics', authenticate, requireAdmin, getMarketplaceAnalyticsController);
+router.get('/admin/enviopack-proofs', authenticate, requireAdmin, listEnvioPackProofsAdminController);
+router.patch(
+  '/admin/enviopack-proofs/:orderNumber/confirm',
+  authenticate,
+  requireAdmin,
+  confirmEnvioPackProofAdminController
+);
 router.get('/admin/returns', authenticate, requireAdmin, listAdminReturnRequestsController);
 router.patch('/admin/returns/:id', authenticate, requireAdmin, updateAdminReturnController);
 router.get('/admin/service-leads', authenticate, requireAdmin, listAdminServiceLeadsController);
