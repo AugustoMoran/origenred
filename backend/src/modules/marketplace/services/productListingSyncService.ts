@@ -49,7 +49,13 @@ export async function resolveMarketplaceCategory(productCategory: string) {
 
 export async function ensureOfficialSellerProfile(adminUserId: mongoose.Types.ObjectId) {
   let seller = await SellerProfile.findOne({ slug: OFFICIAL_SELLER_SLUG });
-  if (seller) return seller;
+  if (seller) {
+    if (seller.mercadoPagoConnected && !seller.mercadoPagoUserId) {
+      seller.mercadoPagoConnected = false;
+      await seller.save();
+    }
+    return seller;
+  }
 
   const admin = await User.findById(adminUserId);
   if (!admin) throw new Error('Admin no encontrado para tienda oficial');
@@ -64,7 +70,7 @@ export async function ensureOfficialSellerProfile(adminUserId: mongoose.Types.Ob
     city: 'CABA',
     postalCode: '1425',
     reputationScore: 95,
-    mercadoPagoConnected: true,
+    mercadoPagoConnected: false,
     approvedAt: new Date(),
     approvedBy: adminUserId,
     listingCount: 0,

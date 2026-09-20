@@ -90,7 +90,7 @@ export const OrderChatPage: React.FC = () => {
           </p>
         )}
         {messages.map((msg: any) => {
-          const isMine = String(msg.sender?._id || msg.sender) === String(user?._id);
+          const isMine = String(msg.sender?._id || msg.sender) === String(user?.id);
           return (
             <div
               key={msg._id}

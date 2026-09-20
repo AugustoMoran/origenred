@@ -16,6 +16,17 @@ import {
 const format = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 
+function shippingResumenLabel(
+  preview: { shippingTotal?: number; bySeller?: { freeShipping?: boolean }[] } | undefined,
+  shippingMethod: 'delivery' | 'pickup',
+  postalCode: string
+): string {
+  if (shippingMethod === 'pickup') return 'Retiro en persona';
+  if (!preview || postalCode.length < 4) return 'A calcular';
+  if ((preview.shippingTotal ?? 0) === 0) return 'Gratis';
+  return format(preview.shippingTotal!);
+}
+
 export const MarketplaceCheckoutPage: React.FC = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -204,7 +215,20 @@ export const MarketplaceCheckoutPage: React.FC = () => {
           {step === 'confirm' && (
             <div className="bg-white rounded-2xl border border-slate-100 p-6 space-y-4">
               <h2 className="font-semibold text-or-navy">Confirmar pedido</h2>
-              {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl">{error}</div>}
+              {error && (
+                <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl space-y-2">
+                  <p>{error}</p>
+                  {/vincular Mercado Pago/i.test(error) && (
+                    <p>
+                      Si sos el vendedor, vinculá tu cuenta en{' '}
+                      <Link to="/vendedor/mercadopago" className="font-semibold underline">
+                        Panel vendedor → Mercado Pago
+                      </Link>
+                      .
+                    </p>
+                  )}
+                </div>
+              )}
 
               <div className="text-sm text-slate-600 space-y-1">
                 {shippingMethod === 'pickup' ? (
@@ -274,7 +298,7 @@ export const MarketplaceCheckoutPage: React.FC = () => {
                 <>
                   <div className="flex justify-between text-slate-500">
                     <span>Envío</span>
-                    <span>{preview.shippingTotal > 0 ? format(preview.shippingTotal) : 'A calcular'}</span>
+                    <span>{shippingResumenLabel(preview, shippingMethod, form.postalCode)}</span>
                   </div>
                   <div className="flex justify-between text-slate-400 text-xs">
                     <span>Comisión OrigenRed ({preview.commissionPercent}%)</span>

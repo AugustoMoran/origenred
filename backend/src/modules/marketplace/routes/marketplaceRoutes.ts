@@ -10,6 +10,7 @@ import {
   quoteShippingController,
   getIntegrationsStatusController,
   registerSellerController,
+  applySellerController,
   getMySellerProfileController,
   updateMySellerProfileController,
   createListingController,
@@ -78,6 +79,7 @@ router.get('/sitemap.xml', getSitemapController);
 
 // Registro vendedor (público)
 router.post('/sellers/register', registerSellerController);
+router.post('/sellers/apply', authenticate, applySellerController);
 
 // Vendedor
 router.get('/seller/me', authenticate, requireSeller, getMySellerProfileController);

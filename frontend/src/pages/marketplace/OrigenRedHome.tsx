@@ -4,9 +4,11 @@ import { SEO } from '../../components/ecommerce/SEO';
 import { MarketplaceListingCard } from '../../components/marketplace/MarketplaceListingCard';
 import { ProductGridSkeleton } from '../../components/ecommerce/ProductCardSkeleton';
 import { useGetHomeDataQuery } from '../../services/marketplaceApi';
+import { useMarketplaceCommission } from '../../hooks/useMarketplaceCommission';
 
 export const OrigenRedHome: React.FC = () => {
   const { data, isLoading } = useGetHomeDataQuery();
+  const commission = useMarketplaceCommission();
 
   return (
     <div className="space-y-14 animate-fade-in">
@@ -100,7 +102,7 @@ export const OrigenRedHome: React.FC = () => {
       <section className="bg-slate-50 rounded-3xl p-8 sm:p-12 text-center border border-slate-100">
         <h2 className="text-2xl font-bold text-or-navy mb-2">¿Tenés algo para vender?</h2>
         <p className="text-slate-500 mb-6 max-w-md mx-auto">
-          Hasta 100 publicaciones gratis. Comisión del 5% solo cuando concretás una venta.
+          Hasta 100 publicaciones gratis. Comisión del {commission ?? '…'}% solo cuando concretás una venta.
         </p>
         <Link
           to="/vender"

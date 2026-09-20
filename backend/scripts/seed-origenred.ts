@@ -40,7 +40,7 @@ const DEMO_SELLERS = [
     postalCode: '1425',
     description: 'Electrónica y gadgets con envío a todo el país.',
     reputationScore: 88,
-    mercadoPagoConnected: true,
+    mercadoPagoConnected: false,
   },
   {
     email: 'vendedor2@demo.origenred.com.ar',
@@ -66,7 +66,7 @@ const DEMO_SELLERS = [
     postalCode: '2000',
     description: 'Decoración, hogar y muebles seleccionados.',
     reputationScore: 91,
-    mercadoPagoConnected: true,
+    mercadoPagoConnected: false,
   },
   {
     email: 'vendedor4@demo.origenred.com.ar',
@@ -357,6 +357,20 @@ async function seedCategories() {
   console.log(`Categorías: ${DEFAULT_CATEGORIES.length} procesadas`);
 }
 
+async function reconcileSellerMercadoPagoLinks() {
+  const result = await SellerProfile.updateMany(
+    {
+      $or: [
+        { mercadoPagoUserId: { $exists: false } },
+        { mercadoPagoUserId: null },
+        { mercadoPagoUserId: '' },
+      ],
+    },
+    { $set: { mercadoPagoConnected: false } }
+  );
+  console.log(`Vendedores sin OAuth MP (marcados como no vinculados): ${result.modifiedCount ?? 0}`);
+}
+
 async function fixBrokenProductImages() {
   const products = await Product.find({});
   let fixed = 0;
@@ -456,6 +470,7 @@ async function seed() {
 
   const { admin } = await ensureAdmin();
   await seedCategories();
+  await reconcileSellerMercadoPagoLinks();
   await fixBrokenProductImages();
   await seedInventoryDemoProducts(admin._id);
 

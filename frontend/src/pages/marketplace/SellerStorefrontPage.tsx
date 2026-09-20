@@ -10,7 +10,7 @@ export const SellerStorefrontPage: React.FC = () => {
   const [showReport, setShowReport] = useState(false);
   const { data: seller, isLoading, error } = useGetSellerBySlugQuery(slug, { skip: !slug });
   const { data: listingsData, isLoading: listingsLoading } = useGetListingsQuery(
-    seller?._id ? { seller: seller._id, limit: 24 } : undefined,
+    { seller: seller?._id ?? '', limit: 24 },
     { skip: !seller?._id }
   );
 

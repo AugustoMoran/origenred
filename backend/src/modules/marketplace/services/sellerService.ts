@@ -97,6 +97,79 @@ export const registerSeller = async (input: {
   return { user, profile };
 };
 
+/** Usuario ya registrado solicita perfil de vendedor (sin crear cuenta nueva). */
+export const applySellerAsExistingUser = async (
+  userId: string,
+  input: {
+    businessName: string;
+    province?: string;
+    city?: string;
+    postalCode?: string;
+    phone?: string;
+    description?: string;
+  }
+) => {
+  const user = await User.findById(userId);
+  if (!user) throw new Error('Usuario no encontrado');
+  if (!input.businessName?.trim()) throw new Error('El nombre del negocio es obligatorio');
+
+  const existingProfile = await SellerProfile.findOne({ user: userId });
+  if (existingProfile) {
+    if (existingProfile.status === 'pending') {
+      throw new Error('Ya tenés una solicitud de vendedor en revisión');
+    }
+    if (existingProfile.status === 'approved') {
+      throw new Error('Ya tenés un perfil de vendedor activo');
+    }
+    if (existingProfile.status === 'rejected') {
+      existingProfile.businessName = input.businessName.trim();
+      existingProfile.description = input.description;
+      existingProfile.province = input.province;
+      existingProfile.city = input.city;
+      existingProfile.postalCode = input.postalCode;
+      existingProfile.phone = input.phone;
+      existingProfile.status = 'pending';
+      existingProfile.rejectionReason = undefined;
+      await existingProfile.save();
+      await ensureSellerRole(user);
+      return { user, profile: existingProfile };
+    }
+    throw new Error('Ya tenés un perfil de vendedor');
+  }
+
+  let baseSlug = slugify(input.businessName);
+  if (!baseSlug) baseSlug = `vendedor-${Date.now()}`;
+
+  let slug = baseSlug;
+  let counter = 1;
+  while (await SellerProfile.exists({ slug })) {
+    slug = `${baseSlug}-${counter++}`;
+  }
+
+  const profile = await SellerProfile.create({
+    user: user._id,
+    businessName: input.businessName.trim(),
+    slug,
+    description: input.description,
+    province: input.province,
+    city: input.city,
+    postalCode: input.postalCode,
+    phone: input.phone,
+    status: 'pending',
+  });
+
+  await ensureSellerRole(user);
+
+  return { user, profile };
+};
+
+async function ensureSellerRole(user: { _id: unknown; roles: string[]; save: () => Promise<unknown> }) {
+  if (!user.roles.includes(MARKETPLACE_ROLES.SELLER)) {
+    user.roles = [...user.roles, MARKETPLACE_ROLES.SELLER];
+    await user.save();
+  }
+}
+
 export const listPendingSellers = () =>
   SellerProfile.find({ status: 'pending' })
     .populate('user', 'name email')
@@ -130,13 +203,16 @@ export const updateSellerStatus = async (
   await profile.save();
 
   if (status === 'approved') {
-    const user = await User.findById(profile.user).select('name email');
-    if (user?.email) {
-      sendSellerApprovedEmail({
-        email: user.email,
-        name: user.name || profile.businessName,
-        businessName: profile.businessName,
-      }).catch((err) => console.error('[seller-approved-email]', err));
+    const user = await User.findById(profile.user);
+    if (user) {
+      await ensureSellerRole(user);
+      if (user.email) {
+        sendSellerApprovedEmail({
+          email: user.email,
+          name: user.name || profile.businessName,
+          businessName: profile.businessName,
+        }).catch((err) => console.error('[seller-approved-email]', err));
+      }
     }
   }
 

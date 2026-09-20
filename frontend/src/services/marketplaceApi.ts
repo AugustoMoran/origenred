@@ -133,6 +133,20 @@ export const marketplaceApi = createApi({
     >({
       query: (body) => ({ url: '/sellers/register', method: 'POST', body }),
     }),
+    applySeller: builder.mutation<
+      { message: string },
+      {
+        businessName: string;
+        province?: string;
+        city?: string;
+        postalCode?: string;
+        phone?: string;
+        description?: string;
+      }
+    >({
+      query: (body) => ({ url: '/sellers/apply', method: 'POST', body }),
+      invalidatesTags: ['Seller'],
+    }),
     toggleFavorite: builder.mutation<{ favorited: boolean }, string>({
       query: (listingId) => ({ url: `/favorites/${listingId}`, method: 'POST' }),
       invalidatesTags: ['Favorites'],
@@ -188,6 +202,9 @@ export const marketplaceApi = createApi({
       {
         url: string | null;
         enabled: boolean;
+        connectEnabled?: boolean;
+        missingConnect?: string[];
+        redirectUri?: string;
         mercadoPagoConnected?: boolean;
         commissionPercent?: number;
       },
@@ -573,6 +590,7 @@ export const {
   useGetIntegrationsQuery,
   useQuoteShippingMutation,
   useRegisterSellerMutation,
+  useApplySellerMutation,
   useToggleFavoriteMutation,
   useGetFavoritesQuery,
   useCreateReportMutation,

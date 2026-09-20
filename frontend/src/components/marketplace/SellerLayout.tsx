@@ -34,8 +34,10 @@ export const SellerLayout: React.FC = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state: RootState) => state.auth);
   const [logoutReq] = useLogoutMutation();
+  const canLoadSellerProfile =
+    user?.roles?.includes('vendedor_marketplace') || user?.roles?.includes('admin');
   const { data: profile, isLoading } = useGetMySellerProfileQuery(undefined, {
-    skip: !user?.roles?.includes('vendedor_marketplace'),
+    skip: !canLoadSellerProfile,
   });
 
   const handleLogout = async () => {

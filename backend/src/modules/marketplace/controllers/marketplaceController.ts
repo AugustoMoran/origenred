@@ -1,6 +1,7 @@
 import { Request, Response } from 'express';
 import {
   registerSeller,
+  applySellerAsExistingUser,
   getSellerByUserId,
   updateSellerProfile,
   listPendingSellers,
@@ -191,6 +192,26 @@ export async function registerSellerController(req: Request, res: Response) {
   }
 }
 
+export async function applySellerController(req: Request, res: Response) {
+  try {
+    const userId = String((req as any).user._id);
+    const result = await applySellerAsExistingUser(userId, {
+      businessName: String(req.body.businessName || ''),
+      province: req.body.province ? String(req.body.province) : undefined,
+      city: req.body.city ? String(req.body.city) : undefined,
+      postalCode: req.body.postalCode ? String(req.body.postalCode) : undefined,
+      phone: req.body.phone ? String(req.body.phone) : undefined,
+      description: req.body.description ? String(req.body.description) : undefined,
+    });
+    res.status(201).json({
+      message: 'Solicitud enviada. Un administrador revisará tu cuenta.',
+      seller: result.profile,
+    });
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
 export async function getMySellerProfileController(req: Request, res: Response) {
   const userId = String((req as any).user._id);
   const profile = await getSellerByUserId(userId);
@@ -303,9 +324,16 @@ export async function getMercadoPagoConnectController(req: Request, res: Respons
     req.headers['x-origenred-client'] === 'mobile' ? 'mobile' : 'web';
   const url = getMercadoPagoConnectUrl(String(profile._id), returnClient);
   const mpConfig = getMercadoPagoPublicConfig();
+  const missingConnect: string[] = [];
+  if (!process.env.MERCADOPAGO_CLIENT_ID) missingConnect.push('MERCADOPAGO_CLIENT_ID');
+  if (!process.env.MERCADOPAGO_CLIENT_SECRET) missingConnect.push('MERCADOPAGO_CLIENT_SECRET');
+  if (!process.env.MERCADOPAGO_ACCESS_TOKEN) missingConnect.push('MERCADOPAGO_ACCESS_TOKEN');
+
   res.json({
     url,
     enabled: Boolean(url),
+    connectEnabled: mpConfig.connectEnabled,
+    missingConnect,
     mercadoPagoConnected: profile.mercadoPagoConnected,
     redirectUri: getMercadoPagoConnectRedirectUri(returnClient),
     commissionPercent: mpConfig.commissionPercent,

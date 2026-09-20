@@ -15,6 +15,7 @@ export const OrigenRedHeader: React.FC = () => {
 
   const isSeller = user?.roles?.includes('vendedor_marketplace');
   const isAdmin = user?.roles?.includes('admin');
+  const showSellerPanel = isSeller || isAdmin;
   const unread = notifications?.totalUnread ?? notifications?.unreadChatMessages ?? 0;
 
   return (
@@ -65,12 +66,12 @@ export const OrigenRedHeader: React.FC = () => {
                 Panel admin
               </Link>
             )}
-            {isSeller && (
+            {showSellerPanel && (
               <Link
                 to="/vendedor"
-                className="hidden sm:inline-flex items-center px-3 py-2 text-xs font-medium text-or-blue bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                className="inline-flex items-center px-3 py-2 text-xs font-semibold text-or-blue bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
               >
-                Mi tienda
+                Panel vendedor
               </Link>
             )}
             {!user ? (
