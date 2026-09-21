@@ -44,6 +44,9 @@ export interface IListing extends Document {
   salesCount: number;
   seoTitle?: string;
   seoDescription?: string;
+  /** Solo uso interno del vendedor / admin — no visible en catálogo público. */
+  supplierName?: string;
+  supplierProductCode?: string;
   moderated: boolean;
   moderationReason?: string;
   createdAt: Date;
@@ -105,6 +108,8 @@ const ListingSchema = new Schema<IListing>(
     salesCount: { type: Number, default: 0 },
     seoTitle: { type: String },
     seoDescription: { type: String },
+    supplierName: { type: String, trim: true },
+    supplierProductCode: { type: String, trim: true },
     moderated: { type: Boolean, default: false },
     moderationReason: { type: String },
   },

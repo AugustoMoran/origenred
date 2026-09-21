@@ -36,6 +36,7 @@ interface ProductFormData {
   minStock: number | '';
   category: string;
   supplier: string;
+  supplierProductCode: string;
   barcode: string;
   internalCode: string;
   weight: number | '';
@@ -365,7 +366,7 @@ export const Inventory = () => {
   const [formData, setFormData] = useState<ProductFormData>({
     name: '', sku: '', description: '', commercialDescription: '', longDescription: '',
     seoTitle: '', seoDescription: '', slug: '',
-    price: '', costPrice: '', iva: 21, margin: '', stock: '', minStock: '', category: '', supplier: '', barcode: '', internalCode: '',
+    price: '', costPrice: '', iva: 21, margin: '', stock: '', minStock: '', category: '', supplier: '', supplierProductCode: '', barcode: '', internalCode: '',
     weight: '', dimLength: '', dimWidth: '', dimHeight: '', displayOrder: '',
   });
 
@@ -474,7 +475,7 @@ export const Inventory = () => {
     setFormData({
       name: '', sku: '', description: '', commercialDescription: '', longDescription: '',
       seoTitle: '', seoDescription: '', slug: '',
-      price: '', costPrice: '', iva: 21, margin: '', stock: '', minStock: '', category: '', supplier: '',
+      price: '', costPrice: '', iva: 21, margin: '', stock: '', minStock: '', category: '', supplier: '', supplierProductCode: '',
       barcode: '', internalCode: '', weight: '', dimLength: '', dimWidth: '', dimHeight: '', displayOrder: '',
     });
     setSelectedFile(null);
@@ -622,6 +623,7 @@ export const Inventory = () => {
       supplier: typeof p.supplier === 'object' ? (p.supplier?._id || '') : (p.supplier || ''),
       barcode: p.barcode || '',
       internalCode: p.internalCode || '',
+      supplierProductCode: p.supplierProductCode || '',
       weight: p.weight ?? '',
       dimLength: p.dimensions?.length ?? '',
       dimWidth: p.dimensions?.width ?? '',
@@ -1185,6 +1187,17 @@ export const Inventory = () => {
                         <option key={s._id} value={s._id}>{s.name}</option>
                       ))}
                     </select>
+                  </div>
+
+                  <div>
+                    <label className="section-heading">Código en proveedor</label>
+                    <input
+                      type="text"
+                      className="input"
+                      placeholder="Código del mayorista (solo uso interno)"
+                      value={formData.supplierProductCode}
+                      onChange={(e) => setFormData({ ...formData, supplierProductCode: e.target.value })}
+                    />
                   </div>
 
                   <div>

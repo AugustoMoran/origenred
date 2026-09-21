@@ -41,6 +41,12 @@ export const parseListingBody = (body: Record<string, unknown>) => {
     status: body.status ? String(body.status) : undefined,
     seoTitle: body.seoTitle ? String(body.seoTitle) : undefined,
     seoDescription: body.seoDescription ? String(body.seoDescription) : undefined,
+    supplierName:
+      body.supplierName !== undefined ? String(body.supplierName).trim() || undefined : undefined,
+    supplierProductCode:
+      body.supplierProductCode !== undefined
+        ? String(body.supplierProductCode).trim() || undefined
+        : undefined,
     images: Array.isArray(images) ? images : undefined,
     removeImageKeys: (() => {
       let keys = body.removeImageKeys;

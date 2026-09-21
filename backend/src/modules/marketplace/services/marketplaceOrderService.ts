@@ -178,6 +178,35 @@ export const canViewFullOrder = async (
 };
 
 /** Vista limitada para confirmación de checkout sin sesión */
+export const sanitizeOrderProcurementForViewer = async (
+  order: IMarketplaceOrder,
+  user?: { _id: string; roles?: string[] }
+) => {
+  const plain =
+    typeof (order as any).toObject === 'function'
+      ? (order as any).toObject({ virtuals: true })
+      : { ...order, items: [...(order.items || [])] };
+
+  if (user?.roles?.includes('admin')) return plain;
+
+  let sellerProfileId: string | null = null;
+  if (user?.roles?.includes('vendedor_marketplace')) {
+    const profile = await getSellerByUserId(String(user._id));
+    sellerProfileId = profile ? String(profile._id) : null;
+  }
+
+  plain.items = (plain.items || []).map((item: any) => {
+    const sellerId = String(item.seller?._id || item.seller || '');
+    const maySee =
+      sellerProfileId && sellerId && sellerId === sellerProfileId;
+    if (maySee) return item;
+    const { supplierName, supplierProductCode, ...rest } = item;
+    return rest;
+  });
+
+  return plain;
+};
+
 export const toPublicOrderSummary = (order: IMarketplaceOrder) => ({
   orderNumber: order.orderNumber,
   total: order.total,

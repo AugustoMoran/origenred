@@ -23,6 +23,8 @@ const emptyForm = {
   allowPickup: false,
   status: 'draft',
   weight: '',
+  supplierName: '',
+  supplierProductCode: '',
 };
 
 export const SellerListingFormPage: React.FC = () => {
@@ -61,6 +63,8 @@ export const SellerListingFormPage: React.FC = () => {
           allowPickup: false,
           status: (existing as any).status || 'draft',
           weight: '',
+          supplierName: existing.supplierName || '',
+          supplierProductCode: existing.supplierProductCode || '',
         });
         setExistingImages(existing.images || []);
       }
@@ -161,6 +165,17 @@ export const SellerListingFormPage: React.FC = () => {
           <Field label="Color" value={form.color} onChange={set('color')} />
           <Field label="Talle" value={form.size} onChange={set('size')} />
           <Field label="Peso (kg)" type="number" value={form.weight} onChange={set('weight')} />
+        </div>
+
+        <div className="border-t border-slate-100 pt-4 space-y-3">
+          <p className="text-sm font-semibold text-or-navy">Proveedor (opcional)</p>
+          <p className="text-xs text-slate-500">
+            Solo vos lo ves al gestionar ventas. No se muestra al comprador en la tienda.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <Field label="Nombre proveedor" value={form.supplierName} onChange={set('supplierName')} />
+            <Field label="Código en proveedor" value={form.supplierProductCode} onChange={set('supplierProductCode')} />
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-4">

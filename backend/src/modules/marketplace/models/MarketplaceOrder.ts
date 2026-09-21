@@ -10,6 +10,8 @@ export interface IOrderItem {
   quantity: number;
   imageUrl?: string;
   subtotal: number;
+  supplierName?: string;
+  supplierProductCode?: string;
 }
 
 export interface IMarketplaceOrder extends Document {
@@ -89,6 +91,8 @@ const OrderItemSchema = new Schema(
     quantity: { type: Number, required: true, min: 1 },
     imageUrl: { type: String },
     subtotal: { type: Number, required: true },
+    supplierName: { type: String },
+    supplierProductCode: { type: String },
   },
   { _id: false }
 );

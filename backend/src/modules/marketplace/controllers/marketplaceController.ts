@@ -60,7 +60,13 @@ import {
   REPORT_REASON_LABELS,
 } from '../services/reportService';
 import { reindexAllListings } from '../services/meilisearchService';
-import { updateSellerOrderFulfillment, canViewFullOrder, toPublicOrderSummary, cancelMarketplaceOrder } from '../services/marketplaceOrderService';
+import {
+  updateSellerOrderFulfillment,
+  canViewFullOrder,
+  sanitizeOrderProcurementForViewer,
+  toPublicOrderSummary,
+  cancelMarketplaceOrder,
+} from '../services/marketplaceOrderService';
 import { buildMarketplaceSitemap } from '../services/sitemapService';
 import { getMarketplaceAdminAnalytics } from '../services/marketplaceAnalyticsService';
 import {
@@ -653,7 +659,11 @@ export async function getOrderController(req: Request, res: Response) {
 
   const user = (req as any).user;
   const fullAccess = await canViewFullOrder(order, user);
-  res.json(fullAccess ? order : toPublicOrderSummary(order));
+  if (!fullAccess) {
+    return res.json(toPublicOrderSummary(order));
+  }
+  const sanitized = await sanitizeOrderProcurementForViewer(order, user);
+  res.json(sanitized);
 }
 
 export async function getMyOrdersController(req: Request, res: Response) {

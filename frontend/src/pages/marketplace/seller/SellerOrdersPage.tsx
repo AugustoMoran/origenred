@@ -92,9 +92,17 @@ export const SellerOrdersPage: React.FC = () => {
                 </div>
 
                 {myItems.map((item: any) => (
-                  <div key={item.listing} className="flex justify-between text-sm text-slate-600">
-                    <span>{item.title} ×{item.quantity}</span>
-                    <span>{format(item.subtotal)}</span>
+                  <div key={item.listing} className="text-sm text-slate-600 space-y-0.5">
+                    <div className="flex justify-between">
+                      <span>{item.title} ×{item.quantity}</span>
+                      <span>{format(item.subtotal)}</span>
+                    </div>
+                    {(item.supplierName || item.supplierProductCode) && (
+                      <p className="text-xs text-slate-500 font-mono">
+                        Proveedor: {item.supplierName || '—'}
+                        {item.supplierProductCode ? ` · Cód. ${item.supplierProductCode}` : ''}
+                      </p>
+                    )}
                   </div>
                 ))}
 

@@ -29,6 +29,14 @@ const uniqueSlug = async (base: string, excludeId?: string) => {
 
 export const PUBLIC_LISTING_FILTER = { status: 'active', moderated: { $ne: true } };
 
+/** Oculta datos de compra a proveedor en respuestas públicas. */
+export const stripListingProcurementFields = <T extends object>(doc: T) => {
+  const copy = { ...doc } as T & { supplierName?: string; supplierProductCode?: string };
+  delete copy.supplierName;
+  delete copy.supplierProductCode;
+  return copy;
+};
+
 export const getSellerListingCount = (sellerId: string) =>
   Listing.countDocuments({ seller: sellerId, status: { $in: ['active', 'draft', 'paused'] } });
 
@@ -143,7 +151,9 @@ export const getPublicListings = async (query: Record<string, unknown> = {}) => 
         return ai - bi;
       });
       return {
-        items,
+        items: items.map((doc) =>
+          stripListingProcurementFields(doc.toObject({ virtuals: true }))
+        ),
         pagination: {
           page,
           limit,
@@ -172,7 +182,7 @@ export const getPublicListings = async (query: Record<string, unknown> = {}) => 
   ]);
 
   return {
-    items,
+    items: items.map((doc) => stripListingProcurementFields(doc.toObject({ virtuals: true }))),
     pagination: { page, limit, total, pages: Math.ceil(total / limit) || 1 },
     source: 'mongodb',
   };
@@ -187,7 +197,9 @@ export const getPublicListingBySlug = async (slug: string) => {
     await Listing.findByIdAndUpdate(listing._id, { $inc: { views: 1 } });
   }
 
-  return listing;
+  if (!listing) return null;
+  const plain = listing.toObject({ virtuals: true });
+  return stripListingProcurementFields(plain);
 };
 
 export const getSellerListings = (sellerProfileId: string) =>

@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import Product, { IProduct } from '../../inventory/models/Product';
+import Supplier from '../../suppliers/models/Supplier';
 import { User } from '../../auth/models/User';
 import { MarketplaceCategory } from '../models/MarketplaceCategory';
 import { Listing } from '../models/Listing';
@@ -184,6 +185,13 @@ export async function syncProductToMarketplaceListing(
     product.description ||
     product.name;
 
+  let supplierName: string | undefined;
+  if (product.supplier) {
+    const sup = await Supplier.findById(product.supplier).select('name');
+    supplierName = sup?.name;
+  }
+  const supplierProductCode = product.supplierProductCode?.trim() || undefined;
+
   const listingPayload = {
     seller: seller._id,
     inventoryProductId: product._id,
@@ -208,6 +216,8 @@ export async function syncProductToMarketplaceListing(
     moderated: false,
     seoTitle: product.seoTitle,
     seoDescription: product.seoDescription,
+    supplierName,
+    supplierProductCode,
   };
 
   let listing = await Listing.findOne({ inventoryProductId: product._id });

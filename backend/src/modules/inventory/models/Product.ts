@@ -28,6 +28,8 @@ export interface IProduct extends Document {
   minStock: number;
   category: string;
   supplier?: mongoose.Types.ObjectId;
+  /** Código del producto en el catálogo del mayorista (uso interno). */
+  supplierProductCode?: string;
   barcode?: string;
   internalCode?: string;
   imageUrl?: string;
@@ -79,6 +81,7 @@ const ProductSchema: Schema = new Schema({
   minStock: { type: Number, required: true, default: 0 },
   category: { type: String, required: true, trim: true },
   supplier: { type: Schema.Types.ObjectId, ref: 'Supplier' },
+  supplierProductCode: { type: String, trim: true },
   barcode: { type: String, sparse: true },
   internalCode: { type: String },
   imageUrl: { type: String },

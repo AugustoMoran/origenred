@@ -56,6 +56,8 @@ export const resolveCheckoutItems = async (rawItems: CheckoutItemInput[]) => {
     subtotal: number;
     weight?: number;
     freeShipping: boolean;
+    supplierName?: string;
+    supplierProductCode?: string;
   }> = [];
 
   for (const raw of rawItems) {
@@ -86,6 +88,8 @@ export const resolveCheckoutItems = async (rawItems: CheckoutItemInput[]) => {
       subtotal: round2(listing.price * qty),
       weight: listing.weight,
       freeShipping: listing.freeShipping,
+      supplierName: listing.supplierName,
+      supplierProductCode: listing.supplierProductCode,
     });
   }
 
@@ -253,6 +257,8 @@ const createOneCheckoutOrder = async (
       quantity: i.quantity,
       imageUrl: i.imageUrl,
       subtotal: i.subtotal,
+      supplierName: i.supplierName,
+      supplierProductCode: i.supplierProductCode,
     })),
     subtotal: slice.subtotal,
     shippingTotal: slice.shippingTotal,

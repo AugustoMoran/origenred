@@ -20,6 +20,8 @@ export interface MarketplaceListing {
   size?: string;
   freeShipping: boolean;
   allowPickup?: boolean;
+  supplierName?: string;
+  supplierProductCode?: string;
   origenRankScore: number;
   salesCount: number;
   seller?: {
