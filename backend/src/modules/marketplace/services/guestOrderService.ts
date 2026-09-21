@@ -5,6 +5,7 @@ import { User } from '../../auth/models/User';
 import { SellerProfile } from '../models/SellerProfile';
 import { sendEmail } from '../../../shared/services/emailService';
 import { createMarketplaceNotification } from './marketplaceNotificationStoreService';
+import { mongoRefId } from '../../../shared/utils/mongoRefId';
 
 export const generateGuestAccessToken = () => crypto.randomBytes(24).toString('hex');
 
@@ -32,7 +33,7 @@ export async function linkGuestOrdersToBuyer(userId: string, email: string) {
 
 export async function ensureConversationForOrder(order: IMarketplaceOrder) {
   if (!order.chatEnabled) return null;
-  const buyerId = order.buyer ? String(order.buyer) : null;
+  const buyerId = order.buyer ? mongoRefId(order.buyer) : null;
   const sellerId = order.items[0]?.seller;
   if (!buyerId || !sellerId) return null;
 

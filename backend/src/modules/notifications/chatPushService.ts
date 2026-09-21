@@ -1,6 +1,7 @@
 import { Conversation } from '../marketplace/models/Chat';
 import { User } from '../auth/models/User';
 import { sendExpoPush } from './pushNotificationService';
+import { mongoRefId } from '../../shared/utils/mongoRefId';
 
 export const notifyChatRecipient = async (
   conversationId: string,
@@ -15,8 +16,8 @@ export const notifyChatRecipient = async (
   if (!conversation) return;
 
   const seller = conversation.seller as any;
-  const buyerId = String(conversation.buyer);
-  const sellerUserId = seller?.user ? String(seller.user) : '';
+  const buyerId = mongoRefId(conversation.buyer);
+  const sellerUserId = mongoRefId(seller?.user);
 
   const recipientId = senderId === buyerId ? sellerUserId : buyerId;
   if (!recipientId) return;

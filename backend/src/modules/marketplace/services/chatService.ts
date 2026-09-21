@@ -2,18 +2,7 @@ import { Conversation, Message, IConversation } from '../models/Chat';
 import { MarketplaceOrder } from '../models/MarketplaceOrder';
 import { SellerProfile } from '../models/SellerProfile';
 import { attachExistingBuyerFromGuestEmail, ensureConversationForOrder } from './guestOrderService';
-
-const refId = (ref: unknown): string => {
-  if (!ref) return '';
-  if (typeof ref === 'string') return ref;
-  if (typeof ref === 'object') {
-    const o = ref as { _id?: unknown; id?: unknown; user?: unknown };
-    if (o._id != null) return String(o._id);
-    if (o.id != null) return String(o.id);
-    if (o.user != null) return refId(o.user);
-  }
-  return String(ref);
-};
+import { mongoRefId as refId } from '../../../shared/utils/mongoRefId';
 
 export const getBuyerConversations = async (buyerId: string) => {
   const conversations = await Conversation.find({ buyer: buyerId })
@@ -139,12 +128,23 @@ export const getConversationByOrder = async (orderNumber: string, userId: string
   if (!isBuyer && !isSeller) throw new Error('Acceso denegado');
 
   let conversation = await Conversation.findOne({ order: order._id });
-  if (!conversation && order.buyer && (isBuyer || isSeller)) {
+  const orderBuyerId = order.buyer ? refId(order.buyer) : '';
+  const isValidObjectId = (id: string) => /^[a-fA-F0-9]{24}$/.test(id);
+
+  if (conversation && orderBuyerId && isValidObjectId(orderBuyerId)) {
+    const currentBuyer = refId(conversation.buyer);
+    if (!isValidObjectId(currentBuyer)) {
+      conversation.buyer = orderBuyerId as any;
+      await conversation.save();
+    }
+  }
+
+  if (!conversation && orderBuyerId && (isBuyer || isSeller)) {
     const sellerId = order.items[0]?.seller;
     if (sellerId) {
       conversation = await Conversation.create({
         order: order._id,
-        buyer: order.buyer,
+        buyer: orderBuyerId,
         seller: sellerId,
         lastMessageAt: new Date(),
       });

@@ -716,7 +716,11 @@ export async function sendMessageController(req: Request, res: Response) {
         ? (message as any).toObject()
         : message;
     emitChatMessage(io, conversationId, payload);
-    await notifyChatRecipient(conversationId, userId, req.body.body || '');
+    try {
+      await notifyChatRecipient(conversationId, userId, req.body.body || '');
+    } catch (pushErr) {
+      console.error('[chat] push notify failed', pushErr);
+    }
     res.status(201).json(payload);
   } catch (error: any) {
     const status = error.message === 'Acceso denegado' ? 403 : 400;
