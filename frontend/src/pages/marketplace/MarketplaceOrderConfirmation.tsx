@@ -1,19 +1,26 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { SEO } from '../../components/ecommerce/SEO';
 import { useGetOrderQuery } from '../../services/marketplaceApi';
+import { clearMarketplaceCart } from '../../store/marketplaceCartSlice';
 
 const format = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 
 export const MarketplaceOrderConfirmation: React.FC = () => {
+  const dispatch = useDispatch();
   const { orderNumber = '' } = useParams();
   const { data: order, isLoading } = useGetOrderQuery(orderNumber, { skip: !orderNumber });
 
+  const isPaid = order?.status === 'paid';
+
+  useEffect(() => {
+    if (isPaid) dispatch(clearMarketplaceCart());
+  }, [isPaid, dispatch]);
+
   if (isLoading) return <div className="py-20 text-center text-slate-400">Cargando pedido...</div>;
   if (!order) return <div className="py-20 text-center text-slate-400">Pedido no encontrado</div>;
-
-  const isPaid = order.status === 'paid';
 
   return (
     <div className="max-w-lg mx-auto text-center py-12 space-y-6">

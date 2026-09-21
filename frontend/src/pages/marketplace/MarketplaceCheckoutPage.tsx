@@ -119,25 +119,32 @@ export const MarketplaceCheckoutPage: React.FC = () => {
         shippingMethod,
       }).unwrap();
 
-      dispatch(clearMarketplaceCart());
+      const mpUrl =
+        result.payment?.initPoint ||
+        result.payment?.sandboxInitPoint ||
+        null;
+      const multiMpUrls =
+        result.multiOrder && result.payments?.length
+          ? result.payments
+              .map((p) => p.initPoint || p.sandboxInitPoint)
+              .filter((url): url is string => Boolean(url))
+          : [];
 
-      if (result.multiOrder && result.payments?.length) {
-        result.payments.forEach((p) => {
-          const url = p.initPoint || p.sandboxInitPoint;
-          if (url) window.open(url, '_blank', 'noopener');
-        });
+      if (multiMpUrls.length > 0) {
+        multiMpUrls.forEach((url) => window.open(url, '_blank', 'noopener'));
         alert(
-          `Se crearon ${result.orders?.length || 1} pedidos (uno por vendedor). Completa cada pago en Mercado Pago.`
+          `Se crearon ${result.orders?.length || 1} pedidos (uno por vendedor). Completa cada pago en Mercado Pago. Tu carrito se mantiene hasta que el pago se confirme.`
         );
         navigate('/cuenta/compras');
         return;
       }
 
-      if (result.payment?.initPoint) {
-        window.location.href = result.payment.initPoint;
+      if (mpUrl) {
+        window.location.href = mpUrl;
         return;
       }
 
+      dispatch(clearMarketplaceCart());
       navigate(`/compras/confirmacion/${result.order.orderNumber}`);
     } catch (err: any) {
       setError(err?.data?.message || 'Error al procesar el pedido');

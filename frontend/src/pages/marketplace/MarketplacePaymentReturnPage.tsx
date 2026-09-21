@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
 import { SEO } from '../../components/ecommerce/SEO';
+import { clearMarketplaceCart } from '../../store/marketplaceCartSlice';
 
 type PaymentReturnKind = 'success' | 'failure' | 'pending';
 
@@ -16,7 +18,7 @@ const config: Record<
   failure: {
     emoji: '❌',
     title: 'El pago no se completó',
-    description: 'Podés intentar de nuevo desde el carrito o elegir otro método de pago.',
+    description: 'Tu carrito sigue guardado. Podés volver a /comprar e intentar de nuevo.',
   },
   pending: {
     emoji: '⏳',
@@ -26,9 +28,16 @@ const config: Record<
 };
 
 export const MarketplacePaymentReturnPage: React.FC<{ kind: PaymentReturnKind }> = ({ kind }) => {
+  const dispatch = useDispatch();
   const [params] = useSearchParams();
   const orderNumber = params.get('external_reference') || params.get('orderNumber') || '';
   const { emoji, title, description } = config[kind];
+
+  useEffect(() => {
+    if (kind === 'success') {
+      dispatch(clearMarketplaceCart());
+    }
+  }, [kind, dispatch]);
 
   return (
     <div className="max-w-lg mx-auto text-center py-12 space-y-6">
