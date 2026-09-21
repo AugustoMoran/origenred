@@ -61,12 +61,10 @@ export const buildAuthPayload = (
   user: IUser | any,
   accessToken: string,
   refreshToken: string,
-  mobile: boolean
-) => {
-  const payload: Record<string, unknown> = { user: serializeAuthUser(user) };
-  if (mobile) {
-    payload.accessToken = accessToken;
-    payload.refreshToken = refreshToken;
-  }
-  return payload;
-};
+  _mobile: boolean
+) => ({
+  user: serializeAuthUser(user),
+  // Also in JSON: mobile Safari often blocks cross-origin httpOnly cookies (Vercel → Render).
+  accessToken,
+  refreshToken,
+});

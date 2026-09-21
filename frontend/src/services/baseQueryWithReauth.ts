@@ -1,6 +1,11 @@
 import { fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import type { BaseQueryApi, BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query';
 import { logout, setUser, AuthUser } from '../store/authSlice';
+import {
+  applyAuthTokensFromPayload,
+  clearAuthTokens,
+  loadAuthTokens,
+} from './authTokenStorage';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
 
@@ -19,14 +24,25 @@ export async function fetchCsrfToken(): Promise<void> {
   }
 }
 
+export const prepareAuthHeaders = (headers: Headers) => {
+  const tokens = loadAuthTokens();
+  if (tokens?.accessToken) {
+    headers.set('Authorization', `Bearer ${tokens.accessToken}`);
+  }
+  if (csrfToken) headers.set('X-CSRF-Token', csrfToken);
+  return headers;
+};
+
 const refreshBaseQuery = fetchBaseQuery({
   baseUrl: API_BASE_URL,
   credentials: 'include',
+  prepareHeaders: prepareAuthHeaders,
 });
 
 const meBaseQuery = fetchBaseQuery({
   baseUrl: `${API_BASE_URL}/auth`,
   credentials: 'include',
+  prepareHeaders: prepareAuthHeaders,
 });
 
 let refreshPromise: Promise<boolean> | null = null;
@@ -53,18 +69,30 @@ export async function tryRefreshSession(
   if (refreshPromise) return refreshPromise;
 
   refreshPromise = (async () => {
+    const stored = loadAuthTokens();
     const refreshResult = await refreshBaseQuery(
-      { url: '/auth/refresh', method: 'POST' },
+      {
+        url: '/auth/refresh',
+        method: 'POST',
+        body: stored?.refreshToken ? { refreshToken: stored.refreshToken } : {},
+      },
       api as BaseQueryApi,
       {}
     );
 
-    const user = (refreshResult.data as any)?.user as AuthUser | undefined;
-    if (applyUser(api, user)) {
+    const data = refreshResult.data as {
+      user?: AuthUser;
+      accessToken?: string;
+      refreshToken?: string;
+    };
+    applyAuthTokensFromPayload(data);
+
+    if (applyUser(api, data?.user)) {
       return true;
     }
 
     if (logoutOnFail) {
+      clearAuthTokens();
       api.dispatch(logout());
     }
     return false;
@@ -81,10 +109,7 @@ export function createReauthBaseQuery(
   const baseQuery = fetchBaseQuery({
     baseUrl,
     credentials: 'include',
-    prepareHeaders: (headers) => {
-      if (csrfToken) headers.set('X-CSRF-Token', csrfToken);
-      return headers;
-    },
+    prepareHeaders: prepareAuthHeaders,
   });
 
   return async (args, api, extraOptions) => {
@@ -129,6 +154,7 @@ export async function bootstrapAuthSession(store: {
     return;
   }
 
+  clearAuthTokens();
   const { isAuthenticated } = (store.getState() as any)?.auth || {};
   if (isAuthenticated) {
     store.dispatch(logout());

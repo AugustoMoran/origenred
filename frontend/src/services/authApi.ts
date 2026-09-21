@@ -1,20 +1,31 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import { createApi } from '@reduxjs/toolkit/query/react';
 import { AuthUser } from '../store/authSlice';
+import { createReauthBaseQuery } from './baseQueryWithReauth';
+import { applyAuthTokensFromPayload, clearAuthTokens } from './authTokenStorage';
+
+const authBaseUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/auth`;
+
+export type AuthSessionPayload = {
+  user: AuthUser;
+  accessToken?: string;
+  refreshToken?: string;
+};
 
 export const authApi = createApi({
   reducerPath: 'authApi',
-  baseQuery: fetchBaseQuery({
-    baseUrl: `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/auth`,
-    credentials: 'include',
-  }),
+  baseQuery: createReauthBaseQuery(authBaseUrl),
   tagTypes: ['Users'],
   endpoints: (builder) => ({
-    login: builder.mutation<{ user: AuthUser }, { email: string; password: string }>({
+    login: builder.mutation<AuthSessionPayload, { email: string; password: string }>({
       query: (credentials) => ({
         url: 'login',
         method: 'POST',
         body: credentials,
       }),
+      async onQueryStarted(_arg, { queryFulfilled }) {
+        const { data } = await queryFulfilled;
+        applyAuthTokensFromPayload(data);
+      },
     }),
     getBootstrapStatus: builder.query<{ needsBootstrap: boolean; adminExists: boolean }, void>({
       query: () => '/bootstrap',
@@ -41,15 +52,26 @@ export const authApi = createApi({
         url: 'logout',
         method: 'POST',
       }),
+      async onQueryStarted(_arg, { queryFulfilled }) {
+        try {
+          await queryFulfilled;
+        } finally {
+          clearAuthTokens();
+        }
+      },
     }),
     getMe: builder.query<AuthUser, void>({
       query: () => '/me',
     }),
-    refresh: builder.mutation<{ user: AuthUser }, void>({
+    refresh: builder.mutation<AuthSessionPayload, void>({
       query: () => ({
         url: 'refresh',
         method: 'POST',
       }),
+      async onQueryStarted(_arg, { queryFulfilled }) {
+        const { data } = await queryFulfilled;
+        applyAuthTokensFromPayload(data);
+      },
     }),
     getUsers: builder.query<any[], void>({
       query: () => 'users',
