@@ -10,4 +10,5 @@ export { AdminMarketplaceAnalytics } from './AdminMarketplaceAnalytics';
 export { AdminMarketplaceReturns } from './AdminMarketplaceReturns';
 export { AdminMarketplaceServiceLeads } from './AdminMarketplaceServiceLeads';
 export { AdminMarketplaceListings } from './AdminMarketplaceListings';
+export { AdminMarketplaceOrders } from './AdminMarketplaceOrders';
 export { AdminEnvioPackProofs } from './AdminEnvioPackProofs';

@@ -41,6 +41,7 @@ import { SellerProfilePage } from './pages/marketplace/seller/SellerProfilePage'
 import { SellerMercadoPagoPage } from './pages/marketplace/seller/SellerMercadoPagoPage';
 import { SellerMercadoPagoCallbackPage } from './pages/marketplace/seller/SellerMercadoPagoCallbackPage';
 import { MarketplacePaymentReturnPage } from './pages/marketplace/MarketplacePaymentReturnPage';
+import { GuestOrderTrackingPage } from './pages/marketplace/GuestOrderTrackingPage';
 import { StoreAuthRoute } from './components/ecommerce/RouteGuards';
 import { StoreProducts } from './pages/store/StoreProducts';
 import { StoreProductDetail } from './pages/store/StoreProductDetail';
@@ -81,6 +82,9 @@ const AdminMarketplaceListings = React.lazy(() =>
 const AdminMarketplaceServiceLeads = React.lazy(() =>
   import('./pages/admin').then((m) => ({ default: m.AdminMarketplaceServiceLeads }))
 );
+const AdminMarketplaceOrders = React.lazy(() =>
+  import('./pages/admin').then((m) => ({ default: m.AdminMarketplaceOrders }))
+);
 
 const LazyAdmin = ({ children }: { children: React.ReactNode }) => (
   <Suspense fallback={<div className="p-8 text-slate-500 text-sm">Cargando...</div>}>{children}</Suspense>
@@ -111,6 +115,7 @@ const router = createBrowserRouter([
       { path: '/compras/exito', element: <MarketplacePaymentReturnPage kind="success" /> },
       { path: '/compras/error', element: <MarketplacePaymentReturnPage kind="failure" /> },
       { path: '/compras/pendiente', element: <MarketplacePaymentReturnPage kind="pending" /> },
+      { path: '/compras/seguimiento/:orderNumber', element: <GuestOrderTrackingPage /> },
       { path: '/cuenta/compras', element: <StoreAuthRoute><MyOrdersPage /></StoreAuthRoute> },
       { path: '/cuenta/compras/:orderNumber', element: <StoreAuthRoute><MarketplaceOrderDetailPage /></StoreAuthRoute> },
       { path: '/cuenta/favoritos', element: <StoreAuthRoute><MyFavoritesPage /></StoreAuthRoute> },
@@ -187,6 +192,7 @@ const router = createBrowserRouter([
       { path: 'perfil', element: <SellerProfilePage /> },
       { path: 'mercadopago', element: <SellerMercadoPagoPage /> },
       { path: 'mercadopago/callback', element: <SellerMercadoPagoCallbackPage /> },
+      { path: 'chat/:orderNumber', element: <OrderChatPage /> },
     ],
   },
   {
@@ -212,6 +218,10 @@ const router = createBrowserRouter([
   {
     path: '/dashboard/admin/marketplace-analytics',
     element: <DashboardLayout adminOnly><LazyAdmin><AdminMarketplaceAnalytics /></LazyAdmin></DashboardLayout>,
+  },
+  {
+    path: '/dashboard/admin/marketplace-orders',
+    element: <DashboardLayout adminOnly><LazyAdmin><AdminMarketplaceOrders /></LazyAdmin></DashboardLayout>,
   },
   {
     path: '/dashboard/admin/marketplace-returns',

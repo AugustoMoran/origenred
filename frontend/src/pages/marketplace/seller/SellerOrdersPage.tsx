@@ -79,8 +79,12 @@ export const SellerOrdersPage: React.FC = () => {
                   <div>
                     <p className="font-semibold text-or-navy">{order.orderNumber}</p>
                     <p className="text-xs text-slate-400">
-                      {order.buyer?.name || order.guestName || order.guestEmail} ·{' '}
-                      {new Date(order.createdAt).toLocaleDateString('es-AR')}
+                      {(order.buyerContact?.name ||
+                        order.buyer?.name ||
+                        order.guestName ||
+                        order.guestEmail) +
+                        ' · ' +
+                        new Date(order.createdAt).toLocaleDateString('es-AR')}
                     </p>
                   </div>
                   <div className="text-right">
@@ -90,6 +94,48 @@ export const SellerOrdersPage: React.FC = () => {
                     </span>
                   </div>
                 </div>
+
+                {(order.buyerContact || order.guestEmail || order.guestPhone) && (
+                  <div className="text-sm bg-slate-50 border border-slate-100 rounded-xl p-3 space-y-1">
+                    <p className="font-semibold text-or-navy text-xs uppercase tracking-wide">
+                      Datos del comprador
+                    </p>
+                    {order.buyerContact?.email || order.guestEmail ? (
+                      <p>
+                        <span className="text-slate-500">Email: </span>
+                        <a
+                          href={`mailto:${order.buyerContact?.email || order.guestEmail}`}
+                          className="text-or-blue font-medium hover:underline"
+                        >
+                          {order.buyerContact?.email || order.guestEmail}
+                        </a>
+                      </p>
+                    ) : null}
+                    {(order.buyerContact?.phone || order.guestPhone) && (
+                      <p>
+                        <span className="text-slate-500">Tel: </span>
+                        <a
+                          href={`tel:${order.buyerContact?.phone || order.guestPhone}`}
+                          className="text-or-blue font-medium"
+                        >
+                          {order.buyerContact?.phone || order.guestPhone}
+                        </a>
+                      </p>
+                    )}
+                    {order.buyerContact?.shippingAddress && (
+                      <p className="text-xs text-slate-600">
+                        Envío: {order.buyerContact.shippingAddress.street},{' '}
+                        {order.buyerContact.shippingAddress.city} (
+                        {order.buyerContact.shippingAddress.postalCode})
+                      </p>
+                    )}
+                    {!order.buyer && order.guestEmail && (
+                      <p className="text-xs text-amber-800">
+                        Compra sin cuenta: el chat se habilita cuando el comprador se registre con el mismo email.
+                      </p>
+                    )}
+                  </div>
+                )}
 
                 {myItems.map((item: any) => (
                   <div key={item.listing} className="text-sm text-slate-600 space-y-0.5">
@@ -199,12 +245,16 @@ export const SellerOrdersPage: React.FC = () => {
 
                 {order.chatEnabled && (
                   <Link
-                    to={`/cuenta/chat/${order.orderNumber}`}
+                    to={`/vendedor/chat/${order.orderNumber}`}
                     className="text-xs text-or-blue font-medium hover:underline"
                   >
                     💬 Responder al comprador
                   </Link>
                 )}
+                <p className="text-[11px] text-slate-400 pt-1">
+                  El cobro ingresa a tu cuenta de Mercado Pago vinculada (menos la comisión de la plataforma). Si no
+                  lo ves, revisá la app de Mercado Pago → Actividad.
+                </p>
               </div>
             );
           })}

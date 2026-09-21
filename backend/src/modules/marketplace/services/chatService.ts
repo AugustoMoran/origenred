@@ -121,7 +121,7 @@ export const getConversationByOrder = async (orderNumber: string, userId: string
   if (!isBuyer && !isSeller) throw new Error('Acceso denegado');
 
   let conversation = await Conversation.findOne({ order: order._id });
-  if (!conversation && isBuyer) {
+  if (!conversation && order.buyer && (isBuyer || isSeller)) {
     const sellerId = order.items[0]?.seller;
     conversation = await Conversation.create({
       order: order._id,
@@ -131,7 +131,14 @@ export const getConversationByOrder = async (orderNumber: string, userId: string
     });
   }
 
-  if (!conversation) throw new Error('Conversación no encontrada');
+  if (!conversation) {
+    if (!order.buyer && order.guestEmail) {
+      throw new Error(
+        'El comprador aún no tiene cuenta. Coordiná por email o teléfono hasta que se registre con el mismo email de la compra.'
+      );
+    }
+    throw new Error('Conversación no encontrada');
+  }
 
   return getConversationMessages(String(conversation._id), userId);
 };

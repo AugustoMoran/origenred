@@ -548,6 +548,42 @@ export const marketplaceApi = createApi({
     >({
       query: (body) => ({ url: '/checkout', method: 'POST', body }),
     }),
+    confirmCheckoutReturn: builder.mutation<
+      { processed?: boolean; orderId?: string; status?: string },
+      string
+    >({
+      query: (paymentId) => ({
+        url: '/checkout/confirm-return',
+        method: 'POST',
+        body: { paymentId },
+      }),
+      invalidatesTags: ['Orders'],
+    }),
+    getGuestOrderTrack: builder.query<
+      {
+        orderNumber: string;
+        status: string;
+        total: number;
+        chatEnabled: boolean;
+        guestEmail?: string;
+        items: Array<{ title: string; quantity: number; subtotal: number }>;
+        shippingAddress?: {
+          fullName: string;
+          phone: string;
+          street: string;
+          city: string;
+          province: string;
+          postalCode: string;
+        };
+      },
+      { orderNumber: string; token: string }
+    >({
+      query: ({ orderNumber, token }) =>
+        `/orders/${orderNumber}/track?token=${encodeURIComponent(token)}`,
+    }),
+    getAdminMarketplaceOrders: builder.query<unknown[], void>({
+      query: () => '/admin/orders',
+    }),
     getOrder: builder.query<
       {
         orderNumber: string;
@@ -727,6 +763,9 @@ export const {
   useUpdateAdminServiceLeadMutation,
   usePreviewCheckoutMutation,
   useCreateCheckoutMutation,
+  useConfirmCheckoutReturnMutation,
+  useGetGuestOrderTrackQuery,
+  useGetAdminMarketplaceOrdersQuery,
   useGetOrderQuery,
   useGetMyOrdersQuery,
   useCancelOrderMutation,

@@ -20,6 +20,8 @@ export interface IMarketplaceOrder extends Document {
   guestEmail?: string;
   guestName?: string;
   guestPhone?: string;
+  /** Token para seguimiento de pedido sin cuenta (invitado) */
+  guestAccessToken?: string;
   items: IOrderItem[];
   subtotal: number;
   shippingTotal: number;
@@ -104,6 +106,7 @@ const MarketplaceOrderSchema = new Schema<IMarketplaceOrder>(
     guestEmail: { type: String, trim: true, lowercase: true },
     guestName: { type: String, trim: true },
     guestPhone: { type: String, trim: true },
+    guestAccessToken: { type: String, select: false },
     items: { type: [OrderItemSchema], required: true },
     subtotal: { type: Number, required: true },
     shippingTotal: { type: Number, default: 0 },

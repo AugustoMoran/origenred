@@ -42,6 +42,14 @@ export async function publicRegisterController(req: Request, res: Response) {
     }
 
     const user = await register(String(email), String(password), ['comprador'], {}, name);
+    try {
+      const { linkGuestOrdersToBuyer } = await import(
+        '../../marketplace/services/guestOrderService'
+      );
+      await linkGuestOrdersToBuyer(String(user._id), String(email));
+    } catch (linkErr) {
+      console.error('[register:link-guest-orders]', linkErr);
+    }
     res.status(201).json({
       id: user.id,
       name: user.name,

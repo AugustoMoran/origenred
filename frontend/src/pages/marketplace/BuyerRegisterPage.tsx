@@ -1,13 +1,14 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { SEO } from '../../components/ecommerce/SEO';
 import { usePublicRegisterMutation, useLoginMutation } from '../../services/authApi';
 import { setCredentials } from '../../store/authSlice';
 
 export const BuyerRegisterPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(searchParams.get('email') || '');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [publicRegister, { isLoading: registering }] = usePublicRegisterMutation();

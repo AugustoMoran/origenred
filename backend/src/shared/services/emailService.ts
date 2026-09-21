@@ -1,5 +1,8 @@
+import nodemailer from 'nodemailer';
+
 /**
- * Envío de emails vía Resend (opcional). Sin RESEND_API_KEY solo registra en log.
+ * Envío de emails: SMTP (Gmail, etc.) si SMTP_USER está configurado;
+ * si no, Resend (RESEND_API_KEY); si no hay nada, solo log.
  */
 export const sendEmail = async (input: {
   to: string;
@@ -7,9 +10,39 @@ export const sendEmail = async (input: {
   html: string;
   text?: string;
 }) => {
-  const apiKey = process.env.RESEND_API_KEY;
-  const from = process.env.EMAIL_FROM || 'OrigenRed <noreply@origenred.com.ar>';
+  const from =
+    process.env.EMAIL_FROM ||
+    (process.env.SMTP_USER
+      ? `OrigenRed <${process.env.SMTP_USER}>`
+      : 'OrigenRed <noreply@origenred.com.ar>');
 
+  if (process.env.SMTP_USER && process.env.SMTP_PASS) {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST || 'smtp.gmail.com',
+      port: Number(process.env.SMTP_PORT || 587),
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    try {
+      await transporter.sendMail({
+        from,
+        to: input.to,
+        subject: input.subject,
+        html: input.html,
+        text: input.text,
+      });
+      return { sent: true };
+    } catch (err) {
+      console.error('[email:smtp:error]', err);
+      return { sent: false, error: String(err) };
+    }
+  }
+
+  const apiKey = process.env.RESEND_API_KEY;
   if (!apiKey) {
     console.log(`[email:skip] ${input.to} — ${input.subject}`);
     return { sent: false, skipped: true };
@@ -32,7 +65,7 @@ export const sendEmail = async (input: {
 
   if (!response.ok) {
     const err = await response.text();
-    console.error('[email:error]', err);
+    console.error('[email:resend:error]', err);
     return { sent: false, error: err };
   }
 

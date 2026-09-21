@@ -97,9 +97,9 @@ export const createMarketplacePreference = async (input: {
           pending: `${mobileReturnBase}?status=pending&orderNumber=${encodeURIComponent(input.orderNumber)}`,
         }
       : {
-          success: `${frontendUrl}/compras/exito`,
-          failure: `${frontendUrl}/compras/error`,
-          pending: `${frontendUrl}/compras/pendiente`,
+          success: `${frontendUrl}/compras/exito?orderNumber=${encodeURIComponent(input.orderNumber)}`,
+          failure: `${frontendUrl}/compras/error?orderNumber=${encodeURIComponent(input.orderNumber)}`,
+          pending: `${frontendUrl}/compras/pendiente?orderNumber=${encodeURIComponent(input.orderNumber)}`,
         };
 
   const payload: Record<string, unknown> = {

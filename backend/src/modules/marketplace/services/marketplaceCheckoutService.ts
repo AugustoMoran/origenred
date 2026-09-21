@@ -2,9 +2,15 @@ import { Listing } from '../models/Listing';
 import { SellerProfile } from '../models/SellerProfile';
 import { User } from '../../auth/models/User';
 import { MarketplaceOrder } from '../models/MarketplaceOrder';
-import { Conversation } from '../models/Chat';
 import { initOrderFulfillmentOnPayment } from './marketplaceOrderService';
 import { notifyUserPush } from '../../notifications/chatPushService';
+import {
+  attachExistingBuyerFromGuestEmail,
+  ensureConversationForOrder,
+  generateGuestAccessToken,
+  notifyAdminsNewMarketplaceOrder,
+  sendGuestOrderConfirmationEmail,
+} from './guestOrderService';
 import { createMarketplaceNotification } from './marketplaceNotificationStoreService';
 import { marketplaceConfig } from '../../../config/features';
 import { PUBLIC_LISTING_FILTER } from './listingService';
@@ -242,12 +248,14 @@ const createOneCheckoutOrder = async (
   const group = slice.bySeller[0];
   const shipFrom = group.shipFrom || (await getShipFromForSeller(group.sellerId));
 
+  const isGuest = !input.buyerId && Boolean(input.guestEmail);
   const order = await MarketplaceOrder.create({
     orderNumber: generateOrderNumber(),
     buyer: input.buyerId || undefined,
     guestEmail: input.guestEmail,
     guestName: input.guestName || input.shippingAddress.fullName,
     guestPhone: input.guestPhone || input.shippingAddress.phone,
+    guestAccessToken: isGuest ? generateGuestAccessToken() : undefined,
     items: slice.items.map((i) => ({
       listing: i.listing,
       seller: i.seller,
@@ -445,20 +453,28 @@ export const fulfillMarketplaceOrder = async (orderId: string, paymentId?: strin
     console.error('[enviopack-auto-ship]', err)
   );
 
-  // Crear conversación post-compra (una por orden)
-  const sellerId = order.items[0]?.seller;
-  if (sellerId && order.buyer) {
-    await Conversation.findOneAndUpdate(
-      { order: order._id },
-      {
-        order: order._id,
-        buyer: order.buyer,
-        seller: sellerId,
-        lastMessageAt: new Date(),
-      },
-      { upsert: true, new: true }
-    );
+  await attachExistingBuyerFromGuestEmail(order);
+  if (!order.buyer && order.guestEmail) {
+    const withToken = await MarketplaceOrder.findById(order._id).select('+guestAccessToken');
+    if (withToken && !withToken.guestAccessToken) {
+      withToken.guestAccessToken = generateGuestAccessToken();
+      await withToken.save();
+    }
+  }
+  await ensureConversationForOrder(order);
 
+  if (!order.buyer && order.guestEmail) {
+    await sendGuestOrderConfirmationEmail(order).catch((err) =>
+      console.error('[order-email-guest]', err)
+    );
+  }
+
+  await notifyAdminsNewMarketplaceOrder(order).catch((err) =>
+    console.error('[order-notify-admin]', err)
+  );
+
+  const sellerId = order.items[0]?.seller;
+  if (sellerId) {
     const sellerProfile = await SellerProfile.findById(sellerId);
     if (sellerProfile?.user) {
       await notifyUserPush(

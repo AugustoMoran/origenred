@@ -69,6 +69,9 @@ import {
   getSellerDashboardController,
   listAdminServiceLeadsController,
   updateAdminServiceLeadController,
+  trackGuestOrderController,
+  confirmCheckoutReturnController,
+  listAdminMarketplaceOrdersController,
 } from '../controllers/marketplaceController';
 
 const router = Router();
@@ -103,6 +106,7 @@ router.post('/seller/mercadopago/callback', authenticate, requireSeller, mercado
 router.get('/orders', authenticate, getMyOrdersController);
 router.post('/orders/:orderNumber/cancel', authenticate, cancelOrderController);
 router.get('/orders/:orderNumber', optionalAuthenticate, getOrderController);
+router.get('/orders/:orderNumber/track', trackGuestOrderController);
 
 // Chat post-compra
 router.get('/chat/conversations', authenticate, getMyConversationsController);
@@ -126,6 +130,7 @@ router.post(
 router.post('/checkout/preview', optionalAuthenticate, previewCheckoutController);
 router.post('/checkout', optionalAuthenticate, createCheckoutController);
 router.post('/checkout/webhook', marketplaceWebhookController);
+router.post('/checkout/confirm-return', confirmCheckoutReturnController);
 
 // Comprador (auth)
 router.get('/notifications/summary', authenticate, getNotificationSummaryController);
@@ -162,6 +167,7 @@ router.post('/admin/search/reindex', authenticate, requireAdmin, reindexListings
 router.get('/admin/reports', authenticate, requireAdmin, listReportsController);
 router.patch('/admin/reports/:id', authenticate, requireAdmin, resolveReportController);
 router.get('/admin/analytics', authenticate, requireAdmin, getMarketplaceAnalyticsController);
+router.get('/admin/orders', authenticate, requireAdmin, listAdminMarketplaceOrdersController);
 router.get('/admin/enviopack-proofs', authenticate, requireAdmin, listEnvioPackProofsAdminController);
 router.patch(
   '/admin/enviopack-proofs/:orderNumber/confirm',

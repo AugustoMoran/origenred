@@ -732,6 +732,46 @@ export async function getChatByOrderController(req: Request, res: Response) {
 export async function getSellerOrdersController(req: Request, res: Response) {
   const userId = String((req as any).user._id);
   const orders = await getSellerOrders(userId);
+  const { sellerBuyerContactFromOrder } = await import('../services/guestOrderService');
+  res.json(
+    orders.map((order) => {
+      const plain = typeof (order as any).toObject === 'function' ? (order as any).toObject() : order;
+      return {
+        ...plain,
+        buyerContact: sellerBuyerContactFromOrder(order as any),
+      };
+    })
+  );
+}
+
+export async function trackGuestOrderController(req: Request, res: Response) {
+  const token = String(req.query.token || '');
+  const { getOrderForGuestTracking } = await import('../services/guestOrderService');
+  const summary = await getOrderForGuestTracking(String(req.params.orderNumber), token);
+  if (!summary) return res.status(404).json({ message: 'Pedido no encontrado o enlace inválido' });
+  res.json(summary);
+}
+
+export async function confirmCheckoutReturnController(req: Request, res: Response) {
+  try {
+    const paymentId =
+      req.body?.paymentId ||
+      req.query?.payment_id ||
+      req.query?.collection_id;
+    if (!paymentId) {
+      return res.status(400).json({ message: 'Falta payment_id de Mercado Pago' });
+    }
+    const { processMarketplacePaymentWebhook } = await import('../services/marketplaceCheckoutService');
+    const result = await processMarketplacePaymentWebhook(String(paymentId));
+    res.json(result);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
+export async function listAdminMarketplaceOrdersController(_req: Request, res: Response) {
+  const { listAdminMarketplaceOrders } = await import('../services/guestOrderService');
+  const orders = await listAdminMarketplaceOrders(150);
   res.json(orders);
 }
 
