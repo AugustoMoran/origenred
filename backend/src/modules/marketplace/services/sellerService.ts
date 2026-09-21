@@ -26,6 +26,11 @@ export const updateSellerProfile = async (
     city?: string;
     postalCode?: string;
     phone?: string;
+    shipStreet?: string;
+    shipCity?: string;
+    shipProvince?: string;
+    shipPostalCode?: string;
+    envioPackDireccionEnvioId?: number | null;
   }
 ) => {
   const profile = await SellerProfile.findOne({ user: userId });
@@ -39,7 +44,27 @@ export const updateSellerProfile = async (
   if (input.city !== undefined) profile.city = input.city.trim();
   if (input.postalCode !== undefined) profile.postalCode = input.postalCode.trim();
   if (input.phone !== undefined) profile.phone = input.phone.trim();
+  if (input.shipStreet !== undefined) profile.shipStreet = input.shipStreet.trim();
+  if (input.shipCity !== undefined) profile.shipCity = input.shipCity.trim();
+  if (input.shipProvince !== undefined) profile.shipProvince = input.shipProvince.trim();
+  if (input.shipPostalCode !== undefined) profile.shipPostalCode = input.shipPostalCode.trim();
+  if (input.envioPackDireccionEnvioId !== undefined) {
+    profile.envioPackDireccionEnvioId =
+      input.envioPackDireccionEnvioId === null ? undefined : Number(input.envioPackDireccionEnvioId);
+  }
 
+  await profile.save();
+  return profile;
+};
+
+export const setSellerEnvioPackDireccionEnvioId = async (sellerId: string, direccionEnvioId: number | null) => {
+  const profile = await SellerProfile.findById(sellerId);
+  if (!profile) throw new Error('Vendedor no encontrado');
+  profile.envioPackDireccionEnvioId =
+    direccionEnvioId === null || direccionEnvioId === undefined ? undefined : Number(direccionEnvioId);
+  if (profile.envioPackDireccionEnvioId !== undefined && !Number.isFinite(profile.envioPackDireccionEnvioId)) {
+    throw new Error('ID de depósito EnvíoPack inválido');
+  }
   await profile.save();
   return profile;
 };

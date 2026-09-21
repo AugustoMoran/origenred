@@ -8,7 +8,12 @@ import { notifyUserPush } from '../../notifications/chatPushService';
 import { createMarketplaceNotification } from './marketplaceNotificationStoreService';
 import { marketplaceConfig } from '../../../config/features';
 import { PUBLIC_LISTING_FILTER } from './listingService';
-import { quoteShippingByPostalCode } from './marketplaceShippingService';
+import { applySelectedQuoteToShippingRow, quoteShippingByPostalCode } from './marketplaceShippingService';
+import { quotePriceValue } from './envioPackQuoteUtils';
+import {
+  getShipFromForSeller,
+  assertShipFromReadyForQuote,
+} from './sellerShipFromService';
 import { createMarketplacePreference, verifyMercadoPagoPayment, isMercadoPagoEnabled, isMercadoPagoConnectEnabled } from './marketplacePaymentService';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -122,20 +127,31 @@ export const previewCheckout = async (input: {
   for (const group of bySellerMap.values()) {
     let shippingCost = 0;
     let shippingQuotes: unknown[] = [];
+    let selectedQuote: unknown = null;
+    let direccionEnvio: number | undefined;
     const allFreeShipping = group.items.every((i) => i.freeShipping);
 
+    let shipFromSnapshot: Awaited<ReturnType<typeof getShipFromForSeller>> | undefined;
+
     if (shippingMethod === 'delivery' && input.postalCode && !allFreeShipping) {
+      shipFromSnapshot = await getShipFromForSeller(group.sellerId);
+      assertShipFromReadyForQuote(shipFromSnapshot);
       const quote = await quoteShippingByPostalCode({
         postalCode: input.postalCode,
         province: input.province,
+        originPostalCode: shipFromSnapshot.postalCode,
+        originProvince: shipFromSnapshot.province,
         weightKg: Math.max(group.weightKg, 0.5),
+        sellerId: group.sellerId,
+        shipFromSource: shipFromSnapshot.source,
       });
       shippingQuotes = quote.quotes || [];
-      // Tomar la cotización más barata si hay resultados
-      if (Array.isArray(shippingQuotes) && shippingQuotes.length) {
-        const costs = shippingQuotes
-          .map((q: any) => Number(q?.precio ?? q?.cost ?? q?.price ?? 0))
-          .filter((c) => c > 0);
+      selectedQuote = quote.selectedQuote;
+      direccionEnvio = quote.direccionEnvio;
+      if (quote.selectedQuote) {
+        shippingCost = round2(quotePriceValue(quote.selectedQuote as any));
+      } else if (Array.isArray(shippingQuotes) && shippingQuotes.length) {
+        const costs = shippingQuotes.map((q: any) => quotePriceValue(q)).filter((c) => c > 0);
         shippingCost = costs.length ? Math.min(...costs) : 0;
       }
     }
@@ -148,7 +164,10 @@ export const previewCheckout = async (input: {
       productSubtotal: group.productSubtotal,
       shippingCost,
       shippingQuotes,
+      selectedQuote,
+      direccionEnvio,
       freeShipping: allFreeShipping,
+      shipFrom: shipFromSnapshot,
     });
   }
 
@@ -188,7 +207,10 @@ type PreviewSlice = {
     productSubtotal: number;
     shippingCost: number;
     shippingQuotes?: unknown[];
+    selectedQuote?: unknown;
+    direccionEnvio?: number;
     freeShipping?: boolean;
+    shipFrom?: Awaited<ReturnType<typeof getShipFromForSeller>>;
   }>;
 };
 
@@ -214,6 +236,7 @@ const createOneCheckoutOrder = async (
   sellerProfile?: { mercadoPagoUserId?: string; mercadoPagoConnected?: boolean; businessName?: string } | null
 ) => {
   const group = slice.bySeller[0];
+  const shipFrom = group.shipFrom || (await getShipFromForSeller(group.sellerId));
 
   const order = await MarketplaceOrder.create({
     orderNumber: generateOrderNumber(),
@@ -240,15 +263,31 @@ const createOneCheckoutOrder = async (
     shippingAddress: input.shippingAddress,
     shippingMethod: input.shippingMethod || 'delivery',
     shippingBySeller: [
-      {
-        seller: group.sellerId,
-        sellerName: group.sellerName,
-        shippingCost: group.shippingCost,
-        envioPackProofStatus:
-          (input.shippingMethod || 'delivery') === 'delivery' && group.shippingCost > 0
-            ? 'pending_transfer'
-            : undefined,
-      },
+      (() => {
+        const shippingRow: Record<string, unknown> = {
+          seller: group.sellerId,
+          sellerName: group.sellerName,
+          shippingCost: group.shippingCost,
+          envioPackProofStatus:
+            (input.shippingMethod || 'delivery') === 'delivery' &&
+            group.shippingCost > 0 &&
+            shipFrom.source === 'seller'
+              ? 'pending_transfer'
+              : undefined,
+          shipFromStreet: shipFrom.street,
+          shipFromCity: shipFrom.city,
+          shipFromProvince: shipFrom.province,
+          shipFromPostalCode: shipFrom.postalCode,
+          shipFromLabel: shipFrom.label,
+          shipFromSource: shipFrom.source,
+        };
+        applySelectedQuoteToShippingRow(
+          shippingRow,
+          group.selectedQuote as any,
+          group.direccionEnvio
+        );
+        return shippingRow;
+      })(),
     ],
     chatEnabled: false,
   });
@@ -389,6 +428,16 @@ export const fulfillMarketplaceOrder = async (orderId: string, paymentId?: strin
   order.chatEnabled = true;
   initOrderFulfillmentOnPayment(order);
   await order.save();
+
+  const { notifyAdminsEnvioPackOnOrderPaid } = await import('./envioPackProofService');
+  await notifyAdminsEnvioPackOnOrderPaid(order).catch((err) =>
+    console.error('[enviopack-notify-paid]', err)
+  );
+
+  const { tryCreateEnvioPackShipmentsForOrder } = await import('./marketplaceEnvioPackShipmentService');
+  await tryCreateEnvioPackShipmentsForOrder(order).catch((err) =>
+    console.error('[enviopack-auto-ship]', err)
+  );
 
   // Crear conversación post-compra (una por orden)
   const sellerId = order.items[0]?.seller;

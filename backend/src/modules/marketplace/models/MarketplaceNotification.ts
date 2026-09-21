@@ -1,6 +1,6 @@
 import mongoose, { Schema, Document } from 'mongoose';
 
-export type PersistedNotificationType = 'order' | 'return';
+export type PersistedNotificationType = 'order' | 'return' | 'enviopack';
 
 export interface IMarketplaceNotification extends Document {
   user: mongoose.Types.ObjectId;
@@ -18,7 +18,7 @@ export interface IMarketplaceNotification extends Document {
 const MarketplaceNotificationSchema = new Schema<IMarketplaceNotification>(
   {
     user: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-    type: { type: String, enum: ['order', 'return'], required: true },
+    type: { type: String, enum: ['order', 'return', 'enviopack'], required: true },
     title: { type: String, required: true },
     body: { type: String, required: true },
     href: { type: String, required: true },

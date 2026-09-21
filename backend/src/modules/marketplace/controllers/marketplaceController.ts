@@ -8,6 +8,7 @@ import {
   listPendingSellers,
   listAllSellers,
   updateSellerStatus,
+  setSellerEnvioPackDireccionEnvioId,
   getSellerPublicProfile,
   connectMercadoPagoForSeller,
 } from '../services/sellerService';
@@ -236,6 +237,16 @@ export async function updateMySellerProfileController(req: Request, res: Respons
       city: req.body.city !== undefined ? String(req.body.city) : undefined,
       postalCode: req.body.postalCode !== undefined ? String(req.body.postalCode) : undefined,
       phone: req.body.phone !== undefined ? String(req.body.phone) : undefined,
+      shipStreet: req.body.shipStreet !== undefined ? String(req.body.shipStreet) : undefined,
+      shipCity: req.body.shipCity !== undefined ? String(req.body.shipCity) : undefined,
+      shipProvince: req.body.shipProvince !== undefined ? String(req.body.shipProvince) : undefined,
+      shipPostalCode: req.body.shipPostalCode !== undefined ? String(req.body.shipPostalCode) : undefined,
+      envioPackDireccionEnvioId:
+        req.body.envioPackDireccionEnvioId !== undefined && req.body.envioPackDireccionEnvioId !== ''
+          ? Number(req.body.envioPackDireccionEnvioId)
+          : req.body.envioPackDireccionEnvioId === null
+            ? null
+            : undefined,
     });
     res.json(profile);
   } catch (error: any) {
@@ -420,6 +431,18 @@ export async function approveSellerController(req: Request, res: Response) {
       adminId,
       req.body.rejectionReason
     );
+    res.json(profile);
+  } catch (error: any) {
+    res.status(400).json({ message: error.message });
+  }
+}
+
+export async function setSellerEnvioPackDepositController(req: Request, res: Response) {
+  try {
+    const raw = req.body.envioPackDireccionEnvioId;
+    const value =
+      raw === null || raw === '' || raw === undefined ? null : Number(raw);
+    const profile = await setSellerEnvioPackDireccionEnvioId(String(req.params.id), value);
     res.json(profile);
   } catch (error: any) {
     res.status(400).json({ message: error.message });

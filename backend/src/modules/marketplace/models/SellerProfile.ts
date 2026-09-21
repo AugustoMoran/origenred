@@ -11,6 +11,14 @@ export interface ISellerProfile extends Document {
   city?: string;
   postalCode?: string;
   phone?: string;
+  shipStreet?: string;
+  shipCity?: string;
+  shipProvince?: string;
+  shipPostalCode?: string;
+  /** ID depósito en EnvíoPack (Configuración > Depósitos). Se autocompleta por CP si coincide. */
+  envioPackDireccionEnvioId?: number;
+  /** Solo cuentas marketplace EnvíoPack: empresa del seller asociado. */
+  envioPackEmpresaId?: number;
   mercadoPagoUserId?: string;
   mercadoPagoConnected: boolean;
   reputationScore: number;
@@ -40,6 +48,12 @@ const SellerProfileSchema = new Schema<ISellerProfile>(
     city: { type: String, trim: true },
     postalCode: { type: String, trim: true },
     phone: { type: String, trim: true },
+    shipStreet: { type: String, trim: true },
+    shipCity: { type: String, trim: true },
+    shipProvince: { type: String, trim: true },
+    shipPostalCode: { type: String, trim: true },
+    envioPackDireccionEnvioId: { type: Number },
+    envioPackEmpresaId: { type: Number },
     mercadoPagoUserId: { type: String },
     mercadoPagoConnected: { type: Boolean, default: false },
     reputationScore: { type: Number, default: 0, min: 0, max: 100 },

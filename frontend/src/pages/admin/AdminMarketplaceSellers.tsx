@@ -3,6 +3,7 @@ import {
   useGetPendingSellersQuery,
   useGetAllSellersQuery,
   useUpdateSellerStatusMutation,
+  useUpdateAdminSellerEnvioPackDepositMutation,
   useReindexMarketplaceListingsMutation,
 } from '../../services/marketplaceApi';
 
@@ -81,6 +82,7 @@ export const AdminMarketplaceSellers: React.FC = () => {
                 <th className="text-left px-4 py-3">Negocio</th>
                 <th className="text-left px-4 py-3">Contacto</th>
                 <th className="text-left px-4 py-3">Ubicación</th>
+                <th className="text-left px-4 py-3">Depósito EP</th>
                 <th className="text-left px-4 py-3">Estado</th>
                 <th className="px-4 py-3"></th>
               </tr>
@@ -100,6 +102,16 @@ export const AdminMarketplaceSellers: React.FC = () => {
                   <td className="px-4 py-3 text-slate-400 text-xs">
                     {[seller.city, seller.province].filter(Boolean).join(', ')}
                     {seller.postalCode && <p>CP: {seller.postalCode}</p>}
+                  </td>
+                  <td className="px-4 py-3">
+                    {seller.status === 'approved' ? (
+                      <SellerEnvioPackDepositCell
+                        sellerId={seller._id}
+                        initialId={seller.envioPackDireccionEnvioId}
+                      />
+                    ) : (
+                      <span className="text-xs text-slate-600">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge status={seller.status} />
@@ -151,6 +163,41 @@ export const AdminMarketplaceSellers: React.FC = () => {
           </table>
         </div>
       )}
+    </div>
+  );
+};
+
+const SellerEnvioPackDepositCell: React.FC<{ sellerId: string; initialId?: number }> = ({
+  sellerId,
+  initialId,
+}) => {
+  const [value, setValue] = React.useState(initialId ? String(initialId) : '');
+  const [save, { isLoading }] = useUpdateAdminSellerEnvioPackDepositMutation();
+
+  React.useEffect(() => {
+    setValue(initialId ? String(initialId) : '');
+  }, [initialId]);
+
+  return (
+    <div className="flex items-center gap-1 max-w-[140px]">
+      <input
+        type="text"
+        inputMode="numeric"
+        placeholder="ID API"
+        value={value}
+        onChange={(e) => setValue(e.target.value.replace(/\D/g, ''))}
+        className="w-20 px-2 py-1 text-xs rounded-lg bg-white/5 border border-white/10 text-white"
+      />
+      <button
+        type="button"
+        disabled={isLoading || !value}
+        onClick={() =>
+          save({ id: sellerId, envioPackDireccionEnvioId: value ? Number(value) : null })
+        }
+        className="text-[10px] text-brand-400 hover:underline disabled:opacity-40"
+      >
+        Guardar
+      </button>
     </div>
   );
 };

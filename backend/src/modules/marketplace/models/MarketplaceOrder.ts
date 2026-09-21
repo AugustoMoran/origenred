@@ -51,6 +51,24 @@ export interface IMarketplaceOrder extends Document {
     envioPackProofStatus?: 'pending_transfer' | 'uploaded' | 'confirmed';
     envioPackProofUploadedAt?: Date;
     envioPackProofConfirmedAt?: Date;
+    shipFromStreet?: string;
+    shipFromCity?: string;
+    shipFromProvince?: string;
+    shipFromPostalCode?: string;
+    shipFromLabel?: string;
+    shipFromSource?: 'platform' | 'seller';
+    envioPackCorreo?: string;
+    envioPackServicio?: string;
+    envioPackModalidad?: string;
+    envioPackDespacho?: string;
+    envioPackDireccionEnvioId?: number;
+    envioPackPedidoId?: number;
+    envioPackEnvioId?: number;
+    envioPackEnvioEstado?: string;
+    envioPackTrackingNumber?: string;
+    envioPackPaquetes?: string;
+    envioPackLastError?: string;
+    envioPackSelectedQuote?: Record<string, unknown>;
   }>;
   envioPackShipmentId?: string;
   trackingCode?: string;
@@ -58,6 +76,8 @@ export interface IMarketplaceOrder extends Document {
   createdAt: Date;
   updatedAt: Date;
 }
+
+export type IShippingBySellerRow = NonNullable<IMarketplaceOrder['shippingBySeller']>[number];
 
 const OrderItemSchema = new Schema(
   {
@@ -122,6 +142,24 @@ const MarketplaceOrderSchema = new Schema<IMarketplaceOrder>(
         },
         envioPackProofUploadedAt: Date,
         envioPackProofConfirmedAt: Date,
+        shipFromStreet: String,
+        shipFromCity: String,
+        shipFromProvince: String,
+        shipFromPostalCode: String,
+        shipFromLabel: String,
+        shipFromSource: { type: String, enum: ['platform', 'seller'] },
+        envioPackCorreo: String,
+        envioPackServicio: String,
+        envioPackModalidad: String,
+        envioPackDespacho: String,
+        envioPackDireccionEnvioId: Number,
+        envioPackPedidoId: Number,
+        envioPackEnvioId: Number,
+        envioPackEnvioEstado: String,
+        envioPackTrackingNumber: String,
+        envioPackPaquetes: String,
+        envioPackLastError: String,
+        envioPackSelectedQuote: Schema.Types.Mixed,
       },
     ],
     envioPackShipmentId: { type: String },

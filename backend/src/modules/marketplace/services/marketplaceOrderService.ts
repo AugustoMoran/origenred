@@ -29,6 +29,12 @@ const ensureSellerFulfillment = (order: IMarketplaceOrder) => {
       envioPackProofStatus: entry.envioPackProofStatus,
       envioPackProofUploadedAt: entry.envioPackProofUploadedAt,
       envioPackProofConfirmedAt: entry.envioPackProofConfirmedAt,
+      shipFromStreet: entry.shipFromStreet,
+      shipFromCity: entry.shipFromCity,
+      shipFromProvince: entry.shipFromProvince,
+      shipFromPostalCode: entry.shipFromPostalCode,
+      shipFromLabel: entry.shipFromLabel,
+      shipFromSource: entry.shipFromSource,
     }));
     return;
   }

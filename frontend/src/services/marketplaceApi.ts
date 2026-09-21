@@ -53,6 +53,11 @@ export interface SellerProfile {
   city?: string;
   postalCode?: string;
   phone?: string;
+  shipStreet?: string;
+  shipCity?: string;
+  shipProvince?: string;
+  shipPostalCode?: string;
+  envioPackDireccionEnvioId?: number;
   reputationScore: number;
   totalSales: number;
   listingCount: number;
@@ -72,7 +77,17 @@ export interface HomeData {
 export const marketplaceApi = createApi({
   reducerPath: 'marketplaceApi',
   baseQuery: createReauthBaseQuery(`${API_BASE}/marketplace`),
-  tagTypes: ['Home', 'Listings', 'Listing', 'Favorites', 'Seller', 'MyListings', 'Orders', 'Notifications'],
+  tagTypes: [
+    'Home',
+    'Listings',
+    'Listing',
+    'Favorites',
+    'Seller',
+    'MyListings',
+    'Orders',
+    'Notifications',
+    'EnvioPackProofs',
+  ],
   endpoints: (builder) => ({
     getHomeData: builder.query<HomeData, void>({
       query: () => '/home',
@@ -174,6 +189,11 @@ export const marketplaceApi = createApi({
         city?: string;
         postalCode?: string;
         phone?: string;
+        shipStreet?: string;
+        shipCity?: string;
+        shipProvince?: string;
+        shipPostalCode?: string;
+        envioPackDireccionEnvioId?: number | null;
       }
     >({
       query: (body) => ({ url: '/seller/me', method: 'PATCH', body }),
@@ -247,6 +267,17 @@ export const marketplaceApi = createApi({
       }),
       invalidatesTags: ['Seller'],
     }),
+    updateAdminSellerEnvioPackDeposit: builder.mutation<
+      SellerProfile,
+      { id: string; envioPackDireccionEnvioId: number | null }
+    >({
+      query: ({ id, envioPackDireccionEnvioId }) => ({
+        url: `/admin/sellers/${id}/enviopack-deposit`,
+        method: 'PATCH',
+        body: { envioPackDireccionEnvioId },
+      }),
+      invalidatesTags: ['Seller'],
+    }),
     reindexMarketplaceListings: builder.mutation<{ indexed: number }, void>({
       query: () => ({ url: '/admin/search/reindex', method: 'POST' }),
     }),
@@ -284,7 +315,7 @@ export const marketplaceApi = createApi({
         totalUnread?: number;
         items?: Array<{
           id: string;
-          type: 'chat' | 'order' | 'return';
+          type: 'chat' | 'order' | 'return' | 'enviopack';
           title: string;
           body: string;
           href: string;
@@ -619,17 +650,26 @@ export const marketplaceApi = createApi({
         proofFileName?: string;
         proofStatus?: string;
         uploadedAt?: string;
+        shipFromLabel?: string;
+        shipFromStreet?: string;
+        shipFromCity?: string;
+        shipFromProvince?: string;
+        shipFromPostalCode?: string;
+        shipFromSource?: 'platform' | 'seller';
+        envioPackEnvioId?: number;
+        envioPackLastError?: string;
       }>,
       void
     >({
       query: () => '/admin/enviopack-proofs',
+      providesTags: ['EnvioPackProofs'],
     }),
     confirmAdminEnvioPackProof: builder.mutation<{ message: string }, string>({
       query: (orderNumber) => ({
         url: `/admin/enviopack-proofs/${orderNumber}/confirm`,
         method: 'PATCH',
       }),
-      invalidatesTags: ['Orders'],
+      invalidatesTags: ['Orders', 'EnvioPackProofs'],
     }),
   }),
 });
@@ -668,6 +708,7 @@ export const {
   useGetPendingSellersQuery,
   useGetAllSellersQuery,
   useUpdateSellerStatusMutation,
+  useUpdateAdminSellerEnvioPackDepositMutation,
   useGetReportsQuery,
   useResolveReportMutation,
   useCreateReturnRequestMutation,

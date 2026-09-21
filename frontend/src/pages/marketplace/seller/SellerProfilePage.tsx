@@ -14,6 +14,11 @@ export const SellerProfilePage: React.FC = () => {
     city: '',
     postalCode: '',
     phone: '',
+    shipStreet: '',
+    shipCity: '',
+    shipProvince: '',
+    shipPostalCode: '',
+    envioPackDireccionEnvioId: '',
   });
   const [feedback, setFeedback] = useState<string | null>(null);
 
@@ -26,6 +31,13 @@ export const SellerProfilePage: React.FC = () => {
         city: profile.city || '',
         postalCode: profile.postalCode || '',
         phone: profile.phone || '',
+        shipStreet: profile.shipStreet || '',
+        shipCity: profile.shipCity || '',
+        shipProvince: profile.shipProvince || '',
+        shipPostalCode: profile.shipPostalCode || '',
+        envioPackDireccionEnvioId: profile.envioPackDireccionEnvioId
+          ? String(profile.envioPackDireccionEnvioId)
+          : '',
       });
     }
   }, [profile]);
@@ -34,7 +46,12 @@ export const SellerProfilePage: React.FC = () => {
     e.preventDefault();
     setFeedback(null);
     try {
-      await updateProfile(form).unwrap();
+      await updateProfile({
+        ...form,
+        envioPackDireccionEnvioId: form.envioPackDireccionEnvioId
+          ? Number(form.envioPackDireccionEnvioId)
+          : null,
+      }).unwrap();
       setFeedback('Perfil actualizado correctamente.');
     } catch (err: any) {
       setFeedback(err?.data?.message || 'No se pudo guardar el perfil');
@@ -95,6 +112,62 @@ export const SellerProfilePage: React.FC = () => {
             />
           </label>
         </div>
+        <div className="border-t border-slate-100 pt-4 space-y-3">
+          <p className="text-sm font-semibold text-or-navy">Dirección de despacho (EnvíoPack)</p>
+          <p className="text-xs text-slate-500">
+            Desde acá se cotiza y retira el paquete. Si sos admin de OrigenRed, se usa el depósito configurado en el
+            servidor.
+          </p>
+          <label className="block space-y-1">
+            <span className="text-sm font-medium text-slate-700">Calle y número</span>
+            <input
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+              value={form.shipStreet}
+              onChange={(e) => setForm({ ...form, shipStreet: e.target.value })}
+              placeholder="Ej. Av. Corrientes 1234"
+            />
+          </label>
+          <div className="grid sm:grid-cols-2 gap-4">
+            <label className="block space-y-1">
+              <span className="text-sm font-medium text-slate-700">Ciudad despacho</span>
+              <input
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                value={form.shipCity}
+                onChange={(e) => setForm({ ...form, shipCity: e.target.value })}
+              />
+            </label>
+            <label className="block space-y-1">
+              <span className="text-sm font-medium text-slate-700">CP despacho</span>
+              <input
+                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                value={form.shipPostalCode}
+                onChange={(e) => setForm({ ...form, shipPostalCode: e.target.value })}
+              />
+            </label>
+          </div>
+          <label className="block space-y-1">
+            <span className="text-sm font-medium text-slate-700">Provincia despacho</span>
+            <input
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+              value={form.shipProvince}
+              onChange={(e) => setForm({ ...form, shipProvince: e.target.value })}
+            />
+          </label>
+          <label className="block space-y-1">
+            <span className="text-sm font-medium text-slate-700">ID depósito EnvíoPack (opcional)</span>
+            <input
+              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+              value={form.envioPackDireccionEnvioId}
+              onChange={(e) => setForm({ ...form, envioPackDireccionEnvioId: e.target.value })}
+              placeholder="Ej. 22 — Configuración > Depósitos en EnvíoPack"
+            />
+            <span className="text-xs text-slate-500">
+              Si la dirección ya está en EnvíoPack con el mismo CP, podemos detectarla sola; si no, copiá el ID del
+              depósito.
+            </span>
+          </label>
+        </div>
+
         <div className="grid sm:grid-cols-2 gap-4">
           <label className="block space-y-1">
             <span className="text-sm font-medium text-slate-700">Provincia</span>

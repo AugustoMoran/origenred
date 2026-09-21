@@ -24,6 +24,7 @@ import {
   listAdminListingsController,
   listPendingSellersController,
   approveSellerController,
+  setSellerEnvioPackDepositController,
   createCategoryController,
   listAdminCategoriesController,
   updateCategoryController,
@@ -147,6 +148,12 @@ router.get('/admin/sellers', authenticate, requireAdmin, listSellersAdminControl
 router.get('/admin/listings', authenticate, requireAdmin, listAdminListingsController);
 router.get('/admin/sellers/pending', authenticate, requireAdmin, listPendingSellersController);
 router.patch('/admin/sellers/:id/status', authenticate, requireAdmin, approveSellerController);
+router.patch(
+  '/admin/sellers/:id/enviopack-deposit',
+  authenticate,
+  requireAdmin,
+  setSellerEnvioPackDepositController
+);
 router.post('/admin/categories', authenticate, requireAdmin, createCategoryController);
 router.get('/admin/categories', authenticate, requireAdmin, listAdminCategoriesController);
 router.patch('/admin/categories/:id', authenticate, requireAdmin, updateCategoryController);
