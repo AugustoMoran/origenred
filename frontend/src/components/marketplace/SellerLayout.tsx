@@ -67,7 +67,7 @@ export const SellerLayout: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="marketplace-theme min-h-screen bg-slate-50 text-or-navy flex">
       <aside className="hidden md:flex w-60 flex-col bg-or-navy text-white fixed inset-y-0 left-0">
         <div className="p-5 border-b border-white/10">
           <Link to="/" className="flex flex-col gap-2">
@@ -120,7 +120,7 @@ export const SellerLayout: React.FC = () => {
           </div>
         )}
 
-        <main className="p-6">
+        <main className="p-6 text-or-navy">
           <Outlet context={{ profile }} />
         </main>
       </div>

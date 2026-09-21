@@ -31,6 +31,40 @@
   .marketplace-theme #root {
     background-color: #F8FAFC;
   }
+  .marketplace-theme input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='button']):not([type='submit']),
+  .marketplace-theme textarea,
+  .marketplace-theme select {
+    color: #0F1B3C !important;
+    -webkit-text-fill-color: #0F1B3C;
+  }
+  .marketplace-theme input::placeholder,
+  .marketplace-theme textarea::placeholder {
+    color: #64748b !important;
+    -webkit-text-fill-color: #64748b;
+    opacity: 1;
+  }
+  .marketplace-theme input:-webkit-autofill,
+  .marketplace-theme textarea:-webkit-autofill,
+  .marketplace-theme select:-webkit-autofill {
+    -webkit-text-fill-color: #0F1B3C !important;
+    caret-color: #0F1B3C;
+  }
+}
+
+@layer components {
+  /* Campos del marketplace / panel vendedor (tema claro sobre app oscura) */
+  .marketplace-field {
+    @apply w-full bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm
+      focus:outline-none focus:border-or-blue focus:ring-2 focus:ring-or-blue/10;
+    color: #0F1B3C !important;
+    -webkit-text-fill-color: #0F1B3C;
+    caret-color: #0F1B3C;
+  }
+  .marketplace-field::placeholder {
+    color: #64748b !important;
+    -webkit-text-fill-color: #64748b;
+    opacity: 1;
+  }
 }
 
 @layer components {

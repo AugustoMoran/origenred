@@ -169,7 +169,7 @@ export const SellerOrdersPage: React.FC = () => {
                       onChange={(e) =>
                         setTrackingByOrder((prev) => ({ ...prev, [order.orderNumber]: e.target.value }))
                       }
-                      className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                      className="marketplace-field flex-1 px-3 py-2 bg-slate-50"
                     />
                     <button
                       disabled={updating}

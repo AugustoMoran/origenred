@@ -41,15 +41,30 @@ export const envioPackProofUpload = multer({
 export const processUploadedImages = async (files: Express.Multer.File[], folder = 'listings') => {
   const results: Array<{ url: string; key?: string }> = [];
 
+  const saveBufferToLocal = (file: Express.Multer.File) => {
+    const safe = file.originalname.replace(/\s+/g, '-').toLowerCase();
+    const filename = `${Date.now()}-${safe}`;
+    const dest = path.join(localUploadsDir, filename);
+    fs.writeFileSync(dest, file.buffer!);
+    return { url: `/uploads/marketplace/${filename}` };
+  };
+
   for (const file of files) {
     if (isR2Enabled() && file.buffer) {
-      const uploaded = await uploadToR2({
-        buffer: file.buffer,
-        originalName: file.originalname,
-        mimeType: file.mimetype,
-        folder,
-      });
-      results.push(uploaded);
+      try {
+        const uploaded = await uploadToR2({
+          buffer: file.buffer,
+          originalName: file.originalname,
+          mimeType: file.mimetype,
+          folder,
+        });
+        results.push(uploaded);
+      } catch (err) {
+        console.error('[marketplace] R2 upload failed, saving image locally:', err);
+        results.push(saveBufferToLocal(file));
+      }
+    } else if (file.buffer) {
+      results.push(saveBufferToLocal(file));
     } else if (file.path) {
       results.push({ url: `/uploads/marketplace/${path.basename(file.path)}` });
     }

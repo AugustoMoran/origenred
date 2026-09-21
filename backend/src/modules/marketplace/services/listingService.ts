@@ -71,7 +71,11 @@ export const createListing = async (sellerProfileId: string, data: Partial<IList
   await listing.save();
 
   if (listing.status === 'active') {
-    await indexListing(listing);
+    try {
+      await indexListing(listing);
+    } catch (err) {
+      console.error('[listing] Meilisearch index failed (listing saved):', err);
+    }
     await MarketplaceCategory.findByIdAndUpdate(category._id, { $inc: { listingCount: 1 } });
     await SellerProfile.findByIdAndUpdate(sellerProfileId, { $inc: { listingCount: 1 } });
   }

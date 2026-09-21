@@ -7,6 +7,8 @@ import {
   useUpdateSellerListingMutation,
 } from '../../../services/marketplaceApi';
 
+const fieldClass = 'marketplace-field';
+
 const emptyForm = {
   title: '',
   description: '',
@@ -116,7 +118,18 @@ export const SellerListingFormPage: React.FC = () => {
       }
       navigate('/vendedor/productos');
     } catch (err: any) {
-      setError(err?.data?.message || 'Error al guardar');
+      const apiMessage =
+        err?.data?.message ||
+        (typeof err?.data === 'string' ? err.data : undefined);
+      if (err?.status === 401) {
+        setError(apiMessage || 'Sesión expirada. Volvé a iniciar sesión e intentá de nuevo.');
+        return;
+      }
+      if (err?.status === 403) {
+        setError(apiMessage || 'No tenés permiso para publicar con esta cuenta.');
+        return;
+      }
+      setError(apiMessage || 'Error al guardar');
     }
   };
 
@@ -128,7 +141,7 @@ export const SellerListingFormPage: React.FC = () => {
         {isEdit ? 'Editar publicación' : 'Nueva publicación'}
       </h2>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-100 p-6 space-y-5">
+      <form onSubmit={handleSubmit} className="bg-white rounded-2xl border border-slate-100 p-6 space-y-5 text-or-navy">
         {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-xl">{error}</div>}
 
         <Field label="Título *" value={form.title} onChange={set('title')} required />
@@ -139,7 +152,7 @@ export const SellerListingFormPage: React.FC = () => {
             onChange={set('description')}
             required
             rows={4}
-            className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-or-blue focus:ring-2 focus:ring-or-blue/10"
+            className={`${fieldClass} min-h-[100px] py-3`}
           />
         </div>
 
@@ -153,7 +166,7 @@ export const SellerListingFormPage: React.FC = () => {
               value={form.category}
               onChange={set('category')}
               required
-              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm"
+              className={fieldClass}
             >
               <option value="">Seleccionar...</option>
               {categories.map((c) => (
@@ -191,7 +204,7 @@ export const SellerListingFormPage: React.FC = () => {
 
         <div>
           <label className="block text-sm font-medium text-or-navy mb-1.5">Estado</label>
-          <select value={form.status} onChange={set('status')} className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm">
+          <select value={form.status} onChange={set('status')} className={fieldClass}>
             <option value="draft">Borrador</option>
             <option value="active">Publicar (activa)</option>
             <option value="paused">Pausada</option>
@@ -294,7 +307,7 @@ const Field: React.FC<{
       value={value}
       onChange={onChange}
       required={required}
-      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-or-blue focus:ring-2 focus:ring-or-blue/10"
+      className={fieldClass}
     />
   </div>
 );

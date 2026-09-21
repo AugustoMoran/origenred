@@ -79,7 +79,7 @@ export const SellerServicesPage: React.FC = () => {
                     onChange={(e) => setMessage(e.target.value)}
                     placeholder="¿Qué necesitás? (opcional)"
                     rows={3}
-                    className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                    className="marketplace-field px-3 py-2"
                   />
                   <div className="flex gap-2">
                     <button

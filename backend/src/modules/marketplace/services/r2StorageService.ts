@@ -53,7 +53,23 @@ export const uploadToR2 = async (input: {
     },
   });
 
-  await upload.done();
+  try {
+    await upload.done();
+  } catch (err: unknown) {
+    const name = (err as { name?: string })?.name || '';
+    const message = String((err as { message?: string })?.message || err);
+    if (
+      name === 'Unauthorized' ||
+      message.includes('Unauthorized') ||
+      message.includes('Access Denied')
+    ) {
+      throw new Error(
+        'No se pudieron subir las imágenes: las credenciales de Cloudflare R2 en el servidor no son válidas. ' +
+          'Revisá R2_ACCESS_KEY_ID y R2_SECRET_ACCESS_KEY en Render, o guardá la publicación sin fotos.'
+      );
+    }
+    throw err;
+  }
 
   return {
     key,

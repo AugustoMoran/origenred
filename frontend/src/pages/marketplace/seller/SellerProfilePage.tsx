@@ -79,7 +79,7 @@ export const SellerProfilePage: React.FC = () => {
         <label className="block space-y-1">
           <span className="text-sm font-medium text-slate-700">Nombre de tienda</span>
           <input
-            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+            className="marketplace-field px-3 py-2"
             value={form.businessName}
             onChange={(e) => setForm({ ...form, businessName: e.target.value })}
             required
@@ -88,7 +88,7 @@ export const SellerProfilePage: React.FC = () => {
         <label className="block space-y-1">
           <span className="text-sm font-medium text-slate-700">Descripción</span>
           <textarea
-            className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm min-h-[100px]"
+            className="marketplace-field px-3 py-2 min-h-[100px]"
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             placeholder="Contá qué vendés y qué te diferencia"
@@ -98,7 +98,7 @@ export const SellerProfilePage: React.FC = () => {
           <label className="block space-y-1">
             <span className="text-sm font-medium text-slate-700">Teléfono</span>
             <input
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+              className="marketplace-field px-3 py-2"
               value={form.phone}
               onChange={(e) => setForm({ ...form, phone: e.target.value })}
             />
@@ -106,7 +106,7 @@ export const SellerProfilePage: React.FC = () => {
           <label className="block space-y-1">
             <span className="text-sm font-medium text-slate-700">Ciudad</span>
             <input
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+              className="marketplace-field px-3 py-2"
               value={form.city}
               onChange={(e) => setForm({ ...form, city: e.target.value })}
             />
@@ -121,7 +121,7 @@ export const SellerProfilePage: React.FC = () => {
           <label className="block space-y-1">
             <span className="text-sm font-medium text-slate-700">Calle y número</span>
             <input
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+              className="marketplace-field px-3 py-2"
               value={form.shipStreet}
               onChange={(e) => setForm({ ...form, shipStreet: e.target.value })}
               placeholder="Ej. Av. Corrientes 1234"
@@ -131,7 +131,7 @@ export const SellerProfilePage: React.FC = () => {
             <label className="block space-y-1">
               <span className="text-sm font-medium text-slate-700">Ciudad despacho</span>
               <input
-                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                className="marketplace-field px-3 py-2"
                 value={form.shipCity}
                 onChange={(e) => setForm({ ...form, shipCity: e.target.value })}
               />
@@ -139,7 +139,7 @@ export const SellerProfilePage: React.FC = () => {
             <label className="block space-y-1">
               <span className="text-sm font-medium text-slate-700">CP despacho</span>
               <input
-                className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+                className="marketplace-field px-3 py-2"
                 value={form.shipPostalCode}
                 onChange={(e) => setForm({ ...form, shipPostalCode: e.target.value })}
               />
@@ -148,7 +148,7 @@ export const SellerProfilePage: React.FC = () => {
           <label className="block space-y-1">
             <span className="text-sm font-medium text-slate-700">Provincia despacho</span>
             <input
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+              className="marketplace-field px-3 py-2"
               value={form.shipProvince}
               onChange={(e) => setForm({ ...form, shipProvince: e.target.value })}
             />
@@ -156,7 +156,7 @@ export const SellerProfilePage: React.FC = () => {
           <label className="block space-y-1">
             <span className="text-sm font-medium text-slate-700">ID depósito EnvíoPack (opcional)</span>
             <input
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+              className="marketplace-field px-3 py-2"
               value={form.envioPackDireccionEnvioId}
               onChange={(e) => setForm({ ...form, envioPackDireccionEnvioId: e.target.value })}
               placeholder="Ej. 22 — Configuración > Depósitos en EnvíoPack"
@@ -172,7 +172,7 @@ export const SellerProfilePage: React.FC = () => {
           <label className="block space-y-1">
             <span className="text-sm font-medium text-slate-700">Provincia</span>
             <input
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+              className="marketplace-field px-3 py-2"
               value={form.province}
               onChange={(e) => setForm({ ...form, province: e.target.value })}
             />
@@ -180,7 +180,7 @@ export const SellerProfilePage: React.FC = () => {
           <label className="block space-y-1">
             <span className="text-sm font-medium text-slate-700">Código postal</span>
             <input
-              className="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm"
+              className="marketplace-field px-3 py-2"
               value={form.postalCode}
               onChange={(e) => setForm({ ...form, postalCode: e.target.value })}
             />
