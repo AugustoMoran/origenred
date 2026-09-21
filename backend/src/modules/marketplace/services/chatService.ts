@@ -112,7 +112,7 @@ export const getConversationByOrder = async (orderNumber: string, userId: string
   if (!order.chatEnabled) throw new Error('Chat no disponible');
 
   if (!order.buyer) {
-    order = await attachExistingBuyerFromGuestEmail(order);
+    await attachExistingBuyerFromGuestEmail(order);
     await ensureConversationForOrder(order);
   }
 

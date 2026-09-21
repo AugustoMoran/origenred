@@ -1,6 +1,6 @@
-import { createApi } from '@reduxjs/toolkit/query/react';
+import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 import { AuthUser } from '../store/authSlice';
-import { createReauthBaseQuery } from './baseQueryWithReauth';
+import { prepareAuthHeaders } from './baseQueryWithReauth';
 import { applyAuthTokensFromPayload, clearAuthTokens } from './authTokenStorage';
 
 const authBaseUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:4000/api'}/auth`;
@@ -13,7 +13,11 @@ export type AuthSessionPayload = {
 
 export const authApi = createApi({
   reducerPath: 'authApi',
-  baseQuery: createReauthBaseQuery(authBaseUrl),
+  baseQuery: fetchBaseQuery({
+    baseUrl: authBaseUrl,
+    credentials: 'include',
+    prepareHeaders: prepareAuthHeaders,
+  }),
   tagTypes: ['Users'],
   endpoints: (builder) => ({
     login: builder.mutation<AuthSessionPayload, { email: string; password: string }>({
