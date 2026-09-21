@@ -9,8 +9,18 @@ const extractTokenFromHandshake = (socket: Socket): string | null => {
   const cookieHeader = socket.handshake.headers.cookie;
   if (!cookieHeader) return null;
 
-  const match = cookieHeader.match(/(?:^|;\s*)accessToken=([^;]+)/);
-  return match?.[1] ? decodeURIComponent(match[1]) : null;
+  const re = /(?:^|;\s*)accessToken=([^;]+)/g;
+  let match: RegExpExecArray | null;
+  while ((match = re.exec(cookieHeader))) {
+    const token = decodeURIComponent(match[1]);
+    try {
+      verifyAccessToken(token);
+      return token;
+    } catch {
+      // stale duplicate cookie (e.g. legacy path=/api)
+    }
+  }
+  return null;
 };
 
 export const registerMarketplaceChatSocket = (io: Server) => {

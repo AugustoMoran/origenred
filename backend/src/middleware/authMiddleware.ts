@@ -3,20 +3,52 @@ import jwt from 'jsonwebtoken';
 import { JWT_ACCESS_TOKEN_SECRET } from '../config';
 import { User } from '../modules/auth/models/User';
 
-const extractAccessToken = (req: Request): string | null => {
+const collectAccessTokenCandidates = (req: Request): string[] => {
+  const tokens: string[] = [];
+
   const auth = req.headers.authorization;
   if (auth) {
     const parts = auth.split(' ');
-    if (parts.length === 2 && parts[0].toLowerCase() === 'bearer') {
-      return parts[1];
+    if (parts.length === 2 && parts[0].toLowerCase() === 'bearer' && parts[1]) {
+      tokens.push(parts[1]);
     }
   }
 
-  if (req.cookies?.accessToken) {
-    return req.cookies.accessToken;
+  const fromParser = req.cookies?.accessToken;
+  if (typeof fromParser === 'string' && fromParser) tokens.push(fromParser);
+  if (Array.isArray(fromParser)) {
+    for (const t of fromParser) {
+      if (typeof t === 'string' && t) tokens.push(t);
+    }
   }
 
-  return null;
+  const cookieHeader = req.headers.cookie;
+  if (cookieHeader) {
+    const re = /(?:^|;\s*)accessToken=([^;]+)/g;
+    let match: RegExpExecArray | null;
+    while ((match = re.exec(cookieHeader))) {
+      try {
+        tokens.push(decodeURIComponent(match[1]));
+      } catch {
+        tokens.push(match[1]);
+      }
+    }
+  }
+
+  return [...new Set(tokens)];
+};
+
+const extractAccessToken = (req: Request): string | null => {
+  const candidates = collectAccessTokenCandidates(req);
+  for (const token of candidates) {
+    try {
+      jwt.verify(token, JWT_ACCESS_TOKEN_SECRET);
+      return token;
+    } catch {
+      // try next duplicate/stale cookie
+    }
+  }
+  return candidates[0] ?? null;
 };
 
 export async function authenticate(req: Request, res: Response, next: NextFunction) {

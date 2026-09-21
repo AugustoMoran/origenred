@@ -15,6 +15,12 @@ export const buildAccessCookieOptions = () => ({
   maxAge: ACCESS_COOKIE_MAX_AGE_MS,
 });
 
+/** Pre–Socket.IO fix: access cookie was scoped to /api only */
+export const buildLegacyAccessCookieOptions = () => ({
+  ...buildAccessCookieOptions(),
+  path: '/api',
+});
+
 export const buildRefreshCookieOptions = () => ({
   httpOnly: true,
   sameSite: (isProd() ? 'none' : 'strict') as 'none' | 'strict',
@@ -32,13 +38,19 @@ export const serializeAuthUser = (user: IUser | any) => ({
   branch: user.branch,
 });
 
+export const clearLegacyAccessCookie = (res: Response) => {
+  res.clearCookie('accessToken', buildLegacyAccessCookieOptions());
+};
+
 export const setAuthCookies = (res: Response, accessToken: string, refreshToken: string) => {
+  clearLegacyAccessCookie(res);
   res.cookie('accessToken', accessToken, buildAccessCookieOptions());
   res.cookie('refreshToken', refreshToken, buildRefreshCookieOptions());
 };
 
 export const clearAuthCookies = (res: Response) => {
   res.clearCookie('accessToken', buildAccessCookieOptions());
+  clearLegacyAccessCookie(res);
   res.clearCookie('refreshToken', buildRefreshCookieOptions());
 };
 
