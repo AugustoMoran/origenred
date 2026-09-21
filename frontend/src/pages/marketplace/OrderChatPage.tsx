@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { SEO } from '../../components/ecommerce/SEO';
@@ -10,27 +10,62 @@ import {
 } from '../../services/marketplaceApi';
 import { connectSocket, joinChatRoom, leaveChatRoom } from '../../services/socket';
 
+const senderId = (msg: { sender?: { _id?: string; id?: string } | string }) => {
+  if (!msg.sender) return '';
+  if (typeof msg.sender === 'string') return msg.sender;
+  return String(msg.sender._id || msg.sender.id || '');
+};
+
 export const OrderChatPage: React.FC = () => {
   const { conversationId, orderNumber } = useParams();
+  const location = useLocation();
+  const isSellerPanel = location.pathname.startsWith('/vendedor/chat');
   const { user } = useSelector((state: RootState) => state.auth);
   const [message, setMessage] = useState('');
   const [liveMessages, setLiveMessages] = useState<any[]>([]);
+  const [sendError, setSendError] = useState('');
   const bottomRef = useRef<HTMLDivElement>(null);
 
-  const byOrder = useGetChatByOrderQuery(orderNumber || '', { skip: !orderNumber });
-  const byId = useGetConversationMessagesQuery(conversationId || '', { skip: !conversationId });
+  const byOrder = useGetChatByOrderQuery(orderNumber || '', {
+    skip: !orderNumber,
+    pollingInterval: 8000,
+  });
+  const byId = useGetConversationMessagesQuery(conversationId || '', {
+    skip: !conversationId,
+    pollingInterval: 8000,
+  });
   const data = orderNumber ? byOrder.data : byId.data;
   const isLoading = orderNumber ? byOrder.isLoading : byId.isLoading;
+  const loadError = orderNumber ? byOrder.error : byId.error;
   const refetch = orderNumber ? byOrder.refetch : byId.refetch;
 
   const [sendMessage, { isLoading: sending }] = useSendMessageMutation();
 
   const convId = data?.conversation?._id || conversationId;
-  const messages = liveMessages.length ? liveMessages : data?.messages || [];
+  const serverMessages = data?.messages || [];
+  const messages = useMemo(() => {
+    const merged = [...serverMessages];
+    for (const m of liveMessages) {
+      if (!merged.some((x) => x._id === m._id)) merged.push(m);
+    }
+    return merged.sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+  }, [serverMessages, liveMessages]);
 
   useEffect(() => {
-    if (data?.messages) setLiveMessages(data.messages);
-  }, [data?.messages]);
+    if (serverMessages.length) {
+      setLiveMessages((prev) => {
+        const merged = [...serverMessages];
+        for (const m of prev) {
+          if (!merged.some((x) => x._id === m._id)) merged.push(m);
+        }
+        return merged.sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
+      });
+    }
+  }, [serverMessages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -45,7 +80,9 @@ export const OrderChatPage: React.FC = () => {
     const onMessage = (msg: any) => {
       setLiveMessages((prev) => {
         if (prev.some((m) => m._id === msg._id)) return prev;
-        return [...prev, msg];
+        return [...prev, msg].sort(
+          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+        );
       });
     };
 
@@ -57,60 +94,98 @@ export const OrderChatPage: React.FC = () => {
     };
   }, [convId]);
 
-  const handleSend = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!message.trim() || !convId) return;
-    await sendMessage({ conversationId: convId, body: message.trim() });
-    setMessage('');
-    refetch();
+  const handleSend = async () => {
+    setSendError('');
+    const text = message.trim();
+    if (!text) return;
+    if (!convId) {
+      setSendError('No se pudo abrir la conversación. Recargá la página o volvé a Mis compras.');
+      return;
+    }
+
+    try {
+      const sent = await sendMessage({ conversationId: convId, body: text }).unwrap();
+      setMessage('');
+      setLiveMessages((prev) => {
+        if (prev.some((m) => m._id === sent._id)) return prev;
+        return [...prev, sent];
+      });
+      refetch();
+    } catch (err: any) {
+      setSendError(err?.data?.message || 'No se pudo enviar el mensaje. Intentá de nuevo.');
+    }
   };
 
-  if (isLoading) return <div className="py-20 text-center text-slate-400">Cargando chat...</div>;
+  const backHref = isSellerPanel ? '/vendedor/ventas' : '/cuenta/compras';
+  const backLabel = isSellerPanel ? 'Mis ventas' : 'Mis compras';
 
-  const order = data?.conversation?.order as any;
+  if (isLoading) {
+    return <div className="py-20 text-center text-slate-400">Cargando chat...</div>;
+  }
+
+  if (loadError && !convId) {
+    const errMsg =
+      (loadError as { data?: { message?: string } })?.data?.message ||
+      'No se pudo cargar el chat';
+    return (
+      <div className="max-w-2xl mx-auto py-12 px-4 text-center space-y-4">
+        <p className="text-red-600 text-sm">{errMsg}</p>
+        <Link to={backHref} className="text-or-blue font-medium hover:underline">
+          ← {backLabel}
+        </Link>
+      </div>
+    );
+  }
+
+  const order = data?.conversation?.order as { orderNumber?: string } | undefined;
 
   return (
-    <div className="max-w-2xl mx-auto flex flex-col h-[calc(100vh-12rem)]">
+    <div
+      className="marketplace-theme flex flex-col w-full max-w-2xl mx-auto fixed inset-0 h-[100dvh] md:relative md:inset-auto md:h-[calc(100dvh-8rem)] md:max-h-[720px] z-[60] bg-slate-50 md:rounded-2xl md:border md:border-slate-200 md:shadow-sm"
+      style={{ paddingBottom: 'max(0.75rem, env(safe-area-inset-bottom, 0px))' }}
+    >
       <SEO title="Chat — OrigenRed" />
 
-      <div className="bg-white rounded-t-2xl border border-slate-100 px-5 py-4 flex items-center gap-3">
-        <Link to="/cuenta/compras" className="text-slate-400 hover:text-or-navy text-sm">← Volver</Link>
-        <div className="flex-1">
-          <p className="font-semibold text-or-navy text-sm">
+      <div className="shrink-0 bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 pt-[max(0.75rem,env(safe-area-inset-top))]">
+        <Link to={backHref} className="text-slate-500 hover:text-or-navy text-sm shrink-0">
+          ← {backLabel}
+        </Link>
+        <div className="flex-1 min-w-0">
+          <p className="font-semibold text-or-navy text-sm truncate">
             Pedido {order?.orderNumber || orderNumber}
           </p>
-          <p className="text-xs text-slate-400">Chat en tiempo real</p>
+          <p className="text-xs text-slate-500">Chat con {isSellerPanel ? 'comprador' : 'vendedor'}</p>
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto bg-slate-50 border-x border-slate-100 px-4 py-4 space-y-3">
+      <div className="flex-1 min-h-0 overflow-y-auto bg-slate-50 px-3 py-4 space-y-3 overscroll-contain">
         {!messages.length && (
-          <p className="text-center text-slate-400 text-sm py-8">
-            Iniciá la conversación con el vendedor
-          </p>
+          <p className="text-center text-slate-500 text-sm py-8">Escribí el primer mensaje</p>
         )}
         {messages.map((msg: any) => {
-          const isMine = String(msg.sender?._id || msg.sender) === String(user?.id);
+          const isMine =
+            senderId(msg) === String(user?.id) ||
+            senderId(msg) === String((user as { _id?: string })?._id);
           return (
-            <div
-              key={msg._id}
-              className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
-            >
+            <div key={msg._id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
               <div
-                className={`max-w-[75%] px-4 py-2.5 rounded-2xl text-sm ${
+                className={`max-w-[85%] sm:max-w-[75%] px-3 py-2 rounded-2xl text-sm break-words ${
                   isMine
                     ? 'bg-or-blue text-white rounded-br-sm'
                     : 'bg-white border border-slate-200 text-or-navy rounded-bl-sm'
                 }`}
               >
                 {!isMine && (
-                  <p className="text-[10px] font-semibold mb-1 opacity-60">
+                  <p className="text-[10px] font-semibold mb-0.5 opacity-70">
                     {msg.sender?.name || 'Usuario'}
                   </p>
                 )}
-                <p>{msg.body}</p>
+                <p className="whitespace-pre-wrap">{msg.body}</p>
                 <p className={`text-[10px] mt-1 ${isMine ? 'text-blue-200' : 'text-slate-400'}`}>
-                  {new Date(msg.createdAt).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}
+                  {new Date(msg.createdAt).toLocaleTimeString('es-AR', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
                 </p>
               </div>
             </div>
@@ -120,23 +195,30 @@ export const OrderChatPage: React.FC = () => {
       </div>
 
       <form
-        onSubmit={handleSend}
-        className="bg-white rounded-b-2xl border border-slate-100 px-4 py-3 flex gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          void handleSend();
+        }}
+        className="shrink-0 bg-white border-t border-slate-200 px-3 py-3 flex gap-2 items-end pb-[max(0.75rem,env(safe-area-inset-bottom))]"
       >
         <input
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           placeholder="Escribí un mensaje..."
-          className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:border-or-blue"
+          className="marketplace-field flex-1 min-w-0 px-3 py-2.5 text-base sm:text-sm"
+          autoComplete="off"
         />
         <button
           type="submit"
           disabled={sending || !message.trim()}
-          className="px-5 py-2.5 bg-or-red text-white font-semibold rounded-xl hover:bg-red-600 disabled:opacity-50 text-sm"
+          className="shrink-0 px-4 py-2.5 bg-or-red text-white font-semibold rounded-xl hover:bg-red-600 disabled:opacity-50 text-sm touch-manipulation"
         >
           Enviar
         </button>
       </form>
+      {sendError && (
+        <p className="shrink-0 px-4 pb-2 text-xs text-red-600 bg-white">{sendError}</p>
+      )}
     </div>
   );
 };

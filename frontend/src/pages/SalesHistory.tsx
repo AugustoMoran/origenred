@@ -1,6 +1,8 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { useGetSalesQuery, useLazyGetSaleInvoiceQuery, useLazyGetSaleRemitoQuery, useDeleteSaleMutation, useCreateCreditNoteMutation, useInvoiceSaleMutation } from '../services/salesApi';
+import { useGetAdminMarketplaceOrdersQuery } from '../services/marketplaceApi';
 import { HasPermission } from '../components/auth/HasPermission';
 import { PERMISSIONS } from '../constants/permissions';
 import { inventoryApi } from '../services/inventoryApi';
@@ -10,6 +12,9 @@ export const SalesHistory = () => {
   const { user } = useSelector((state: any) => state.auth);
   const isAdmin = Array.isArray(user?.roles) ? user.roles.includes('admin') : user?.role === 'admin';
   const { data: sales = [], isLoading } = useGetSalesQuery();
+  const { data: mpOrders = [], isLoading: mpLoading } = useGetAdminMarketplaceOrdersQuery(undefined, {
+    skip: !isAdmin,
+  });
   const [downloadInvoice] = useLazyGetSaleInvoiceQuery();
   const [downloadRemito] = useLazyGetSaleRemitoQuery();
   const [deleteSale, { isLoading: deletingSale }] = useDeleteSaleMutation();
@@ -218,7 +223,72 @@ export const SalesHistory = () => {
       {/* Header */}
       <div>
         <h1 className="page-title">Ventas</h1>
-        <p className="page-sub">Registro fiscal y auditoría de comprobantes</p>
+        <p className="page-sub">POS / sucursal y marketplace OrigenRed</p>
+      </div>
+
+      {isAdmin && (
+        <div className="card overflow-hidden">
+          <div className="px-5 py-4 border-b border-white/[0.06] flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h2 className="text-sm font-semibold text-white">Ventas marketplace (tienda online)</h2>
+              <p className="text-xs text-slate-500">Pedidos pagados en origenred.com</p>
+            </div>
+            <Link
+              to="/dashboard/admin/marketplace-orders"
+              className="text-xs text-brand-400 hover:text-brand-300 font-medium"
+            >
+              Ver listado completo →
+            </Link>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="data-table w-full text-sm">
+              <thead>
+                <tr>
+                  <th>Pedido</th>
+                  <th>Comprador</th>
+                  <th className="text-right">Total</th>
+                  <th>Estado</th>
+                  <th>Fecha</th>
+                </tr>
+              </thead>
+              <tbody>
+                {mpLoading && (
+                  <tr>
+                    <td colSpan={5} className="text-center text-slate-500 py-8">Cargando...</td>
+                  </tr>
+                )}
+                {!mpLoading && mpOrders.length === 0 && (
+                  <tr>
+                    <td colSpan={5} className="text-center text-slate-500 py-8">
+                      Sin pedidos marketplace todavía
+                    </td>
+                  </tr>
+                )}
+                {(mpOrders as any[]).slice(0, 15).map((o) => (
+                  <tr key={o._id}>
+                    <td className="font-mono text-xs text-brand-300">{o.orderNumber}</td>
+                    <td>
+                      <div className="text-white text-sm">{o.guestName || o.buyer?.name || '—'}</div>
+                      <div className="text-xs text-slate-500">{o.guestEmail || o.buyer?.email}</div>
+                    </td>
+                    <td className="text-right text-white font-medium">
+                      ${Number(o.total).toLocaleString('es-AR')}
+                    </td>
+                    <td className="capitalize text-slate-300">{String(o.status).replace('_', ' ')}</td>
+                    <td className="text-xs text-slate-500">
+                      {o.createdAt ? new Date(o.createdAt).toLocaleString('es-AR') : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+
+      <div>
+        <h2 className="text-sm font-semibold text-slate-300 mb-1">Ventas POS / sucursal</h2>
+        <p className="text-xs text-slate-500 mb-4">Comprobantes y facturación AFIP</p>
       </div>
 
       {/* Summary row */}

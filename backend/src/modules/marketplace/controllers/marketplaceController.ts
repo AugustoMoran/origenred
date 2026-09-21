@@ -711,11 +711,16 @@ export async function sendMessageController(req: Request, res: Response) {
     const userId = String((req as any).user._id);
     const conversationId = String(req.params.id);
     const message = await sendMessage(conversationId, userId, req.body.body);
-    emitChatMessage(io, conversationId, message);
+    const payload =
+      message && typeof (message as any).toObject === 'function'
+        ? (message as any).toObject()
+        : message;
+    emitChatMessage(io, conversationId, payload);
     await notifyChatRecipient(conversationId, userId, req.body.body || '');
-    res.status(201).json(message);
+    res.status(201).json(payload);
   } catch (error: any) {
-    res.status(400).json({ message: error.message });
+    const status = error.message === 'Acceso denegado' ? 403 : 400;
+    res.status(status).json({ message: error.message });
   }
 }
 

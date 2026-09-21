@@ -1,6 +1,19 @@
 import { Conversation, Message, IConversation } from '../models/Chat';
 import { MarketplaceOrder } from '../models/MarketplaceOrder';
 import { SellerProfile } from '../models/SellerProfile';
+import { attachExistingBuyerFromGuestEmail, ensureConversationForOrder } from './guestOrderService';
+
+const refId = (ref: unknown): string => {
+  if (!ref) return '';
+  if (typeof ref === 'string') return ref;
+  if (typeof ref === 'object') {
+    const o = ref as { _id?: unknown; id?: unknown; user?: unknown };
+    if (o._id != null) return String(o._id);
+    if (o.id != null) return String(o.id);
+    if (o.user != null) return refId(o.user);
+  }
+  return String(ref);
+};
 
 export const getBuyerConversations = async (buyerId: string) => {
   const conversations = await Conversation.find({ buyer: buyerId })
@@ -54,8 +67,8 @@ export const getConversationMessages = async (conversationId: string, userId: st
   if (!conversation) throw new Error('Conversación no encontrada');
 
   const seller = conversation.seller as any;
-  const isBuyer = String(conversation.buyer) === userId;
-  const isSeller = seller?.user && String(seller.user) === userId;
+  const isBuyer = refId(conversation.buyer) === userId;
+  const isSeller = refId(seller?.user) === userId;
 
   if (!isBuyer && !isSeller) throw new Error('Acceso denegado');
 
@@ -84,8 +97,8 @@ export const sendMessage = async (conversationId: string, userId: string, body: 
   if (!conversation) throw new Error('Conversación no encontrada');
 
   const seller = conversation.seller as any;
-  const isBuyer = String(conversation.buyer) === userId;
-  const isSeller = seller?.user && String(seller.user) === userId;
+  const isBuyer = refId(conversation.buyer) === userId;
+  const isSeller = refId(seller?.user) === userId;
   if (!isBuyer && !isSeller) throw new Error('Acceso denegado');
 
   const order = await MarketplaceOrder.findById(conversation.order);
@@ -105,11 +118,16 @@ export const sendMessage = async (conversationId: string, userId: string, body: 
 };
 
 export const getConversationByOrder = async (orderNumber: string, userId: string) => {
-  const order = await MarketplaceOrder.findOne({ orderNumber });
+  let order = await MarketplaceOrder.findOne({ orderNumber });
   if (!order) throw new Error('Pedido no encontrado');
   if (!order.chatEnabled) throw new Error('Chat no disponible');
 
-  const isBuyer = order.buyer && String(order.buyer) === userId;
+  if (!order.buyer) {
+    order = await attachExistingBuyerFromGuestEmail(order);
+    await ensureConversationForOrder(order);
+  }
+
+  const isBuyer = order.buyer && refId(order.buyer) === userId;
   let isSeller = false;
   if (!isBuyer) {
     const profile = await SellerProfile.findOne({ user: userId });
@@ -123,12 +141,14 @@ export const getConversationByOrder = async (orderNumber: string, userId: string
   let conversation = await Conversation.findOne({ order: order._id });
   if (!conversation && order.buyer && (isBuyer || isSeller)) {
     const sellerId = order.items[0]?.seller;
-    conversation = await Conversation.create({
-      order: order._id,
-      buyer: order.buyer,
-      seller: sellerId,
-      lastMessageAt: new Date(),
-    });
+    if (sellerId) {
+      conversation = await Conversation.create({
+        order: order._id,
+        buyer: order.buyer,
+        seller: sellerId,
+        lastMessageAt: new Date(),
+      });
+    }
   }
 
   if (!conversation) {
@@ -148,8 +168,8 @@ export const canAccessConversation = async (conversationId: string, userId: stri
   if (!conversation) return false;
 
   const seller = conversation.seller as any;
-  const isBuyer = String(conversation.buyer) === userId;
-  const isSeller = seller?.user && String(seller.user) === userId;
+  const isBuyer = refId(conversation.buyer) === userId;
+  const isSeller = refId(seller?.user) === userId;
   if (!isBuyer && !isSeller) return false;
 
   const order = await MarketplaceOrder.findById(conversation.order);

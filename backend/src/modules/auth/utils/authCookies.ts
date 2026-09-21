@@ -10,7 +10,8 @@ export const buildAccessCookieOptions = () => ({
   httpOnly: true,
   sameSite: (isProd() ? 'none' : 'strict') as 'none' | 'strict',
   secure: isProd(),
-  path: '/api',
+  // path '/' so Socket.IO (root) and /api/* both receive the session cookie
+  path: '/',
   maxAge: ACCESS_COOKIE_MAX_AGE_MS,
 });
 
