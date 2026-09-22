@@ -4,6 +4,7 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadBucketCommand,
+  ListBucketsCommand,
 } from '@aws-sdk/client-s3';
 import { buildMediaProxyUrl } from '../../../shared/utils/mediaUrl';
 import { randomUUID } from 'crypto';
@@ -16,10 +17,14 @@ const buildS3Client = () =>
   new S3Client({
     region: 'auto',
     endpoint: r2Config.endpoint,
+    forcePathStyle: true,
     credentials: {
       accessKeyId: r2Config.accessKeyId,
       secretAccessKey: r2Config.secretAccessKey,
     },
+    // AWS SDK v3 manda CRC32 por defecto; R2 a veces responde 403 si no coincide el checksum.
+    requestChecksumCalculation: 'WHEN_REQUIRED',
+    responseChecksumValidation: 'WHEN_REQUIRED',
   });
 
 const getClient = () => {
@@ -81,9 +86,9 @@ const formatR2UploadError = (err: unknown): Error => {
     message.includes('Unauthorized')
   ) {
     return new Error(
-      'No se pudieron subir las imágenes: el token R2 no tiene permiso de escritura en el bucket "' +
+      'No se pudieron subir las imágenes al bucket "' +
         r2Config.bucket +
-        '". En Cloudflare, el API token debe ser Object Read & Write sobre ese bucket (o Admin Read & Write). Revisá también R2_BUCKET_NAME y R2_ENDPOINT.'
+        '". Si en Cloudflare el token tiene Admin Read & Write, lo usual es que en Render no estén las claves S3 de ESE token: al crear el token copiá Access Key ID y Secret Access Key (no el API Token ni CLOUDFLARE_API_TOKEN). Regenerá el token, actualizá R2_ACCESS_KEY_ID y R2_SECRET_ACCESS_KEY en Render y redeploy. Revisá también R2_BUCKET_NAME y R2_ENDPOINT (account id).'
     );
   }
 
@@ -98,12 +103,40 @@ const formatR2UploadError = (err: unknown): Error => {
 
 export const isR2Enabled = () => features.r2;
 
-export const getR2PublicConfig = () => ({
-  enabled: features.r2,
-  bucket: r2Config.bucket,
-  endpointConfigured: Boolean(r2Config.endpoint),
-  publicUrlConfigured: Boolean(r2Config.publicUrl),
-});
+const endpointAccountId = () => {
+  const match = r2Config.endpoint.match(/https:\/\/([^.]+)\.r2\.cloudflarestorage\.com/i);
+  return match?.[1] || null;
+};
+
+export const getR2PublicConfig = () => {
+  const key = r2Config.accessKeyId;
+  return {
+    enabled: features.r2,
+    bucket: r2Config.bucket,
+    endpointAccountId: endpointAccountId(),
+    accessKeyIdHint: key.length >= 8 ? `${key.slice(0, 4)}…${key.slice(-4)}` : key ? '(corta)' : null,
+    secretConfigured: Boolean(r2Config.secretAccessKey),
+    endpointConfigured: Boolean(r2Config.endpoint),
+    publicUrlConfigured: Boolean(r2Config.publicUrl),
+  };
+};
+
+export const listR2BucketsForDiagnostics = async () => {
+  const s3 = getClient();
+  if (!s3) return { ok: false as const, reason: 'not_configured' as const };
+  try {
+    const res = await s3.send(new ListBucketsCommand({}));
+    const buckets = (res.Buckets || []).map((b) => b.Name).filter(Boolean) as string[];
+    return {
+      ok: true as const,
+      buckets,
+      configuredBucketListed: buckets.includes(r2Config.bucket),
+    };
+  } catch (err: unknown) {
+    const { code, status, message } = awsErrorDetails(err);
+    return { ok: false as const, code, status, message: message.slice(0, 200) };
+  }
+};
 
 export const uploadToR2 = async (input: {
   buffer: Buffer;
@@ -145,7 +178,6 @@ export const probeR2WriteAccess = async () => {
     return { ok: false as const, reason: 'R2 no configurado (faltan variables R2_*)' };
   }
 
-  const probeKey = `_healthcheck/${randomUUID()}.txt`;
   try {
     const uploaded = await uploadToR2({
       buffer: Buffer.from('origenred-r2-probe'),

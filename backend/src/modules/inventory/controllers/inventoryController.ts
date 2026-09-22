@@ -15,6 +15,7 @@ import { Listing } from '../../marketplace/models/Listing';
 import { prepareProductForClient } from '../services/productMediaRepairService';
 import {
   getR2PublicConfig,
+  listR2BucketsForDiagnostics,
   probeR2WriteAccess,
   verifyR2BucketReachable,
 } from '../../marketplace/services/r2StorageService';
@@ -170,10 +171,15 @@ export const r2DiagnosticsController = async (req: Request, res: Response) => {
       return res.status(403).json({ message: 'Solo administradores' });
     }
 
-    const [head, write] = await Promise.all([verifyR2BucketReachable(), probeR2WriteAccess()]);
+    const [head, write, buckets] = await Promise.all([
+      verifyR2BucketReachable(),
+      probeR2WriteAccess(),
+      listR2BucketsForDiagnostics(),
+    ]);
     res.json({
       config: getR2PublicConfig(),
       headBucket: head,
+      listBuckets: buckets,
       writeProbe: write,
     });
   } catch (error: any) {
