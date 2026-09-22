@@ -5,6 +5,8 @@ import {
   useDeleteSellerListingMutation,
   MarketplaceListing,
 } from '../../../services/marketplaceApi';
+import { MarketplaceImage } from '../../../components/marketplace/MarketplaceImage';
+import { resolveMarketplaceImageUrl } from '../../../utils/marketplaceMediaUrl';
 
 const STATUS_LABELS: Record<string, string> = {
   draft: 'Borrador',
@@ -63,12 +65,16 @@ export const SellerListingsPage: React.FC = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-50">
-              {listings.map((listing: MarketplaceListing & { status?: string; stock?: number }) => (
+              {listings.map((listing: MarketplaceListing & { status?: string; stock?: number }) => {
+                const primary = listing.images?.[0];
+                const thumbUrl = resolveMarketplaceImageUrl(primary?.url, primary?.key);
+                return (
                 <tr key={listing._id} className="hover:bg-slate-50/50">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <img
-                        src={listing.images?.[0]?.url || '/logooficialdefinitivo.png'}
+                      <MarketplaceImage
+                        src={thumbUrl}
+                        storageKey={primary?.key}
                         alt=""
                         className="w-10 h-10 rounded-lg object-cover bg-slate-100"
                       />
@@ -100,7 +106,8 @@ export const SellerListingsPage: React.FC = () => {
                     </button>
                   </td>
                 </tr>
-              ))}
+              );
+              })}
             </tbody>
           </table>
         </div>

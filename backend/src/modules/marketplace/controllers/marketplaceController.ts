@@ -325,7 +325,8 @@ export async function updateListingController(req: Request, res: Response) {
     const existing = await Listing.findOne({ _id: req.params.id, seller: profile._id });
     if (!existing) return res.status(404).json({ message: 'Publicación no encontrada' });
 
-    let images = parsed.images ?? [...existing.images];
+    let images =
+      parsed.images !== undefined ? [...parsed.images] : [...existing.images];
     if (parsed.removeImageKeys?.length) {
       const toRemove = new Set(parsed.removeImageKeys);
       for (const img of existing.images) {
@@ -356,7 +357,8 @@ export async function getMyListingsController(req: Request, res: Response) {
   if (!profile) return res.status(404).json({ message: 'Perfil de vendedor no encontrado' });
 
   const listings = await getSellerListings(String(profile._id));
-  res.json(listings);
+  const plain = listings.map((doc) => toPlainListing(doc));
+  res.json(await preparePublicListingsForClient(plain, req));
 }
 
 export async function deleteListingController(req: Request, res: Response) {

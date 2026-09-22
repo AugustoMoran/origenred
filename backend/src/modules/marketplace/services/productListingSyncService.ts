@@ -148,7 +148,7 @@ export async function syncProductToMarketplaceListing(
   const product = await Product.findById(productId);
   if (!product) return null;
 
-  const existingListing = await Listing.findOne({ inventoryProductId: product._id }).select('images');
+  const existingListing = await Listing.findOne({ inventoryProductId: product._id });
 
   if (!product.isActive) {
     await unpublishProductListing(productId);

@@ -11,14 +11,18 @@ export const parseListingBody = (body: Record<string, unknown>) => {
     return undefined;
   };
 
-  let images = body.images;
-  if (typeof images === 'string') {
+  const parseJsonArray = (value: unknown) => {
+    if (Array.isArray(value)) return value;
+    if (typeof value !== 'string' || !value.trim()) return undefined;
     try {
-      images = JSON.parse(images);
+      const parsed = JSON.parse(value);
+      return Array.isArray(parsed) ? parsed : undefined;
     } catch {
-      images = [];
+      return undefined;
     }
-  }
+  };
+
+  let images = parseJsonArray(body.images) ?? parseJsonArray(body.keptImages);
 
   return {
     title: body.title ? String(body.title) : undefined,

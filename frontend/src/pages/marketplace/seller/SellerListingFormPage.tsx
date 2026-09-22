@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useOutletContext, useParams } from 'react-router-dom';
 import {
   useGetCategoriesQuery,
@@ -6,6 +6,9 @@ import {
   useCreateSellerListingMutation,
   useUpdateSellerListingMutation,
 } from '../../../services/marketplaceApi';
+import { MarketplaceImage } from '../../../components/marketplace/MarketplaceImage';
+import { resolveMarketplaceImageUrl } from '../../../utils/marketplaceMediaUrl';
+import { extractStorageKeyFromUrl } from '../../../utils/mediaUrlHelpers';
 
 const fieldClass = 'marketplace-field';
 
@@ -29,6 +32,11 @@ const emptyForm = {
   supplierProductCode: '',
 };
 
+type ListingImage = { url: string; key?: string };
+
+const imageStorageKey = (img: ListingImage) =>
+  img.key || extractStorageKeyFromUrl(img.url) || undefined;
+
 export const SellerListingFormPage: React.FC = () => {
   const { id } = useParams();
   const isEdit = Boolean(id);
@@ -41,9 +49,20 @@ export const SellerListingFormPage: React.FC = () => {
 
   const [form, setForm] = useState(emptyForm);
   const [images, setImages] = useState<File[]>([]);
-  const [existingImages, setExistingImages] = useState<Array<{ url: string; key?: string }>>([]);
+  const [existingImages, setExistingImages] = useState<ListingImage[]>([]);
   const [removeImageKeys, setRemoveImageKeys] = useState<string[]>([]);
   const [error, setError] = useState('');
+
+  const newImagePreviews = useMemo(
+    () => images.map((file) => ({ file, preview: URL.createObjectURL(file) })),
+    [images]
+  );
+
+  useEffect(() => {
+    return () => {
+      newImagePreviews.forEach((item) => URL.revokeObjectURL(item.preview));
+    };
+  }, [newImagePreviews]);
 
   useEffect(() => {
     if (isEdit && id) {
@@ -69,6 +88,7 @@ export const SellerListingFormPage: React.FC = () => {
           supplierProductCode: existing.supplierProductCode || '',
         });
         setExistingImages(existing.images || []);
+        setRemoveImageKeys([]);
       }
     }
   }, [isEdit, id, listings]);
@@ -86,6 +106,37 @@ export const SellerListingFormPage: React.FC = () => {
     setForm((f) => ({ ...f, [field]: val }));
   };
 
+  const toggleRemoveExisting = (img: ListingImage) => {
+    const key = imageStorageKey(img);
+    if (!key) {
+      setExistingImages((list) => list.filter((item) => item.url !== img.url));
+      return;
+    }
+    setRemoveImageKeys((keys) =>
+      keys.includes(key) ? keys.filter((k) => k !== key) : [...keys, key]
+    );
+  };
+
+  const isMarkedForRemoval = (img: ListingImage) => {
+    const key = imageStorageKey(img);
+    return key ? removeImageKeys.includes(key) : false;
+  };
+
+  const keptExistingImages = existingImages.filter((img) => !isMarkedForRemoval(img));
+
+  const buildFormData = () => {
+    const fd = new FormData();
+    Object.entries(form).forEach(([k, v]) => fd.append(k, String(v)));
+    if (isEdit) {
+      fd.append('keptImages', JSON.stringify(keptExistingImages));
+      if (removeImageKeys.length) {
+        fd.append('removeImageKeys', JSON.stringify(removeImageKeys));
+      }
+    }
+    images.forEach((file) => fd.append('images', file));
+    return fd;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
@@ -97,24 +148,9 @@ export const SellerListingFormPage: React.FC = () => {
 
     try {
       if (isEdit && id) {
-        const body: Record<string, unknown> | FormData =
-          images.length > 0 || removeImageKeys.length > 0
-            ? (() => {
-                const fd = new FormData();
-                Object.entries(form).forEach(([k, v]) => fd.append(k, String(v)));
-                if (removeImageKeys.length) {
-                  fd.append('removeImageKeys', JSON.stringify(removeImageKeys));
-                }
-                images.forEach((file) => fd.append('images', file));
-                return fd;
-              })()
-            : form;
-        await updateListing({ id, body }).unwrap();
+        await updateListing({ id, body: buildFormData() }).unwrap();
       } else {
-        const fd = new FormData();
-        Object.entries(form).forEach(([k, v]) => fd.append(k, String(v)));
-        images.forEach((file) => fd.append('images', file));
-        await createListing(fd).unwrap();
+        await createListing(buildFormData()).unwrap();
       }
       navigate('/vendedor/productos');
     } catch (err: any) {
@@ -134,6 +170,67 @@ export const SellerListingFormPage: React.FC = () => {
   };
 
   const loading = creating || updating;
+
+  const renderImageGrid = () => (
+    <div className="space-y-3">
+      <label className="block text-sm font-medium text-or-navy">Imágenes</label>
+      <p className="text-xs text-slate-500">
+        Tocá la × para quitar una foto. Al guardar, los cambios se aplican en la publicación.
+      </p>
+
+      {(keptExistingImages.length > 0 || newImagePreviews.length > 0) && (
+        <div className="flex flex-wrap gap-2">
+          {keptExistingImages.map((img) => {
+            const displayUrl = resolveMarketplaceImageUrl(img.url, imageStorageKey(img));
+            const key = imageStorageKey(img);
+            return (
+              <div key={img.url} className="relative w-20 h-20 rounded-lg border border-slate-200 overflow-hidden">
+                <MarketplaceImage
+                  src={displayUrl}
+                  storageKey={key}
+                  alt=""
+                  className="w-full h-full object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => toggleRemoveExisting(img)}
+                  className="absolute top-0.5 right-0.5 w-6 h-6 rounded-full bg-red-600 text-white text-sm leading-none shadow"
+                  aria-label="Quitar imagen"
+                >
+                  ×
+                </button>
+              </div>
+            );
+          })}
+          {newImagePreviews.map((item, idx) => (
+            <div key={`${item.file.name}-${idx}`} className="relative w-20 h-20 rounded-lg border border-brand-500/40 overflow-hidden">
+              <img src={item.preview} alt="" className="w-full h-full object-cover" />
+              <button
+                type="button"
+                onClick={() => setImages((files) => files.filter((_, i) => i !== idx))}
+                className="absolute top-0.5 right-0.5 w-6 h-6 rounded-full bg-red-600 text-white text-sm leading-none shadow"
+                aria-label="Quitar imagen nueva"
+              >
+                ×
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <input
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        multiple
+        onChange={(e) => {
+          const picked = Array.from(e.target.files || []);
+          if (picked.length) setImages((prev) => [...prev, ...picked]);
+          e.target.value = '';
+        }}
+        className="text-sm text-slate-500"
+      />
+    </div>
+  );
 
   return (
     <div className="max-w-2xl space-y-6">
@@ -211,66 +308,7 @@ export const SellerListingFormPage: React.FC = () => {
           </select>
         </div>
 
-        {!isEdit && (
-          <div>
-            <label className="block text-sm font-medium text-or-navy mb-1.5">Imágenes</label>
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              onChange={(e) => setImages(Array.from(e.target.files || []))}
-              className="text-sm text-slate-500"
-            />
-            {images.length > 0 && (
-              <p className="text-xs text-slate-400 mt-1">{images.length} imagen(es) seleccionada(s)</p>
-            )}
-          </div>
-        )}
-
-        {isEdit && (
-          <div className="space-y-2">
-            <label className="block text-sm font-medium text-or-navy">Imágenes</label>
-            {existingImages.length > 0 && (
-              <div className="flex flex-wrap gap-2">
-                {existingImages.map((img) => {
-                  const marked = img.key && removeImageKeys.includes(img.key);
-                  return (
-                    <button
-                      key={img.url}
-                      type="button"
-                      onClick={() => {
-                        if (!img.key) return;
-                        setRemoveImageKeys((keys) =>
-                          keys.includes(img.key!)
-                            ? keys.filter((k) => k !== img.key)
-                            : [...keys, img.key!]
-                        );
-                      }}
-                      className={`relative rounded-lg border-2 ${marked ? 'border-red-400 opacity-50' : 'border-slate-200'}`}
-                    >
-                      <img src={img.url} alt="" className="w-16 h-16 rounded-lg object-cover" />
-                      {img.key && (
-                        <span className="absolute bottom-0 left-0 right-0 text-[10px] bg-black/60 text-white text-center rounded-b-lg">
-                          {marked ? 'Quitar' : 'Tocar para quitar'}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-            <input
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              onChange={(e) => setImages(Array.from(e.target.files || []))}
-              className="text-sm text-slate-500"
-            />
-            {images.length > 0 && (
-              <p className="text-xs text-slate-400">{images.length} nueva(s) imagen(es) a agregar</p>
-            )}
-          </div>
-        )}
+        {renderImageGrid()}
 
         <div className="flex gap-3 pt-2">
           <button
