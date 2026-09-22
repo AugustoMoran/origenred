@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useCreateReportMutation } from '../../services/marketplaceApi';
+import { MotionModal } from '../motion/MotionModal';
 
 const REASONS = [
   { value: 'producto_falso', label: 'Producto falso o engañoso' },
@@ -38,8 +39,8 @@ export const MarketplaceReportModal: React.FC<Props> = ({
 
   if (isSuccess) {
     return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-        <div className="bg-white rounded-2xl p-6 max-w-sm w-full text-center space-y-4">
+      <MotionModal onClose={onClose} panelClassName="max-w-sm">
+        <div className="bg-white rounded-2xl p-6 w-full text-center space-y-4">
           <div className="text-4xl">✅</div>
           <p className="font-semibold text-or-navy">Denuncia enviada</p>
           <p className="text-sm text-slate-500">Un administrador revisará tu reporte.</p>
@@ -47,13 +48,13 @@ export const MarketplaceReportModal: React.FC<Props> = ({
             Cerrar
           </button>
         </div>
-      </div>
+      </MotionModal>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="bg-white rounded-2xl p-6 max-w-md w-full space-y-4">
+    <MotionModal onClose={onClose} panelClassName="max-w-md">
+      <div className="bg-white rounded-2xl p-6 w-full space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="font-bold text-or-navy">{title}</h2>
           <button onClick={onClose} className="text-slate-400 hover:text-or-navy">✕</button>
@@ -98,7 +99,7 @@ export const MarketplaceReportModal: React.FC<Props> = ({
           </button>
         </form>
       </div>
-    </div>
+    </MotionModal>
   );
 };
 

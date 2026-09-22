@@ -1,11 +1,14 @@
 import React from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import { useSearchParams } from 'react-router-dom';
+import { fadeUp, staggerFast } from '../../components/motion/marketplaceMotion';
 import { SEO } from '../../components/ecommerce/SEO';
 import { MarketplaceListingCard } from '../../components/marketplace/MarketplaceListingCard';
 import { ProductGridSkeleton } from '../../components/ecommerce/ProductCardSkeleton';
 import { useGetListingsQuery, useGetCategoriesQuery } from '../../services/marketplaceApi';
 
 export const MarketplaceSearchPage: React.FC = () => {
+  const reduce = useReducedMotion();
   const [params, setParams] = useSearchParams();
   const search = params.get('q') || '';
   const category = params.get('category') || '';
@@ -82,11 +85,19 @@ export const MarketplaceSearchPage: React.FC = () => {
       ) : data?.items?.length ? (
         <>
           <p className="text-sm text-slate-400">{data.pagination.total} productos encontrados</p>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          <motion.div
+            key={`${search}-${category}-${sort}-${data.pagination.total}`}
+            className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4"
+            initial={reduce ? false : 'hidden'}
+            animate="visible"
+            variants={staggerFast}
+          >
             {data.items.map((listing) => (
-              <MarketplaceListingCard key={listing._id} listing={listing} />
+              <motion.div key={listing._id} variants={fadeUp}>
+                <MarketplaceListingCard listing={listing} />
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </>
       ) : (
         <div className="text-center py-16 bg-white rounded-2xl border border-dashed border-slate-200">

@@ -5,6 +5,7 @@ import { MarketplaceCartDrawer } from '../marketplace/MarketplaceCartDrawer';
 import { RouteChangeTracker } from '../RouteChangeTracker';
 import { NetworkBackdrop } from '../branding/NetworkBackdrop';
 import { OrigenRedLogo } from '../branding/OrigenRedLogo';
+import { MarketplacePageTransition } from '../motion/MarketplacePageTransition';
 
 export const EcommerceLayout: React.FC = () => {
   const { pathname } = useLocation();
@@ -21,7 +22,9 @@ export const EcommerceLayout: React.FC = () => {
             <Outlet />
           ) : (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <Outlet />
+              <MarketplacePageTransition key={pathname}>
+                <Outlet />
+              </MarketplacePageTransition>
             </div>
           )}
         </main>

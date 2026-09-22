@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import { Link } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import { MarketplaceListing, useGetFavoritesQuery, useToggleFavoriteMutation } from '../../services/marketplaceApi';
@@ -18,6 +19,7 @@ export const MarketplaceListingCard: React.FC<Props> = ({ listing }) => {
   const { data: favorites = [] } = useGetFavoritesQuery(undefined, { skip: !user });
   const [toggleFavorite] = useToggleFavoriteMutation();
   const [addedFlash, setAddedFlash] = useState(false);
+  const reduce = useReducedMotion();
 
   const isFavorited = favorites.some((f) => f.listing?._id === listing._id);
   const imageUrl = listing.images?.[0]?.url || '/logooficialdefinitivo.png';
@@ -54,8 +56,10 @@ export const MarketplaceListingCard: React.FC<Props> = ({ listing }) => {
   };
 
   return (
-    <div
-      className="group relative bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-lg hover:border-or-red/20 transition-all duration-300"
+    <motion.div
+      className="group relative bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-lg hover:border-or-red/20 transition-[box-shadow,border-color] duration-300"
+      whileHover={reduce ? undefined : { y: -3 }}
+      transition={{ type: 'spring', stiffness: 420, damping: 28 }}
     >
       <Link to={`/p/${listing.slug}`} className="block">
         <div className="aspect-square bg-slate-50 overflow-hidden relative">
@@ -134,6 +138,6 @@ export const MarketplaceListingCard: React.FC<Props> = ({ listing }) => {
           </svg>
         )}
       </button>
-    </div>
+    </motion.div>
   );
 };

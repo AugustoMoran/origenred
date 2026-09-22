@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { Link, useNavigate } from 'react-router-dom';
+import { motionEase } from '../motion/marketplaceMotion';
 import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { logout as logoutAction } from '../../store/authSlice';
@@ -20,6 +22,7 @@ export const MarketplaceAccountMenu: React.FC = () => {
     skip: !user || !isSellerRole,
   });
   const isSeller = isSellerRole || sellerProfile?.status === 'approved' || sellerProfile?.status === 'pending';
+  const reduce = useReducedMotion();
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -61,10 +64,15 @@ export const MarketplaceAccountMenu: React.FC = () => {
         </svg>
       </button>
 
-      {open && (
-        <div
-          className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl border border-slate-100 shadow-lg py-2 z-50 animate-fade-in"
+      <AnimatePresence>
+        {open && (
+        <motion.div
+          className="absolute right-0 top-full mt-2 w-56 bg-white rounded-xl border border-slate-100 shadow-lg py-2 z-50"
           role="menu"
+          initial={reduce ? false : { opacity: 0, y: -6, scale: 0.98 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={reduce ? undefined : { opacity: 0, y: -4, scale: 0.98 }}
+          transition={{ duration: 0.2, ease: motionEase }}
         >
           <div className="px-4 py-2 border-b border-slate-100">
             <p className="text-sm font-semibold text-or-navy truncate">{displayName}</p>
@@ -108,8 +116,9 @@ export const MarketplaceAccountMenu: React.FC = () => {
               Cerrar sesión
             </button>
           </div>
-        </div>
-      )}
+        </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };
