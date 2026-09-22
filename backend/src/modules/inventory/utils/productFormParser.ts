@@ -68,21 +68,7 @@ export const applyEcommerceFieldsToProductData = (req: Request, productData: Rec
   if ('gallery' in productData) {
     const keptGallery = parseJsonField(productData.gallery);
     delete productData.gallery;
-
-    const gallery = Array.isArray(keptGallery) ? keptGallery.filter((item) => item?.url) : [];
-    const galleryFiles = getUploadedFiles(req).galleryImages || [];
-
-    for (const file of galleryFiles) {
-      gallery.push({
-        url: isHttpUrl((file as any).path)
-          ? (file as any).path
-          : getLocalImageUrl(req, file.filename),
-        publicId: file.filename,
-        alt: '',
-      });
-    }
-
-    productData.gallery = gallery;
+    productData.gallery = Array.isArray(keptGallery) ? keptGallery.filter((item) => item?.url) : [];
   }
 
   return productData;

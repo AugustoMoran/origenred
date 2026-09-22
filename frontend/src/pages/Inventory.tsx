@@ -601,8 +601,8 @@ export const Inventory = () => {
       }
       setShowModal(false);
       resetForm();
-    } catch {
-      alert('Error al guardar producto');
+    } catch (err: any) {
+      alert(err?.data?.message || err?.message || 'Error al guardar producto');
     }
   };
 
@@ -810,7 +810,9 @@ export const Inventory = () => {
                 setMpSyncMsg('');
                 try {
                   const res = await repairProductMedia().unwrap();
-                  setMpSyncMsg(res.message);
+                  setMpSyncMsg(
+                    `${res.message} Recargá la página si no ves cambios de inmediato.`
+                  );
                 } catch (e: any) {
                   setMpSyncMsg(e?.data?.message || 'Error al reparar imágenes');
                 }

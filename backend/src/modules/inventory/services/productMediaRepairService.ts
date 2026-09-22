@@ -37,16 +37,12 @@ export async function persistProductMediaIfRepaired(
 ) {
   if (before.imageUrl === after.imageUrl && before.imagePublicId === after.imagePublicId) return;
   if (!after.imageUrl || isPlaceholderMediaUrl(after.imageUrl)) return;
-  await Product.updateOne(
-    { _id: productId },
-    {
-      $set: {
-        imageUrl: after.imageUrl,
-        ...(after.imagePublicId ? { imagePublicId: after.imagePublicId } : {}),
-        ...(Array.isArray((after as any).gallery) ? { gallery: (after as any).gallery } : {}),
-      },
-    }
-  );
+  const $set: Record<string, unknown> = { imageUrl: after.imageUrl };
+  if (after.imagePublicId) $set.imagePublicId = after.imagePublicId;
+  if (Array.isArray((after as any).gallery) && (after as any).gallery.length) {
+    $set.gallery = (after as any).gallery;
+  }
+  await Product.updateOne({ _id: productId }, { $set });
 }
 
 export const repairProductMediaFromListing = (

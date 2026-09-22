@@ -1,31 +1,26 @@
 import fs from 'fs';
 import path from 'path';
 import { Request } from 'express';
-import {
-  applyMainImageToProductData,
-  getMainUploadedImage,
-  getUploadedFiles,
-} from './productFormParser';
+import { getMainUploadedImage, getUploadedFiles } from './productFormParser';
 import { uploadToR2, isR2Enabled } from '../../marketplace/services/r2StorageService';
-import { buildLocalUploadUrl, resolveStoredMediaUrl } from '../../../shared/utils/mediaUrl';
+import { buildLocalUploadUrl, isPlaceholderMediaUrl, resolveStoredMediaUrl } from '../../../shared/utils/mediaUrl';
 
 const isHttpUrl = (value?: string) => !!value && /^https?:\/\//i.test(value);
 
 const readUploadedBuffer = (file: Express.Multer.File): Buffer | null => {
   if (file.buffer?.length) return file.buffer;
   if (isHttpUrl((file as any).path)) return null;
+  if (!file.filename) return null;
   const localPath = path.resolve(process.cwd(), 'uploads', file.filename);
   if (!fs.existsSync(localPath)) return null;
   return fs.readFileSync(localPath);
 };
 
-const persistR2Upload = async (
-  req: Request,
-  file: Express.Multer.File,
-  folder: string
-) => {
+const persistR2Upload = async (req: Request, file: Express.Multer.File, folder: string) => {
   const buffer = readUploadedBuffer(file);
-  if (!buffer) return null;
+  if (!buffer) {
+    throw new Error('No se pudo leer el archivo de imagen subido');
+  }
 
   const uploaded = await uploadToR2({
     buffer,
@@ -38,60 +33,88 @@ const persistR2Upload = async (
   return { url, key: uploaded.key };
 };
 
+const persistLocalOrCloudinaryUpload = (req: Request, file: Express.Multer.File) => {
+  const url = isHttpUrl((file as any).path)
+    ? (file as any).path
+    : buildLocalUploadUrl(req, file.filename || `${Date.now()}-${file.originalname}`);
+  return {
+    url,
+    key: file.filename || file.originalname,
+  };
+};
+
+const uploadInventoryFile = async (req: Request, file: Express.Multer.File, folder: string) => {
+  if (isR2Enabled()) {
+    return persistR2Upload(req, file, folder);
+  }
+  return persistLocalOrCloudinaryUpload(req, file);
+};
+
+const normalizeKeptGalleryItem = (item: { url?: string; publicId?: string; alt?: string }) => {
+  if (!item?.url || isPlaceholderMediaUrl(item.url)) return null;
+  const url = resolveStoredMediaUrl(item.url, item.publicId) || item.url;
+  if (isPlaceholderMediaUrl(url)) return null;
+  return {
+    url,
+    publicId: item.publicId,
+    alt: item.alt || '',
+  };
+};
+
 export async function applyInventoryImagesToProductData(
   req: Request,
   productData: Record<string, any>
 ) {
-  applyMainImageToProductData(req, productData);
-
   const mainFile = getMainUploadedImage(req);
-  if (mainFile && isR2Enabled()) {
-    try {
-      const uploaded = await persistR2Upload(req, mainFile, 'inventory/products');
-      if (uploaded) {
-        productData.imageUrl = uploaded.url;
-        productData.imagePublicId = uploaded.key;
-        productData.gallery = [
-          { url: uploaded.url, publicId: uploaded.key, alt: productData.name || '' },
-        ];
-      }
-    } catch (err) {
-      console.error('[inventory] R2 upload failed:', (err as Error).message);
-      if (process.env.NODE_ENV === 'production') {
-        throw new Error(
-          'No se pudo guardar la imagen en almacenamiento permanente (R2). Revisá la configuración en el servidor.'
-        );
-      }
-      productData.imageUrl = buildLocalUploadUrl(req, mainFile.filename);
-      productData.imagePublicId = mainFile.filename;
+  const galleryFiles = getUploadedFiles(req).galleryImages || [];
+  if (!mainFile && !galleryFiles.length) return;
+
+  const keptGallery = (Array.isArray(productData.gallery) ? productData.gallery : [])
+    .map(normalizeKeptGalleryItem)
+    .filter(Boolean) as Array<{ url: string; publicId?: string; alt: string }>;
+
+  const uploadedGallery: Array<{ url: string; publicId?: string; alt: string }> = [];
+
+  try {
+    if (mainFile) {
+      const uploaded = await uploadInventoryFile(req, mainFile, 'inventory/products');
+      productData.imageUrl = uploaded.url;
+      productData.imagePublicId = uploaded.key;
+    }
+
+    for (const file of galleryFiles) {
+      const uploaded = await uploadInventoryFile(req, file, 'inventory/gallery');
+      uploadedGallery.push({ url: uploaded.url, publicId: uploaded.key, alt: '' });
+    }
+  } catch (err) {
+    const message = (err as Error).message || 'Error al subir imágenes';
+    throw new Error(
+      message.includes('R2') || message.includes('almacenamiento')
+        ? message
+        : `No se pudieron guardar las imágenes: ${message}`
+    );
+  }
+
+  const mergedGallery = [...keptGallery];
+  for (const item of uploadedGallery) {
+    if (!mergedGallery.some((g) => g.url === item.url)) {
+      mergedGallery.push(item);
     }
   }
 
-  const galleryFiles = getUploadedFiles(req).galleryImages || [];
-  if (galleryFiles.length && isR2Enabled()) {
-    const gallery = Array.isArray(productData.gallery) ? [...productData.gallery] : [];
-    for (const file of galleryFiles) {
-      try {
-        const uploaded = await persistR2Upload(req, file, 'inventory/gallery');
-        if (uploaded) {
-          gallery.push({ url: uploaded.url, publicId: uploaded.key, alt: '' });
-        }
-      } catch (err) {
-        console.error('[inventory] R2 gallery upload failed:', (err as Error).message);
-        if (process.env.NODE_ENV === 'production') {
-          throw new Error('No se pudo guardar una imagen de galería en R2.');
-        }
-        gallery.push({
-          url: buildLocalUploadUrl(req, file.filename),
-          publicId: file.filename,
-          alt: '',
-        });
-      }
+  if (productData.imageUrl) {
+    const featured = {
+      url: productData.imageUrl,
+      publicId: productData.imagePublicId,
+      alt: productData.name || '',
+    };
+    if (!mergedGallery.some((g) => g.url === featured.url)) {
+      mergedGallery.unshift(featured);
     }
-    productData.gallery = gallery;
-    if (!productData.imageUrl && gallery[0]?.url) {
-      productData.imageUrl = gallery[0].url;
-      productData.imagePublicId = gallery[0].publicId;
-    }
+  } else if (mergedGallery.length) {
+    productData.imageUrl = mergedGallery[0].url;
+    productData.imagePublicId = mergedGallery[0].publicId;
   }
+
+  productData.gallery = mergedGallery;
 }

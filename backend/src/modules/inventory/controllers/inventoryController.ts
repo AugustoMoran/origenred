@@ -6,7 +6,10 @@ import path from 'path';
 import {
   applyEcommerceFieldsToProductData,
   getMainUploadedImage,
+  getUploadedFiles,
 } from '../utils/productFormParser';
+import { deleteFromR2 } from '../../marketplace/services/r2StorageService';
+import { isR2ObjectKey } from '../../../shared/utils/mediaUrl';
 import { applyInventoryImagesToProductData } from '../utils/inventoryImageUpload';
 import { Listing } from '../../marketplace/models/Listing';
 import { prepareProductForClient, persistProductMediaIfRepaired } from '../services/productMediaRepairService';
@@ -103,10 +106,14 @@ export const updateProductController = async (req: Request, res: Response) => {
     const productData = applyEcommerceFieldsToProductData(req, { ...req.body });
     parseSupplierField(productData);
 
-    if (getMainUploadedImage(req)) {
+    const uploads = getUploadedFiles(req);
+    const hasNewImages = Boolean(uploads.image?.length || uploads.galleryImages?.length);
+    if (hasNewImages) {
       const oldProduct = await inventoryService.getProductById(id);
 
-      if (oldProduct?.imagePublicId && isHttpUrl(oldProduct.imageUrl || '')) {
+      if (oldProduct?.imagePublicId && isR2ObjectKey(oldProduct.imagePublicId)) {
+        await deleteFromR2(oldProduct.imagePublicId).catch(() => undefined);
+      } else if (oldProduct?.imagePublicId && isHttpUrl(oldProduct.imageUrl || '')) {
         await deleteImage(oldProduct.imagePublicId);
       }
 
