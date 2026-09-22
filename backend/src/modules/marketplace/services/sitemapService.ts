@@ -22,18 +22,24 @@ export const buildMarketplaceSitemap = async () => {
 
   const staticPaths = ['/', '/buscar', '/vender', '/registro'];
 
-  const [listings, sellers] = await Promise.all([
-    Listing.find(PUBLIC_LISTING_FILTER)
-      .select('slug updatedAt')
-      .sort({ updatedAt: -1 })
-      .limit(2000)
-      .lean(),
-    SellerProfile.find({ status: 'approved' })
-      .select('slug updatedAt')
-      .sort({ updatedAt: -1 })
-      .limit(500)
-      .lean(),
-  ]);
+  let listings: Array<{ slug: string; updatedAt?: Date }> = [];
+  let sellers: Array<{ slug: string; updatedAt?: Date }> = [];
+  try {
+    [listings, sellers] = await Promise.all([
+      Listing.find(PUBLIC_LISTING_FILTER)
+        .select('slug updatedAt')
+        .sort({ updatedAt: -1 })
+        .limit(2000)
+        .lean(),
+      SellerProfile.find({ status: 'approved' })
+        .select('slug updatedAt')
+        .sort({ updatedAt: -1 })
+        .limit(500)
+        .lean(),
+    ]);
+  } catch (err) {
+    console.error('[sitemap] failed to load listings/sellers', err);
+  }
 
   const urls = [
     ...staticPaths.map((path) => urlEntry(`${base}${path}`)),
