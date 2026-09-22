@@ -1,4 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { resolveMarketplaceImageUrl } from '../utils/marketplaceMediaUrl';
 
 export interface MarketplaceCartItem {
   listingId: string;
@@ -24,7 +25,17 @@ const loadCart = (): MarketplaceCartItem[] => {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) return [];
+    const normalized = parsed.map((item) => ({
+      ...item,
+      imageUrl: item.imageUrl ? resolveMarketplaceImageUrl(item.imageUrl) : undefined,
+    }));
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(normalized));
+    } catch {
+      // no-op
+    }
+    return normalized;
   } catch {
     return [];
   }
@@ -46,14 +57,18 @@ const marketplaceCartSlice = createSlice({
   } as MarketplaceCartState,
   reducers: {
     addMarketplaceItem: (state, action: PayloadAction<MarketplaceCartItem>) => {
-      const existing = state.items.find((i) => i.listingId === action.payload.listingId);
+      const payload = {
+        ...action.payload,
+        imageUrl: action.payload.imageUrl
+          ? resolveMarketplaceImageUrl(action.payload.imageUrl)
+          : undefined,
+      };
+      const existing = state.items.find((i) => i.listingId === payload.listingId);
       if (existing) {
-        existing.quantity = Math.min(
-          existing.quantity + action.payload.quantity,
-          action.payload.maxStock
-        );
+        existing.quantity = Math.min(existing.quantity + payload.quantity, payload.maxStock);
+        if (payload.imageUrl) existing.imageUrl = payload.imageUrl;
       } else {
-        state.items.push({ ...action.payload });
+        state.items.push(payload);
       }
       persist(state.items);
     },

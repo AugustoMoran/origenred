@@ -11,6 +11,7 @@ import {
   updateMarketplaceQuantity,
 } from '../../store/marketplaceCartSlice';
 import { drawerSpring } from '../motion/marketplaceMotion';
+import { MarketplaceImage } from './MarketplaceImage';
 
 export const MarketplaceCartDrawer: React.FC = () => {
   const dispatch = useDispatch();
@@ -68,7 +69,11 @@ export const MarketplaceCartDrawer: React.FC = () => {
                 items.map((item) => (
                   <div key={item.listingId} className="flex gap-3 bg-slate-50 border border-slate-100 rounded-xl p-3">
                     <div className="w-16 h-16 rounded-lg bg-white overflow-hidden flex-shrink-0 border border-slate-100">
-                      <img src={item.imageUrl || '/logooficialdefinitivo.png'} alt="" className="w-full h-full object-cover" />
+                      <MarketplaceImage
+                        src={item.imageUrl}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs text-slate-400">{item.sellerName}</p>

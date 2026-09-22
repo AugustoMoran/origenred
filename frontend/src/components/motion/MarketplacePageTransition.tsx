@@ -7,7 +7,7 @@ type Props = {
   className?: string;
 };
 
-/** Transición suave al cambiar de ruta en el marketplace. */
+/** Transición al cambiar de ruta en el marketplace (entrada + salida). */
 export const MarketplacePageTransition: React.FC<Props> = ({ children, className }) => {
   const reduce = useReducedMotion();
 
@@ -18,9 +18,10 @@ export const MarketplacePageTransition: React.FC<Props> = ({ children, className
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y: 22 }}
+      initial={{ opacity: 0, y: 14 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.52, ease: motionEase }}
+      exit={{ opacity: 0, y: -10 }}
+      transition={{ duration: 0.34, ease: motionEase }}
     >
       {children}
     </motion.div>

@@ -5,6 +5,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { MarketplaceListing, useGetFavoritesQuery, useToggleFavoriteMutation } from '../../services/marketplaceApi';
 import { RootState } from '../../store';
 import { addMarketplaceItem, setMarketplaceCartOpen } from '../../store/marketplaceCartSlice';
+import { resolveMarketplaceImageUrl } from '../../utils/marketplaceMediaUrl';
+import { MarketplaceImage } from './MarketplaceImage';
 
 const formatPrice = (price: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(price);
@@ -22,7 +24,7 @@ export const MarketplaceListingCard: React.FC<Props> = ({ listing }) => {
   const reduce = useReducedMotion();
 
   const isFavorited = favorites.some((f) => f.listing?._id === listing._id);
-  const imageUrl = listing.images?.[0]?.url || '/logooficialdefinitivo.png';
+  const imageUrl = resolveMarketplaceImageUrl(listing.images?.[0]?.url);
   const hasDiscount = listing.compareAtPrice && listing.compareAtPrice > listing.price;
   const outOfStock = (listing.stock ?? 0) <= 0;
 
@@ -44,7 +46,7 @@ export const MarketplaceListingCard: React.FC<Props> = ({ listing }) => {
         title: listing.title,
         price: listing.price,
         quantity: 1,
-        imageUrl: listing.images?.[0]?.url,
+        imageUrl: resolveMarketplaceImageUrl(listing.images?.[0]?.url),
         sellerId: listing.seller?._id || '',
         sellerName: listing.seller?.businessName || 'Vendedor',
         maxStock: listing.stock,
@@ -63,15 +65,10 @@ export const MarketplaceListingCard: React.FC<Props> = ({ listing }) => {
     >
       <Link to={`/p/${listing.slug}`} className="block">
         <div className="aspect-square bg-slate-50 overflow-hidden relative">
-          <img
+          <MarketplaceImage
             src={imageUrl}
             alt={listing.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-            loading="lazy"
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.src = '/logooficialdefinitivo.png';
-            }}
           />
           {user && (
             <button

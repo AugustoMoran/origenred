@@ -124,8 +124,8 @@ export const OrigenRedHeader: React.FC = () => {
           </div>
         </div>
 
-        <div className="pb-3 sm:pb-4">
-          <MarketplaceSearchBar autoFocus={false} />
+        <div className="pb-2.5 sm:pb-3 border-t border-slate-100/80 pt-2.5">
+          <MarketplaceSearchBar />
         </div>
       </div>
     </header>

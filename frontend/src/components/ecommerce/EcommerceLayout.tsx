@@ -1,4 +1,5 @@
 import React from 'react';
+import { AnimatePresence } from 'motion/react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { OrigenRedHeader } from '../marketplace/OrigenRedHeader';
 import { MarketplaceCartDrawer } from '../marketplace/MarketplaceCartDrawer';
@@ -22,9 +23,11 @@ export const EcommerceLayout: React.FC = () => {
             <Outlet />
           ) : (
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-              <MarketplacePageTransition key={pathname}>
-                <Outlet />
-              </MarketplacePageTransition>
+              <AnimatePresence mode="wait">
+                <MarketplacePageTransition key={pathname}>
+                  <Outlet />
+                </MarketplacePageTransition>
+              </AnimatePresence>
             </div>
           )}
         </main>

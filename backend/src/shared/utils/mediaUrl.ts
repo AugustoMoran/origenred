@@ -32,8 +32,13 @@ export const normalizeMediaUrl = (url?: string | null): string => {
     normalized = `https:${normalized}`;
   }
 
+  if (normalized.startsWith('/uploads')) {
+    return `${getPublicApiBaseUrl().replace(/\/+$/, '')}${normalized}`;
+  }
+
   if (normalized.startsWith('/')) {
-    return `https://origenred.com${normalized}`;
+    const frontend = (process.env.FRONTEND_URL || 'https://origenred.com').replace(/\/+$/, '');
+    return `${frontend}${normalized}`;
   }
 
   normalized = normalized.replace(/^http:/i, 'https:');

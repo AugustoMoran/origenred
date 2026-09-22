@@ -6,6 +6,8 @@ import { useGetListingBySlugQuery, useToggleFavoriteMutation } from '../../servi
 import { RootState } from '../../store';
 import { addMarketplaceItem, setMarketplaceCartOpen } from '../../store/marketplaceCartSlice';
 import { ReportListingModal } from '../../components/marketplace/MarketplaceReportModal';
+import { MarketplaceImage } from '../../components/marketplace/MarketplaceImage';
+import { resolveMarketplaceImageUrl } from '../../utils/marketplaceMediaUrl';
 
 const formatPrice = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
@@ -28,7 +30,7 @@ export const MarketplaceListingDetail: React.FC = () => {
         title: listing.title,
         price: listing.price,
         quantity: 1,
-        imageUrl: listing.images?.[0]?.url,
+        imageUrl: resolveMarketplaceImageUrl(listing.images?.[0]?.url),
         sellerId: listing.seller?._id || '',
         sellerName: listing.seller?.businessName || 'Vendedor',
         maxStock: listing.stock,
@@ -52,20 +54,17 @@ export const MarketplaceListingDetail: React.FC = () => {
       <div className="grid lg:grid-cols-2 gap-8">
         <div className="space-y-3">
           <div className="aspect-square bg-white rounded-2xl border border-slate-100 overflow-hidden">
-            <img
-              src={images[0].url}
-              alt={listing.title}
-              className="w-full h-full object-cover"
-              onError={(e) => {
-                e.currentTarget.onerror = null;
-                e.currentTarget.src = '/logooficialdefinitivo.png';
-              }}
-            />
+            <MarketplaceImage src={images[0].url} alt={listing.title} className="w-full h-full object-cover" />
           </div>
           {images.length > 1 && (
             <div className="flex gap-2 overflow-x-auto">
               {images.slice(1, 5).map((img, i) => (
-                <img key={i} src={img.url} alt="" className="w-16 h-16 rounded-lg object-cover border border-slate-100 flex-shrink-0" />
+                <MarketplaceImage
+                  key={i}
+                  src={img.url}
+                  alt=""
+                  className="w-16 h-16 rounded-lg object-cover border border-slate-100 flex-shrink-0"
+                />
               ))}
             </div>
           )}
