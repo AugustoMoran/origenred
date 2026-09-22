@@ -10,6 +10,7 @@ import { indexListing, removeListingFromIndex } from './meilisearchService';
 import { repairProductMediaInPlace } from '../../../shared/utils/mediaUrl';
 import {
   listingImagesFromProductOrExisting,
+  productHasUsableMedia,
   repairProductMediaFromListing,
 } from '../../inventory/services/productMediaRepairService';
 
@@ -155,8 +156,10 @@ export async function syncProductToMarketplaceListing(
   const existingListing = await Listing.findOne({ inventoryProductId: product._id }).select('images');
 
   let productMediaDirty = false;
-  if (repairProductMediaFromListing(product, existingListing)) {
-    productMediaDirty = true;
+  if (!productHasUsableMedia(product)) {
+    if (repairProductMediaFromListing(product, existingListing)) {
+      productMediaDirty = true;
+    }
   }
   if (repairProductMediaInPlace(product)) {
     productMediaDirty = true;

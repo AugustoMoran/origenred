@@ -3,11 +3,6 @@ import path from 'path';
 import fs from 'fs';
 import { isR2Enabled } from '../../marketplace/services/r2StorageService';
 
-const hasCloudinaryConfig =
-  !!process.env.CLOUDINARY_CLOUD_NAME &&
-  !!process.env.CLOUDINARY_API_KEY &&
-  !!process.env.CLOUDINARY_API_SECRET;
-
 const localUploadsDir = path.resolve(process.cwd(), 'uploads');
 if (!fs.existsSync(localUploadsDir)) {
   fs.mkdirSync(localUploadsDir, { recursive: true });
@@ -21,9 +16,12 @@ const diskStorage = multer.diskStorage({
   },
 });
 
-const useMemoryForR2 = isR2Enabled() && !hasCloudinaryConfig;
-
+/** En producción con R2, subimos en memoria y persistimos en el bucket (no disco efímero de Render). */
 export const inventoryProductUpload = multer({
-  storage: useMemoryForR2 ? multer.memoryStorage() : diskStorage,
+  storage: isR2Enabled() ? multer.memoryStorage() : diskStorage,
   limits: { fileSize: 8 * 1024 * 1024, files: 11 },
+  fileFilter: (_req, file, cb) => {
+    if (/^image\/(jpeg|jpg|png|webp)$/i.test(file.mimetype)) cb(null, true);
+    else cb(new Error('Solo imágenes JPG, PNG o WebP'));
+  },
 });

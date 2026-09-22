@@ -647,7 +647,17 @@ export const Inventory = () => {
       displayOrder: p.displayOrder ?? '',
     });
     setImagePreview(resolveProductImageUrl(p));
-    setGalleryItems(Array.isArray(p.gallery) ? p.gallery : []);
+    const savedGallery = Array.isArray(p.gallery) ? p.gallery.filter((g: GalleryItem) => g?.url) : [];
+    if (savedGallery.length) {
+      setGalleryItems(savedGallery);
+    } else {
+      const main = resolveProductImageUrl(p);
+      setGalleryItems(
+        main && main !== '/logooficialdefinitivo.png'
+          ? [{ url: main, publicId: p.imagePublicId, alt: p.name || '' }]
+          : []
+      );
+    }
     setGalleryFiles([]);
     setGalleryPreviews([]);
     setIsEditing(true);

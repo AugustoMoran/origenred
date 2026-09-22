@@ -86,10 +86,14 @@ export const extractStorageKeyFromUrl = (url?: string | null): string | null => 
 };
 
 const effectiveStorageKey = (url?: string | null, storageKey?: string | null) => {
-  if (isR2ObjectKey(storageKey)) return storageKey!.trim();
   const fromUrl = extractStorageKeyFromUrl(url);
+  const trimmedKey = storageKey?.trim();
+  if (isR2ObjectKey(fromUrl) && isR2ObjectKey(trimmedKey) && fromUrl !== trimmedKey) {
+    return fromUrl;
+  }
+  if (isR2ObjectKey(trimmedKey)) return trimmedKey;
   if (isR2ObjectKey(fromUrl)) return fromUrl;
-  return storageKey?.trim() || null;
+  return trimmedKey || null;
 };
 
 /** URL pública estable vía API (no expira, no depende del dominio R2 en el cliente). */
@@ -245,6 +249,23 @@ export const repairProductMediaInPlace = (product: {
   gallery?: Array<{ url?: string; publicId?: string; alt?: string }>;
 }) => {
   let changed = false;
+
+  if (isPlaceholderMediaUrl(product.imageUrl) || !product.imageUrl?.trim()) {
+    const firstGood = (product.gallery || []).find((item) => {
+      const resolved = resolveStoredMediaUrl(item.url, item.publicId);
+      return resolved && !isPlaceholderMediaUrl(resolved);
+    });
+    if (firstGood) {
+      const url = resolveStoredMediaUrl(firstGood.url, firstGood.publicId)!;
+      product.imageUrl = url;
+      const key =
+        (isR2ObjectKey(firstGood.publicId) && firstGood.publicId) ||
+        extractStorageKeyFromUrl(firstGood.url) ||
+        undefined;
+      if (isR2ObjectKey(key)) product.imagePublicId = key;
+      changed = true;
+    }
+  }
 
   const inferredFromUrl = extractStorageKeyFromUrl(product.imageUrl);
   if (isPlaceholderMediaUrl(product.imageUrl) && isR2ObjectKey(inferredFromUrl)) {

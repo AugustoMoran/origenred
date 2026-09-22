@@ -12,7 +12,7 @@ import { deleteFromR2 } from '../../marketplace/services/r2StorageService';
 import { isR2ObjectKey } from '../../../shared/utils/mediaUrl';
 import { applyInventoryImagesToProductData } from '../utils/inventoryImageUpload';
 import { Listing } from '../../marketplace/models/Listing';
-import { prepareProductForClient, persistProductMediaIfRepaired } from '../services/productMediaRepairService';
+import { prepareProductForClient } from '../services/productMediaRepairService';
 
 const isHttpUrl = (value?: string) => !!value && /^https?:\/\//i.test(value);
 
@@ -47,18 +47,9 @@ const toPlainProduct = (product: unknown) =>
     ? (product as { toObject: () => Record<string, unknown> }).toObject()
     : product;
 
-const toClientProduct = async (req: Request, product: unknown, listing?: { images?: unknown[] } | null) => {
-  const plain = toPlainProduct(product) as Record<string, unknown> & {
-    _id?: unknown;
-    imageUrl?: string;
-    imagePublicId?: string;
-  };
-  const before = { imageUrl: plain.imageUrl, imagePublicId: plain.imagePublicId };
-  const prepared = prepareProductForClient(plain, listing as any, req);
-  if (plain._id) {
-    void persistProductMediaIfRepaired(String(plain._id), before, prepared as any);
-  }
-  return prepared;
+const toClientProduct = (req: Request, product: unknown, listing?: { images?: unknown[] } | null) => {
+  const plain = toPlainProduct(product) as Record<string, unknown>;
+  return prepareProductForClient(plain, listing as any, req);
 };
 
 export const getProductsController = async (req: Request, res: Response) => {
@@ -69,8 +60,8 @@ export const getProductsController = async (req: Request, res: Response) => {
     const listingByProduct = new Map(
       listings.map((l) => [String(l.inventoryProductId), l])
     );
-    const payload = await Promise.all(
-      products.map((p: any) => toClientProduct(req, p, listingByProduct.get(String(p._id))))
+    const payload = products.map((p: any) =>
+      toClientProduct(req, p, listingByProduct.get(String(p._id)))
     );
     res.json(payload);
   } catch (error: any) {
@@ -94,7 +85,7 @@ export const createProductController = async (req: Request, res: Response) => {
     await applyInventoryImagesToProductData(req, productData);
 
     const product = await inventoryService.createProduct(productData, (req as any).user);
-    res.status(201).json(product ? await toClientProduct(req, product as any) : product);
+    res.status(201).json(product ? toClientProduct(req, product as any) : product);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }
@@ -107,23 +98,26 @@ export const updateProductController = async (req: Request, res: Response) => {
     parseSupplierField(productData);
 
     const uploads = getUploadedFiles(req);
-    const hasNewImages = Boolean(uploads.image?.length || uploads.galleryImages?.length);
-    if (hasNewImages) {
-      const oldProduct = await inventoryService.getProductById(id);
+    const newMainImage = Boolean(uploads.image?.length);
+    const newGalleryImages = Boolean(uploads.galleryImages?.length);
+    if (newMainImage || newGalleryImages) {
+      if (newMainImage) {
+        const oldProduct = await inventoryService.getProductById(id);
 
-      if (oldProduct?.imagePublicId && isR2ObjectKey(oldProduct.imagePublicId)) {
-        await deleteFromR2(oldProduct.imagePublicId).catch(() => undefined);
-      } else if (oldProduct?.imagePublicId && isHttpUrl(oldProduct.imageUrl || '')) {
-        await deleteImage(oldProduct.imagePublicId);
+        if (oldProduct?.imagePublicId && isR2ObjectKey(oldProduct.imagePublicId)) {
+          await deleteFromR2(oldProduct.imagePublicId).catch(() => undefined);
+        } else if (oldProduct?.imagePublicId && isHttpUrl(oldProduct.imageUrl || '')) {
+          await deleteImage(oldProduct.imagePublicId);
+        }
+
+        deleteLocalImageFromUrl(oldProduct?.imageUrl);
       }
-
-      deleteLocalImageFromUrl(oldProduct?.imageUrl);
       await applyInventoryImagesToProductData(req, productData);
     }
 
     const product = await inventoryService.updateProduct(id, productData, (req as any).user);
     if (!product) return res.status(404).json({ message: 'Producto no encontrado' });
-    res.json(await toClientProduct(req, product as any));
+    res.json(toClientProduct(req, product as any));
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

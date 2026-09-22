@@ -9,7 +9,7 @@ const isHttpUrl = (value?: string) => !!value && /^https?:\/\//i.test(value);
 
 const readUploadedBuffer = (file: Express.Multer.File): Buffer | null => {
   if (file.buffer?.length) return file.buffer;
-  if (isHttpUrl((file as any).path)) return null;
+  if (isHttpUrl(file.path)) return null;
   if (!file.filename) return null;
   const localPath = path.resolve(process.cwd(), 'uploads', file.filename);
   if (!fs.existsSync(localPath)) return null;
@@ -18,9 +18,7 @@ const readUploadedBuffer = (file: Express.Multer.File): Buffer | null => {
 
 const persistR2Upload = async (req: Request, file: Express.Multer.File, folder: string) => {
   const buffer = readUploadedBuffer(file);
-  if (!buffer) {
-    throw new Error('No se pudo leer el archivo de imagen subido');
-  }
+  if (!buffer) throw new Error('No se pudo leer el archivo de imagen subido');
 
   const uploaded = await uploadToR2({
     buffer,
@@ -33,9 +31,9 @@ const persistR2Upload = async (req: Request, file: Express.Multer.File, folder: 
   return { url, key: uploaded.key };
 };
 
-const persistLocalOrCloudinaryUpload = (req: Request, file: Express.Multer.File) => {
-  const url = isHttpUrl((file as any).path)
-    ? (file as any).path
+const persistLocalUpload = (req: Request, file: Express.Multer.File) => {
+  const url = isHttpUrl(file.path)
+    ? file.path
     : buildLocalUploadUrl(req, file.filename || `${Date.now()}-${file.originalname}`);
   return {
     url,
@@ -47,7 +45,7 @@ const uploadInventoryFile = async (req: Request, file: Express.Multer.File, fold
   if (isR2Enabled()) {
     return persistR2Upload(req, file, folder);
   }
-  return persistLocalOrCloudinaryUpload(req, file);
+  return persistLocalUpload(req, file);
 };
 
 const normalizeKeptGalleryItem = (item: { url?: string; publicId?: string; alt?: string }) => {

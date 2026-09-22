@@ -11,7 +11,7 @@ import {
 } from '../../../shared/utils/mediaUrl';
 import { Request } from 'express';
 
-const hasUsableMedia = (url?: string | null, key?: string | null) => {
+export const hasUsableMedia = (url?: string | null, key?: string | null) => {
   const resolved = resolveStoredMediaUrl(url, key);
   if (resolved && !isPlaceholderMediaUrl(resolved)) return true;
   if (isCloudinaryMediaUrl(url)) return true;
@@ -20,30 +20,25 @@ const hasUsableMedia = (url?: string | null, key?: string | null) => {
   return Boolean(url?.trim() && !isPlaceholderMediaUrl(url));
 };
 
+export const productHasUsableMedia = (product: {
+  imageUrl?: string;
+  imagePublicId?: string;
+  gallery?: Array<{ url?: string; publicId?: string }>;
+}) => {
+  if (hasUsableMedia(product.imageUrl, product.imagePublicId)) return true;
+  if (!Array.isArray(product.gallery)) return false;
+  return product.gallery.some((item) => hasUsableMedia(item.url, item.publicId));
+};
+
+/** Solo normaliza URLs para la respuesta; no copia datos del listing al producto en memoria. */
 export const prepareProductForClient = (
   product: Record<string, unknown>,
-  listing?: { images?: Array<{ url?: string; key?: string; alt?: string }> } | null,
+  _listing?: { images?: Array<{ url?: string; key?: string; alt?: string }> } | null,
   req?: Request
 ) => {
-  repairProductMediaFromListing(product as any, listing);
   repairProductMediaInPlace(product as any);
   return normalizeProductMedia(product as any, req);
 };
-
-export async function persistProductMediaIfRepaired(
-  productId: string,
-  before: { imageUrl?: string; imagePublicId?: string },
-  after: { imageUrl?: string; imagePublicId?: string }
-) {
-  if (before.imageUrl === after.imageUrl && before.imagePublicId === after.imagePublicId) return;
-  if (!after.imageUrl || isPlaceholderMediaUrl(after.imageUrl)) return;
-  const $set: Record<string, unknown> = { imageUrl: after.imageUrl };
-  if (after.imagePublicId) $set.imagePublicId = after.imagePublicId;
-  if (Array.isArray((after as any).gallery) && (after as any).gallery.length) {
-    $set.gallery = (after as any).gallery;
-  }
-  await Product.updateOne({ _id: productId }, { $set });
-}
 
 export const repairProductMediaFromListing = (
   product: {
@@ -54,9 +49,7 @@ export const repairProductMediaFromListing = (
   listing?: { images?: Array<{ url?: string; key?: string; alt?: string }> } | null
 ) => {
   if (!listing?.images?.length) return false;
-
-  const productOk = hasUsableMedia(product.imageUrl, product.imagePublicId);
-  if (productOk) return false;
+  if (productHasUsableMedia(product)) return false;
 
   const listingImages = listing.images
     .map((img) => {
@@ -149,7 +142,7 @@ export const repairAllInventoryProductMedia = async () => {
       await product.save();
       repairedProducts += 1;
       if (fromListing) repairedFromListing += 1;
-    } else if (!hasUsableMedia(product.imageUrl, product.imagePublicId)) {
+    } else if (!productHasUsableMedia(product)) {
       stillMissing += 1;
     }
   }

@@ -68,7 +68,10 @@ export const applyEcommerceFieldsToProductData = (req: Request, productData: Rec
   if ('gallery' in productData) {
     const keptGallery = parseJsonField(productData.gallery);
     delete productData.gallery;
-    productData.gallery = Array.isArray(keptGallery) ? keptGallery.filter((item) => item?.url) : [];
+    if (Array.isArray(keptGallery)) {
+      const filtered = keptGallery.filter((item) => item?.url);
+      if (filtered.length) productData.gallery = filtered;
+    }
   }
 
   return productData;

@@ -64,10 +64,14 @@ export const extractStorageKeyFromUrl = (url?: string | null): string | null => 
 };
 
 export const effectiveStorageKey = (url?: string | null, storageKey?: string | null) => {
-  if (isR2ObjectKey(storageKey)) return storageKey!.trim();
   const fromUrl = extractStorageKeyFromUrl(url);
+  const trimmedKey = storageKey?.trim();
+  if (isR2ObjectKey(fromUrl) && isR2ObjectKey(trimmedKey) && fromUrl !== trimmedKey) {
+    return fromUrl;
+  }
+  if (isR2ObjectKey(trimmedKey)) return trimmedKey;
   if (isR2ObjectKey(fromUrl)) return fromUrl;
-  return storageKey?.trim() || null;
+  return trimmedKey || null;
 };
 
 export const buildMediaProxyUrl = (storageKey?: string | null): string | null => {
