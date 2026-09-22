@@ -12,6 +12,7 @@ export interface StoreProduct {
   longDescription?: string;
   price: number;
   imageUrl?: string;
+  imagePublicId?: string;
   gallery?: Array<{ url: string; alt?: string; publicId?: string }>;
   category: string;
   sku: string;

@@ -6,6 +6,7 @@ import { useGetBranchesQuery } from '../services/branchApi';
 import { useGetCategoriesQuery } from '../services/categoryApi';
 import { useGetSuppliersQuery } from '../services/supplierApi';
 import { useLazyGetTaxpayerQuery } from '../services/afipApi';
+import { resolveProductImageUrl } from '../utils/marketplaceMediaUrl';
 
 interface CartItem {
   product: string;
@@ -624,8 +625,8 @@ export const POS = () => {
                 className="group p-4 bg-slate-900 border border-white/5 rounded-2xl text-left hover:border-brand-500/50 transition-all hover:shadow-2xl hover:shadow-brand-500/10 relative overflow-hidden active:scale-95"
               >
                 <div className="aspect-square bg-slate-800 rounded-xl mb-4 overflow-hidden relative">
-                   {p.imageUrl ? (
-                     <img src={p.imageUrl} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+                   {p.imageUrl || p.gallery?.length ? (
+                     <img src={resolveProductImageUrl(p)} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" onError={(e) => { (e.target as HTMLImageElement).src = '/logooficialdefinitivo.png'; }} />
                    ) : (
                      <div className="w-full h-full flex items-center justify-center text-slate-700">
                         <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" strokeWidth={1.5} /></svg>

@@ -24,7 +24,8 @@ export const MarketplaceListingCard: React.FC<Props> = ({ listing }) => {
   const reduce = useReducedMotion();
 
   const isFavorited = favorites.some((f) => f.listing?._id === listing._id);
-  const imageUrl = resolveMarketplaceImageUrl(listing.images?.[0]?.url);
+  const primaryImage = listing.images?.[0];
+  const imageUrl = resolveMarketplaceImageUrl(primaryImage?.url, primaryImage?.key);
   const hasDiscount = listing.compareAtPrice && listing.compareAtPrice > listing.price;
   const outOfStock = (listing.stock ?? 0) <= 0;
 
@@ -46,7 +47,7 @@ export const MarketplaceListingCard: React.FC<Props> = ({ listing }) => {
         title: listing.title,
         price: listing.price,
         quantity: 1,
-        imageUrl: resolveMarketplaceImageUrl(listing.images?.[0]?.url),
+        imageUrl: resolveMarketplaceImageUrl(primaryImage?.url, primaryImage?.key),
         sellerId: listing.seller?._id || '',
         sellerName: listing.seller?.businessName || 'Vendedor',
         maxStock: listing.stock,

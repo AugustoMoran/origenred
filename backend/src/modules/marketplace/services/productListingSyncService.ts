@@ -7,7 +7,7 @@ import { Listing } from '../models/Listing';
 import { SellerProfile } from '../models/SellerProfile';
 import { computeOrigenRankScore } from './origenRankService';
 import { indexListing, removeListingFromIndex } from './meilisearchService';
-import { normalizeMediaUrl } from '../../../shared/utils/mediaUrl';
+import { canonicalizeMediaUrl } from '../../../shared/utils/mediaUrl';
 
 const OFFICIAL_SELLER_SLUG = 'origenred-oficial';
 
@@ -116,15 +116,25 @@ async function getDefaultAdminId(): Promise<mongoose.Types.ObjectId> {
 
 function buildListingImages(product: IProduct) {
   if (product.gallery?.length) {
-    return product.gallery.map((item) => ({
-      url: normalizeMediaUrl(item.url),
-      alt: item.alt || product.name,
-    }));
+    return product.gallery
+      .map((item) => {
+        const url = canonicalizeMediaUrl(item.url, item.publicId);
+        if (!url) return null;
+        return {
+          url,
+          key: item.publicId,
+          alt: item.alt || product.name,
+        };
+      })
+      .filter(Boolean) as Array<{ url: string; key?: string; alt: string }>;
   }
   if (product.imageUrl) {
-    return [{ url: normalizeMediaUrl(product.imageUrl), alt: product.name }];
+    const url = canonicalizeMediaUrl(product.imageUrl, product.imagePublicId);
+    if (url) {
+      return [{ url, key: product.imagePublicId, alt: product.name }];
+    }
   }
-  return [{ url: normalizeMediaUrl(null), alt: product.name }];
+  return [];
 }
 
 async function uniqueListingSlug(base: string, excludeId?: string) {

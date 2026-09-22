@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/uploads/:path*",
+      "destination": "https://origenred-ulob.onrender.com/uploads/:path*"
+    },
+    {
       "source": "/((?!.*\\.).*)",
       "destination": "/index.html"
     }

@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { StoreProduct } from '../../services/ecommerceApi';
 import { addToCart, setCartOpen } from '../../store/cartSlice';
+import { resolveProductImageUrl } from '../../utils/marketplaceMediaUrl';
 
 interface ProductCardProps {
   product: StoreProduct;
@@ -41,7 +42,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, showFeatured 
       <div className="aspect-square bg-slate-800 relative overflow-hidden">
         {product.imageUrl ? (
           <img
-            src={product.imageUrl}
+            src={resolveProductImageUrl(product)}
             alt={product.name}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             onError={(e) => {

@@ -30,7 +30,10 @@ export const MarketplaceListingDetail: React.FC = () => {
         title: listing.title,
         price: listing.price,
         quantity: 1,
-        imageUrl: resolveMarketplaceImageUrl(listing.images?.[0]?.url),
+        imageUrl: resolveMarketplaceImageUrl(
+          listing.images?.[0]?.url,
+          listing.images?.[0]?.key
+        ),
         sellerId: listing.seller?._id || '',
         sellerName: listing.seller?.businessName || 'Vendedor',
         maxStock: listing.stock,
@@ -44,7 +47,12 @@ export const MarketplaceListingDetail: React.FC = () => {
   if (isLoading) return <div className="py-20 text-center text-slate-400">Cargando...</div>;
   if (error || !listing) return <div className="py-20 text-center text-slate-400">Producto no encontrado</div>;
 
-  const images = listing.images?.length ? listing.images : [{ url: '/logooficialdefinitivo.png' }];
+  const images = listing.images?.length
+    ? listing.images.map((img) => ({
+        ...img,
+        url: resolveMarketplaceImageUrl(img.url, img.key),
+      }))
+    : [{ url: '/logooficialdefinitivo.png' }];
   const hasDiscount = listing.compareAtPrice && listing.compareAtPrice > listing.price;
 
   return (

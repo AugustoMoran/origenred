@@ -23,6 +23,9 @@ const getClient = () => {
 
 const buildPublicUrl = (key: string) => {
   if (r2Config.publicUrl) return `${r2Config.publicUrl}/${key}`;
+  console.warn(
+    '[R2] R2_PUBLIC_URL no está configurado: las URLs privadas de R2 no funcionan en el navegador. Configurá un dominio público en Render.'
+  );
   return `${r2Config.endpoint}/${r2Config.bucket}/${key}`;
 };
 

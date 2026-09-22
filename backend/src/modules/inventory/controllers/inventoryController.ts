@@ -8,6 +8,7 @@ import {
   getMainUploadedImage,
 } from '../utils/productFormParser';
 import { applyInventoryImagesToProductData } from '../utils/inventoryImageUpload';
+import { normalizeProductMedia } from '../../../shared/utils/mediaUrl';
 
 const isHttpUrl = (value?: string) => !!value && /^https?:\/\//i.test(value);
 
@@ -37,10 +38,12 @@ const parseSupplierField = (productData: Record<string, any>) => {
   }
 };
 
+const toClientProduct = (_req: Request, product: Record<string, unknown>) => normalizeProductMedia(product);
+
 export const getProductsController = async (req: Request, res: Response) => {
   try {
     const products = await inventoryService.getProducts(req.query || {});
-    res.json(products);
+    res.json(products.map((p) => toClientProduct(req, p as any)));
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -62,7 +65,7 @@ export const createProductController = async (req: Request, res: Response) => {
     await applyInventoryImagesToProductData(req, productData);
 
     const product = await inventoryService.createProduct(productData, (req as any).user);
-    res.status(201).json(product);
+    res.status(201).json(product ? toClientProduct(req, product as any) : product);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }
@@ -87,7 +90,7 @@ export const updateProductController = async (req: Request, res: Response) => {
 
     const product = await inventoryService.updateProduct(id, productData, (req as any).user);
     if (!product) return res.status(404).json({ message: 'Producto no encontrado' });
-    res.json(product);
+    res.json(toClientProduct(req, product as any));
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

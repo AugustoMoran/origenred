@@ -5,6 +5,7 @@ import { SEO } from '../../components/ecommerce/SEO';
 import { useGetStoreProductQuery } from '../../services/ecommerceApi';
 import { addToCart, setCartOpen } from '../../store/cartSlice';
 import { useTrackEventMutation } from '../../services/analyticsApi';
+import { resolveProductImageUrl, resolveMarketplaceImageUrl } from '../../utils/marketplaceMediaUrl';
 
 export const StoreProductDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,9 +17,14 @@ export const StoreProductDetail: React.FC = () => {
 
   const galleryImages = useMemo(() => {
     if (!product) return [] as string[];
-    const fromGallery = (product.gallery || []).map((item) => item.url).filter(Boolean);
-    const images = product.imageUrl ? [product.imageUrl, ...fromGallery.filter((url) => url !== product.imageUrl)] : fromGallery;
-    return images;
+    const main = resolveProductImageUrl(product);
+    const fromGallery = (product.gallery || [])
+      .map((item) => resolveMarketplaceImageUrl(item.url, item.publicId))
+      .filter((url) => url && url !== '/logooficialdefinitivo.png');
+    const images = main && main !== '/logooficialdefinitivo.png'
+      ? [main, ...fromGallery.filter((url) => url !== main)]
+      : fromGallery;
+    return images.length ? images : main ? [main] : [];
   }, [product]);
 
   useEffect(() => {
@@ -82,7 +88,14 @@ export const StoreProductDetail: React.FC = () => {
         <div className="space-y-3">
           <div className="aspect-square rounded-2xl overflow-hidden bg-slate-800 card p-0">
             {activeImage ? (
-              <img src={activeImage} alt={product.name} className="w-full h-full object-cover" />
+              <img
+                src={activeImage}
+                alt={product.name}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = '/logooficialdefinitivo.png';
+                }}
+              />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-slate-600">
                 <svg className="w-16 h-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
