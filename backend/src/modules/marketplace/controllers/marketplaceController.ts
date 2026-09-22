@@ -94,7 +94,11 @@ import {
   deleteMarketplaceCategory,
 } from '../services/categoryService';
 import { io } from '../../../app';
-import { emitChatMessage } from '../../../socket/marketplaceChatSocket';
+import {
+  emitChatMessage,
+  emitChatRead,
+  markReadForUsersViewingChat,
+} from '../../../socket/marketplaceChatSocket';
 import { notifyChatRecipient } from '../../../modules/notifications/chatPushService';
 import { normalizeListingMedia } from '../../../shared/utils/mediaUrl';
 
@@ -699,7 +703,11 @@ export async function getMyConversationsController(req: Request, res: Response) 
 export async function getConversationMessagesController(req: Request, res: Response) {
   try {
     const userId = String((req as any).user._id);
-    const result = await getConversationMessages(String(req.params.id), userId);
+    const conversationId = String(req.params.id);
+    const result = await getConversationMessages(conversationId, userId);
+    if (result.readReceipt) {
+      emitChatRead(io, conversationId, result.readReceipt);
+    }
     res.json(result);
   } catch (error: any) {
     res.status(error.message === 'Acceso denegado' ? 403 : 400).json({ message: error.message });
@@ -716,6 +724,7 @@ export async function sendMessageController(req: Request, res: Response) {
         ? (message as any).toObject()
         : message;
     emitChatMessage(io, conversationId, payload);
+    await markReadForUsersViewingChat(io, conversationId, userId);
     try {
       await notifyChatRecipient(conversationId, userId, req.body.body || '');
     } catch (pushErr) {
@@ -732,6 +741,12 @@ export async function getChatByOrderController(req: Request, res: Response) {
   try {
     const userId = String((req as any).user._id);
     const result = await getConversationByOrder(String(req.params.orderNumber), userId);
+    const conversationId = result.conversation?._id
+      ? String((result.conversation as any)._id)
+      : '';
+    if (conversationId && result.readReceipt) {
+      emitChatRead(io, conversationId, result.readReceipt);
+    }
     res.json(result);
   } catch (error: any) {
     res.status(400).json({ message: error.message });

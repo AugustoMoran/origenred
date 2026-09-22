@@ -1,6 +1,9 @@
 import type { Server, Socket } from 'socket.io';
 import { verifyAccessToken } from '../modules/auth/services/tokenService';
-import { canAccessConversation } from '../modules/marketplace/services/chatService';
+import {
+  canAccessConversation,
+  markIncomingMessagesAsRead,
+} from '../modules/marketplace/services/chatService';
 
 const extractTokenFromHandshake = (socket: Socket): string | null => {
   const authToken = socket.handshake.auth?.token;
@@ -23,6 +26,40 @@ const extractTokenFromHandshake = (socket: Socket): string | null => {
   return null;
 };
 
+export const emitChatRead = (
+  io: Server | null,
+  conversationId: string,
+  receipt: {
+    conversationId: string;
+    readerId: string;
+    readAt: Date;
+    messageIds: string[];
+  }
+) => {
+  if (!io || !conversationId || !receipt.messageIds.length) return;
+  io.to(`chat:${conversationId}`).emit('chat:read', {
+    conversationId,
+    readerId: receipt.readerId,
+    readAt: receipt.readAt.toISOString(),
+    messageIds: receipt.messageIds,
+  });
+};
+
+export const markReadForUsersViewingChat = async (
+  io: Server | null,
+  conversationId: string,
+  excludeUserId: string
+) => {
+  if (!io) return;
+  const sockets = await io.in(`chat:${conversationId}`).fetchSockets();
+  for (const s of sockets) {
+    const uid = s.data.userId as string | undefined;
+    if (!uid || uid === excludeUserId) continue;
+    const receipt = await markIncomingMessagesAsRead(conversationId, uid);
+    if (receipt) emitChatRead(io, conversationId, receipt);
+  }
+};
+
 export const registerMarketplaceChatSocket = (io: Server) => {
   io.use((socket, next) => {
     const token = extractTokenFromHandshake(socket);
@@ -41,6 +78,14 @@ export const registerMarketplaceChatSocket = (io: Server) => {
   });
 
   io.on('connection', (socket) => {
+    const markReadIfAllowed = async (conversationId: string) => {
+      if (!conversationId || !socket.data.userId) return;
+      const allowed = await canAccessConversation(conversationId, socket.data.userId);
+      if (!allowed) return;
+      const receipt = await markIncomingMessagesAsRead(conversationId, socket.data.userId);
+      if (receipt) emitChatRead(io, conversationId, receipt);
+    };
+
     socket.on('chat:join', async (conversationId: string) => {
       if (!conversationId || !socket.data.userId) return;
 
@@ -51,6 +96,11 @@ export const registerMarketplaceChatSocket = (io: Server) => {
       }
 
       socket.join(`chat:${conversationId}`);
+      await markReadIfAllowed(conversationId);
+    });
+
+    socket.on('chat:markRead', async (conversationId: string) => {
+      await markReadIfAllowed(conversationId);
     });
 
     socket.on('chat:leave', (conversationId: string) => {

@@ -33,9 +33,16 @@ export const disconnectChatSocket = () => {
 };
 
 export const joinChatRoom = (conversationId: string) => {
-  if (socket?.connected) socket.emit('chat:join', conversationId);
+  if (!socket) return;
+  const join = () => socket?.emit('chat:join', conversationId);
+  if (socket.connected) join();
+  else socket.once('connect', join);
 };
 
 export const leaveChatRoom = (conversationId: string) => {
   if (socket?.connected) socket.emit('chat:leave', conversationId);
+};
+
+export const markChatRead = (conversationId: string) => {
+  if (socket?.connected) socket.emit('chat:markRead', conversationId);
 };

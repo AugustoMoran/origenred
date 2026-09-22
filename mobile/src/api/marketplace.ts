@@ -50,6 +50,8 @@ export interface ChatMessage {
   _id: string;
   body: string;
   createdAt: string;
+  readAt?: string;
+  pending?: boolean;
   sender?: { _id: string; name: string };
 }
 

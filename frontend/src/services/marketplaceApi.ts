@@ -641,7 +641,6 @@ export const marketplaceApi = createApi({
         method: 'POST',
         body: { body },
       }),
-      invalidatesTags: ['Orders'],
     }),
     getSellerOrders: builder.query<unknown[], void>({
       query: () => '/seller/orders',

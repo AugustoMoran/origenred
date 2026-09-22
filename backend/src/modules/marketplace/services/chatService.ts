@@ -68,6 +68,37 @@ const attachUnreadCounts = async (conversations: IConversation[], userId: string
   return result;
 };
 
+export type ChatReadReceipt = {
+  conversationId: string;
+  readerId: string;
+  readAt: Date;
+  messageIds: string[];
+};
+
+/** Marca como leídos los mensajes del otro participante. */
+export const markIncomingMessagesAsRead = async (
+  conversationId: string,
+  readerId: string
+): Promise<ChatReadReceipt | null> => {
+  const unread = await Message.find({
+    conversation: conversationId,
+    sender: { $ne: readerId },
+    $or: [{ readAt: { $exists: false } }, { readAt: null }],
+  }).select('_id');
+
+  if (!unread.length) return null;
+
+  const readAt = new Date();
+  await Message.updateMany({ _id: { $in: unread.map((m) => m._id) } }, { readAt });
+
+  return {
+    conversationId,
+    readerId,
+    readAt,
+    messageIds: unread.map((m) => String(m._id)),
+  };
+};
+
 export const getConversationMessages = async (conversationId: string, userId: string) => {
   const conversation = await Conversation.findById(conversationId)
     .populate('seller', 'user businessName')
@@ -90,13 +121,9 @@ export const getConversationMessages = async (conversationId: string, userId: st
     .populate('sender', 'name email')
     .sort({ createdAt: 1 });
 
-  // Marcar como leídos los mensajes del otro
-  await Message.updateMany(
-    { conversation: conversationId, sender: { $ne: userId }, readAt: { $exists: false } },
-    { readAt: new Date() }
-  );
+  const readReceipt = await markIncomingMessagesAsRead(conversationId, userId);
 
-  return { conversation, messages };
+  return { conversation, messages, readReceipt };
 };
 
 export const sendMessage = async (conversationId: string, userId: string, body: string) => {

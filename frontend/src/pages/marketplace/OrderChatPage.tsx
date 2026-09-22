@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
@@ -8,12 +8,27 @@ import {
   useGetConversationMessagesQuery,
   useSendMessageMutation,
 } from '../../services/marketplaceApi';
-import { connectSocket, joinChatRoom, leaveChatRoom } from '../../services/socket';
+import {
+  connectSocket,
+  joinChatRoom,
+  leaveChatRoom,
+  markChatRead,
+} from '../../services/socket';
+import {
+  applyChatReadToMessages,
+  chatSenderId,
+  ChatReadPayload,
+  formatChatReadLabel,
+  formatChatTime,
+} from '../../utils/chatUi';
 
-const senderId = (msg: { sender?: { _id?: string; id?: string } | string }) => {
-  if (!msg.sender) return '';
-  if (typeof msg.sender === 'string') return msg.sender;
-  return String(msg.sender._id || msg.sender.id || '');
+type ChatMsg = {
+  _id: string;
+  body: string;
+  createdAt: string;
+  readAt?: string;
+  pending?: boolean;
+  sender?: { _id?: string; id?: string; name?: string } | string;
 };
 
 export const OrderChatPage: React.FC = () => {
@@ -21,32 +36,40 @@ export const OrderChatPage: React.FC = () => {
   const location = useLocation();
   const isSellerPanel = location.pathname.startsWith('/vendedor/chat');
   const { user } = useSelector((state: RootState) => state.auth);
+  const userId = String(user?.id || (user as { _id?: string })?._id || '');
   const [message, setMessage] = useState('');
-  const [liveMessages, setLiveMessages] = useState<any[]>([]);
+  const [liveMessages, setLiveMessages] = useState<ChatMsg[]>([]);
   const [sendError, setSendError] = useState('');
+  const [socketConnected, setSocketConnected] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   const byOrder = useGetChatByOrderQuery(orderNumber || '', {
     skip: !orderNumber,
-    pollingInterval: 8000,
+    pollingInterval: socketConnected ? 0 : 12_000,
   });
   const byId = useGetConversationMessagesQuery(conversationId || '', {
     skip: !conversationId,
-    pollingInterval: 8000,
+    pollingInterval: socketConnected ? 0 : 12_000,
   });
   const data = orderNumber ? byOrder.data : byId.data;
   const isLoading = orderNumber ? byOrder.isLoading : byId.isLoading;
   const loadError = orderNumber ? byOrder.error : byId.error;
-  const refetch = orderNumber ? byOrder.refetch : byId.refetch;
 
   const [sendMessage, { isLoading: sending }] = useSendMessageMutation();
 
   const convId = data?.conversation?._id || conversationId;
-  const serverMessages = data?.messages || [];
+  const serverMessages = (data?.messages || []) as ChatMsg[];
+
+  const patchMessages = useCallback((updater: (prev: ChatMsg[]) => ChatMsg[]) => {
+    setLiveMessages(updater);
+  }, []);
+
   const messages = useMemo(() => {
     const merged = [...serverMessages];
     for (const m of liveMessages) {
-      if (!merged.some((x) => x._id === m._id)) merged.push(m);
+      const idx = merged.findIndex((x) => x._id === m._id);
+      if (idx >= 0) merged[idx] = { ...merged[idx], ...m };
+      else merged.push(m);
     }
     return merged.sort(
       (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
@@ -54,18 +77,19 @@ export const OrderChatPage: React.FC = () => {
   }, [serverMessages, liveMessages]);
 
   useEffect(() => {
-    if (serverMessages.length) {
-      setLiveMessages((prev) => {
-        const merged = [...serverMessages];
-        for (const m of prev) {
-          if (!merged.some((x) => x._id === m._id)) merged.push(m);
-        }
-        return merged.sort(
-          (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-        );
-      });
-    }
-  }, [serverMessages]);
+    if (!serverMessages.length) return;
+    patchMessages((prev) => {
+      const merged = [...serverMessages];
+      for (const m of prev) {
+        const idx = merged.findIndex((x) => x._id === m._id);
+        if (idx >= 0) merged[idx] = { ...merged[idx], ...m };
+        else merged.push(m);
+      }
+      return merged.sort(
+        (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+    });
+  }, [serverMessages, patchMessages]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -75,24 +99,42 @@ export const OrderChatPage: React.FC = () => {
     if (!convId) return;
 
     const socket = connectSocket();
-    joinChatRoom(convId);
 
-    const onMessage = (msg: any) => {
-      setLiveMessages((prev) => {
+    const onConnect = () => setSocketConnected(true);
+    const onDisconnect = () => setSocketConnected(false);
+
+    const onMessage = (msg: ChatMsg) => {
+      patchMessages((prev) => {
         if (prev.some((m) => m._id === msg._id)) return prev;
         return [...prev, msg].sort(
           (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
         );
       });
+      const fromOther = chatSenderId(msg) !== userId;
+      if (fromOther) markChatRead(convId);
     };
 
+    const onRead = (payload: ChatReadPayload) => {
+      if (payload.conversationId && payload.conversationId !== convId) return;
+      patchMessages((prev) => applyChatReadToMessages(prev, payload));
+    };
+
+    socket.on('connect', onConnect);
+    socket.on('disconnect', onDisconnect);
     socket.on('chat:message', onMessage);
+    socket.on('chat:read', onRead);
+
+    if (socket.connected) setSocketConnected(true);
+    joinChatRoom(convId);
 
     return () => {
+      socket.off('connect', onConnect);
+      socket.off('disconnect', onDisconnect);
       socket.off('chat:message', onMessage);
+      socket.off('chat:read', onRead);
       leaveChatRoom(convId);
     };
-  }, [convId]);
+  }, [convId, patchMessages, userId]);
 
   const handleSend = async () => {
     setSendError('');
@@ -103,15 +145,28 @@ export const OrderChatPage: React.FC = () => {
       return;
     }
 
+    const tempId = `pending-${Date.now()}`;
+    const optimistic: ChatMsg = {
+      _id: tempId,
+      body: text,
+      createdAt: new Date().toISOString(),
+      pending: true,
+      sender: { _id: userId, name: user?.name },
+    };
+    setMessage('');
+    patchMessages((prev) => [...prev, optimistic]);
+
     try {
-      const sent = await sendMessage({ conversationId: convId, body: text }).unwrap();
-      setMessage('');
-      setLiveMessages((prev) => {
-        if (prev.some((m) => m._id === sent._id)) return prev;
-        return [...prev, sent];
-      });
-      refetch();
+      const sent = (await sendMessage({ conversationId: convId, body: text }).unwrap()) as ChatMsg;
+      patchMessages((prev) =>
+        prev
+          .filter((m) => m._id !== tempId)
+          .concat(sent)
+          .sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
+      );
     } catch (err: any) {
+      patchMessages((prev) => prev.filter((m) => m._id !== tempId));
+      setMessage(text);
       setSendError(err?.data?.message || 'No se pudo enviar el mensaje. Intentá de nuevo.');
     }
   };
@@ -154,7 +209,10 @@ export const OrderChatPage: React.FC = () => {
           <p className="font-semibold text-or-navy text-sm truncate">
             Pedido {order?.orderNumber || orderNumber}
           </p>
-          <p className="text-xs text-slate-500">Chat con {isSellerPanel ? 'comprador' : 'vendedor'}</p>
+          <p className="text-xs text-slate-500">
+            Chat con {isSellerPanel ? 'comprador' : 'vendedor'}
+            {!socketConnected && ' · reconectando…'}
+          </p>
         </div>
       </div>
 
@@ -162,10 +220,9 @@ export const OrderChatPage: React.FC = () => {
         {!messages.length && (
           <p className="text-center text-slate-500 text-sm py-8">Escribí el primer mensaje</p>
         )}
-        {messages.map((msg: any) => {
-          const isMine =
-            senderId(msg) === String(user?.id) ||
-            senderId(msg) === String((user as { _id?: string })?._id);
+        {messages.map((msg) => {
+          const isMine = chatSenderId(msg) === userId;
+          const readLabel = isMine ? formatChatReadLabel(msg.readAt) : null;
           return (
             <div key={msg._id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
               <div
@@ -173,20 +230,22 @@ export const OrderChatPage: React.FC = () => {
                   isMine
                     ? 'bg-or-blue text-white rounded-br-sm'
                     : 'bg-white border border-slate-200 text-or-navy rounded-bl-sm'
-                }`}
+                } ${msg.pending ? 'opacity-80' : ''}`}
               >
                 {!isMine && (
                   <p className="text-[10px] font-semibold mb-0.5 opacity-70">
-                    {msg.sender?.name || 'Usuario'}
+                    {typeof msg.sender === 'object' ? msg.sender?.name || 'Usuario' : 'Usuario'}
                   </p>
                 )}
                 <p className="whitespace-pre-wrap">{msg.body}</p>
-                <p className={`text-[10px] mt-1 ${isMine ? 'text-blue-200' : 'text-slate-400'}`}>
-                  {new Date(msg.createdAt).toLocaleTimeString('es-AR', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                  })}
-                </p>
+                <div
+                  className={`flex items-center gap-2 justify-end mt-1 text-[10px] ${
+                    isMine ? 'text-blue-200' : 'text-slate-400'
+                  }`}
+                >
+                  <span>{formatChatTime(msg.createdAt)}</span>
+                  {readLabel && <span className="font-medium">{readLabel}</span>}
+                </div>
               </div>
             </div>
           );

@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -18,8 +18,24 @@ import {
   disconnectChatSocket,
   joinChatRoom,
   leaveChatRoom,
+  markChatRead,
 } from '../../src/services/socket';
 import { colors } from '../../src/theme/colors';
+
+type ReadPayload = {
+  conversationId: string;
+  readerId: string;
+  readAt: string;
+  messageIds: string[];
+};
+
+const formatTime = (value: string) =>
+  new Date(value).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+const applyRead = (messages: ChatMessage[], payload: ReadPayload): ChatMessage[] => {
+  const ids = new Set(payload.messageIds);
+  return messages.map((m) => (ids.has(m._id) ? { ...m, readAt: payload.readAt } : m));
+};
 
 export default function ChatScreen() {
   const { orderNumber } = useLocalSearchParams<{ orderNumber: string }>();
@@ -31,6 +47,10 @@ export default function ChatScreen() {
   const [sending, setSending] = useState(false);
   const [error, setError] = useState('');
   const bottomRef = useRef<ScrollView>(null);
+
+  const patchMessages = useCallback((updater: (prev: ChatMessage[]) => ChatMessage[]) => {
+    setMessages(updater);
+  }, []);
 
   useEffect(() => {
     if (!orderNumber || !accessToken) return;
@@ -45,34 +65,59 @@ export default function ChatScreen() {
   }, [orderNumber, accessToken]);
 
   useEffect(() => {
-    if (!accessToken || !conversationId) return;
+    if (!accessToken || !conversationId || !user?.id) return;
 
     const socket = connectChatSocket(accessToken);
     joinChatRoom(conversationId);
 
     const onMessage = (msg: ChatMessage) => {
-      setMessages((prev) => {
+      patchMessages((prev) => {
         if (prev.some((m) => m._id === msg._id)) return prev;
         return [...prev, msg];
       });
+      if (String(msg.sender?._id) !== String(user.id)) {
+        markChatRead(conversationId);
+      }
+    };
+
+    const onRead = (payload: ReadPayload) => {
+      if (payload.conversationId && payload.conversationId !== conversationId) return;
+      patchMessages((prev) => applyRead(prev, payload));
     };
 
     socket.on('chat:message', onMessage);
+    socket.on('chat:read', onRead);
 
     return () => {
       socket.off('chat:message', onMessage);
+      socket.off('chat:read', onRead);
       leaveChatRoom(conversationId);
       disconnectChatSocket();
     };
-  }, [accessToken, conversationId]);
+  }, [accessToken, conversationId, patchMessages, user?.id]);
 
   const handleSend = async () => {
-    if (!text.trim() || !conversationId || !accessToken) return;
+    if (!text.trim() || !conversationId || !accessToken || !user?.id) return;
+    const body = text.trim();
+    const tempId = `pending-${Date.now()}`;
+    const optimistic: ChatMessage = {
+      _id: tempId,
+      body,
+      createdAt: new Date().toISOString(),
+      pending: true,
+      sender: { _id: String(user.id), name: user.name || '' },
+    };
+    setText('');
+    patchMessages((prev) => [...prev, optimistic]);
     setSending(true);
     try {
-      await sendChatMessage(conversationId, text.trim(), accessToken);
-      setText('');
+      const sent = await sendChatMessage(conversationId, body, accessToken);
+      patchMessages((prev) =>
+        prev.filter((m) => m._id !== tempId).concat(sent)
+      );
     } catch (e: any) {
+      patchMessages((prev) => prev.filter((m) => m._id !== tempId));
+      setText(body);
       setError(e.message);
     } finally {
       setSending(false);
@@ -123,13 +168,30 @@ export default function ChatScreen() {
         )}
         {messages.map((msg) => {
           const isMine = String(msg.sender?._id) === String(user.id);
+          const readLabel = isMine && msg.readAt ? `Visto ${formatTime(msg.readAt)}` : null;
           return (
             <View key={msg._id} style={[styles.bubbleWrap, isMine && styles.bubbleWrapMine]}>
-              <View style={[styles.bubble, isMine ? styles.bubbleMine : styles.bubbleOther]}>
+              <View
+                style={[
+                  styles.bubble,
+                  isMine ? styles.bubbleMine : styles.bubbleOther,
+                  msg.pending && styles.bubblePending,
+                ]}
+              >
                 {!isMine && msg.sender?.name && (
                   <Text style={styles.senderName}>{msg.sender.name}</Text>
                 )}
                 <Text style={[styles.bubbleText, isMine && styles.bubbleTextMine]}>{msg.body}</Text>
+                <View style={styles.metaRow}>
+                  <Text style={[styles.metaText, isMine && styles.metaTextMine]}>
+                    {formatTime(msg.createdAt)}
+                  </Text>
+                  {readLabel && (
+                    <Text style={[styles.metaText, styles.readText, isMine && styles.metaTextMine]}>
+                      {readLabel}
+                    </Text>
+                  )}
+                </View>
               </View>
             </View>
           );
@@ -174,11 +236,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
+  bubblePending: { opacity: 0.85 },
   bubbleMine: { backgroundColor: colors.blue },
   bubbleOther: { backgroundColor: colors.white, borderWidth: 1, borderColor: colors.slate200 },
   senderName: { fontSize: 10, color: colors.slate500, marginBottom: 2 },
   bubbleText: { fontSize: 15, color: colors.navy },
   bubbleTextMine: { color: colors.white },
+  metaRow: { flexDirection: 'row', gap: 8, justifyContent: 'flex-end', marginTop: 4 },
+  metaText: { fontSize: 10, color: colors.slate400 },
+  metaTextMine: { color: 'rgba(255,255,255,0.75)' },
+  readText: { fontWeight: '600' },
   inputRow: {
     flexDirection: 'row',
     gap: 8,
