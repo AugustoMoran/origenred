@@ -89,6 +89,7 @@ export const marketplaceApi = createApi({
     'Orders',
     'Notifications',
     'EnvioPackProofs',
+    'MarketplaceCategories',
   ],
   endpoints: (builder) => ({
     getHomeData: builder.query<HomeData, void>({
@@ -295,21 +296,52 @@ export const marketplaceApi = createApi({
     }),
     getAdminMarketplaceCategories: builder.query<MarketplaceCategory[], void>({
       query: () => '/admin/categories',
+      providesTags: ['MarketplaceCategories'],
     }),
     createAdminMarketplaceCategory: builder.mutation<
       MarketplaceCategory,
       { name: string; icon?: string; displayOrder?: number }
     >({
       query: (body) => ({ url: '/admin/categories', method: 'POST', body }),
+      invalidatesTags: ['MarketplaceCategories', 'Home'],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          const { categoryApi } = await import('./categoryApi');
+          dispatch(categoryApi.util.invalidateTags(['Category']));
+        } catch {
+          /* ignore */
+        }
+      },
     }),
     updateAdminMarketplaceCategory: builder.mutation<
       MarketplaceCategory,
       { id: string; body: Record<string, unknown> }
     >({
       query: ({ id, body }) => ({ url: `/admin/categories/${id}`, method: 'PATCH', body }),
+      invalidatesTags: ['MarketplaceCategories', 'Home'],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          const { categoryApi } = await import('./categoryApi');
+          dispatch(categoryApi.util.invalidateTags(['Category']));
+        } catch {
+          /* ignore */
+        }
+      },
     }),
     deleteAdminMarketplaceCategory: builder.mutation<{ deleted: boolean }, string>({
       query: (id) => ({ url: `/admin/categories/${id}`, method: 'DELETE' }),
+      invalidatesTags: ['MarketplaceCategories', 'Home'],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          const { categoryApi } = await import('./categoryApi');
+          dispatch(categoryApi.util.invalidateTags(['Category']));
+        } catch {
+          /* ignore */
+        }
+      },
     }),
     getNotificationSummary: builder.query<
       {

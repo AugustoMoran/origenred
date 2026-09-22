@@ -220,7 +220,9 @@ export const AdminCatalog: React.FC = () => {
     <div className="space-y-6 animate-slide-up">
       <div>
         <h1 className="page-title">Configuración Comercial</h1>
-        <p className="page-sub">Administra categorías y sucursales del sistema</p>
+        <p className="page-sub">
+          Las categorías se comparten con el marketplace (inventario, publicaciones y catálogo).
+        </p>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

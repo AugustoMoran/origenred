@@ -1,26 +1,10 @@
 import { MarketplaceCategory } from '../models/MarketplaceCategory';
-
-const slugify = (value: string) =>
-  value
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 80);
-
-const uniqueSlug = async (base: string, excludeId?: string) => {
-  let slug = base || `cat-${Date.now()}`;
-  let counter = 1;
-  while (true) {
-    const exists = await MarketplaceCategory.findOne({
-      slug,
-      ...(excludeId ? { _id: { $ne: excludeId } } : {}),
-    });
-    if (!exists) return slug;
-    slug = `${base}-${counter++}`;
-  }
-};
+import {
+  deactivateSyncedCategories,
+  renameSyncedCategories,
+  syncPosCategoryFromMarketplace,
+} from '../../categories/services/categorySyncService';
+import { buildUniqueCategorySlug } from '../utils/categorySlug';
 
 export const listAdminCategories = () =>
   MarketplaceCategory.find().sort({ displayOrder: 1, name: 1 });
@@ -35,10 +19,9 @@ export const createMarketplaceCategory = async (input: {
   const name = input.name?.trim();
   if (!name) throw new Error('Nombre requerido');
 
-  const baseSlug = slugify(name);
-  const slug = await uniqueSlug(baseSlug);
+  const slug = await buildUniqueCategorySlug(name);
 
-  return MarketplaceCategory.create({
+  const created = await MarketplaceCategory.create({
     name,
     slug,
     description: input.description,
@@ -46,6 +29,8 @@ export const createMarketplaceCategory = async (input: {
     displayOrder: input.displayOrder ?? 0,
     isActive: input.isActive ?? true,
   });
+  await syncPosCategoryFromMarketplace(created.name);
+  return created;
 };
 
 export const updateMarketplaceCategory = async (
@@ -61,10 +46,11 @@ export const updateMarketplaceCategory = async (
   const category = await MarketplaceCategory.findById(id);
   if (!category) throw new Error('Categoría no encontrada');
 
+  const previousName = category.name;
+
   if (data.name && data.name.trim() !== category.name) {
     category.name = data.name.trim();
-    const baseSlug = slugify(category.name);
-    category.slug = await uniqueSlug(baseSlug, String(category._id));
+    category.slug = await buildUniqueCategorySlug(category.name, String(category._id));
   }
   if (data.description !== undefined) category.description = data.description;
   if (data.icon !== undefined) category.icon = data.icon;
@@ -72,6 +58,16 @@ export const updateMarketplaceCategory = async (
   if (data.isActive !== undefined) category.isActive = data.isActive;
 
   await category.save();
+
+  if (data.name && data.name.trim() !== previousName) {
+    await renameSyncedCategories(previousName, category.name);
+  }
+  if (data.isActive === false) {
+    await deactivateSyncedCategories(category.name);
+  } else if (category.isActive) {
+    await syncPosCategoryFromMarketplace(category.name);
+  }
+
   return category;
 };
 
@@ -81,6 +77,8 @@ export const deleteMarketplaceCategory = async (id: string) => {
   if (category.listingCount > 0) {
     throw new Error('No se puede eliminar: hay publicaciones en esta categoría');
   }
+  const name = category.name;
   await category.deleteOne();
+  await deactivateSyncedCategories(name);
   return { deleted: true };
 };

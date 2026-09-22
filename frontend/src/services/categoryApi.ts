@@ -19,6 +19,15 @@ export const categoryApi = createApi({
         body,
       }),
       invalidatesTags: ['Category'],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          const { marketplaceApi } = await import('./marketplaceApi');
+          dispatch(marketplaceApi.util.invalidateTags(['MarketplaceCategories', 'Home']));
+        } catch {
+          /* ignore */
+        }
+      },
     }),
     updateCategory: builder.mutation({
       query: ({ id, body }) => ({
@@ -27,6 +36,15 @@ export const categoryApi = createApi({
         body,
       }),
       invalidatesTags: ['Category'],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          const { marketplaceApi } = await import('./marketplaceApi');
+          dispatch(marketplaceApi.util.invalidateTags(['MarketplaceCategories', 'Home']));
+        } catch {
+          /* ignore */
+        }
+      },
     }),
     deleteCategory: builder.mutation({
       query: (id) => ({
@@ -34,6 +52,15 @@ export const categoryApi = createApi({
         method: 'DELETE',
       }),
       invalidatesTags: ['Category'],
+      async onQueryStarted(_arg, { dispatch, queryFulfilled }) {
+        try {
+          await queryFulfilled;
+          const { marketplaceApi } = await import('./marketplaceApi');
+          dispatch(marketplaceApi.util.invalidateTags(['MarketplaceCategories', 'Home']));
+        } catch {
+          /* ignore */
+        }
+      },
     }),
   }),
 });
