@@ -26,6 +26,10 @@ import { Listing } from '../models/Listing';
 import { MarketplaceCategory } from '../models/MarketplaceCategory';
 import { Favorite } from '../models/Favorite';
 import { getMercadoPagoPublicConfig, getMercadoPagoConnectUrl, getMercadoPagoConnectRedirectUri } from '../services/marketplacePaymentService';
+import {
+  effectivePackageDimensions,
+  effectivePackageWeightKg,
+} from '../constants/packageShippingDefaults';
 import { quoteShippingByPostalCode, getEnvioPackConfig } from '../services/marketplaceShippingService';
 import { processUploadedImages, marketplaceUpload, envioPackProofUpload } from '../middleware/marketplaceUpload';
 import {
@@ -169,8 +173,12 @@ export async function quoteShippingController(req: Request, res: Response) {
   const result = await quoteShippingByPostalCode({
     postalCode: String(postalCode),
     province,
-    weightKg: Number(weightKg) || 1,
-    dimensions: length && width && height ? { length, width, height } : undefined,
+    weightKg: effectivePackageWeightKg(Number(weightKg)),
+    dimensions: effectivePackageDimensions({
+      length: Number(length),
+      width: Number(width),
+      height: Number(height),
+    }),
   });
 
   res.json(result);

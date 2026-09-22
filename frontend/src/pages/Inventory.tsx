@@ -15,6 +15,10 @@ import {
 } from '../services/inventoryApi';
 import { useGetBranchesQuery } from '../services/branchApi';
 import { useGetCategoriesQuery } from '../services/categoryApi';
+import {
+  DEFAULT_PRODUCT_DIMENSIONS_CM,
+  DEFAULT_PRODUCT_WEIGHT_KG,
+} from '../constants/shippingPackageDefaults';
 import { useGetSuppliersQuery } from '../services/supplierApi';
 import { HasPermission } from '../components/auth/HasPermission';
 import { PERMISSIONS } from '../constants/permissions';
@@ -363,11 +367,19 @@ export const Inventory = () => {
   const [branchAssignments, setBranchAssignments] = useState<BranchAssignmentForm[]>([]);
   const [priceDriver, setPriceDriver] = useState<'margin' | 'price'>('margin');
 
+  const defaultShippingForm = {
+    weight: DEFAULT_PRODUCT_WEIGHT_KG,
+    dimLength: DEFAULT_PRODUCT_DIMENSIONS_CM.length,
+    dimWidth: DEFAULT_PRODUCT_DIMENSIONS_CM.width,
+    dimHeight: DEFAULT_PRODUCT_DIMENSIONS_CM.height,
+  };
+
   const [formData, setFormData] = useState<ProductFormData>({
     name: '', sku: '', description: '', commercialDescription: '', longDescription: '',
     seoTitle: '', seoDescription: '', slug: '',
     price: '', costPrice: '', iva: 21, margin: '', stock: '', minStock: '', category: '', supplier: '', supplierProductCode: '', barcode: '', internalCode: '',
-    weight: '', dimLength: '', dimWidth: '', dimHeight: '', displayOrder: '',
+    ...defaultShippingForm,
+    displayOrder: '',
   });
 
   const toNum = (value: any) => {
@@ -476,7 +488,7 @@ export const Inventory = () => {
       name: '', sku: '', description: '', commercialDescription: '', longDescription: '',
       seoTitle: '', seoDescription: '', slug: '',
       price: '', costPrice: '', iva: 21, margin: '', stock: '', minStock: '', category: '', supplier: '', supplierProductCode: '',
-      barcode: '', internalCode: '', weight: '', dimLength: '', dimWidth: '', dimHeight: '', displayOrder: '',
+      barcode: '', internalCode: '', ...defaultShippingForm, displayOrder: '',
     });
     setSelectedFile(null);
     setImagePreview(null);
@@ -624,10 +636,10 @@ export const Inventory = () => {
       barcode: p.barcode || '',
       internalCode: p.internalCode || '',
       supplierProductCode: p.supplierProductCode || '',
-      weight: p.weight ?? '',
-      dimLength: p.dimensions?.length ?? '',
-      dimWidth: p.dimensions?.width ?? '',
-      dimHeight: p.dimensions?.height ?? '',
+      weight: p.weight ?? DEFAULT_PRODUCT_WEIGHT_KG,
+      dimLength: p.dimensions?.length ?? DEFAULT_PRODUCT_DIMENSIONS_CM.length,
+      dimWidth: p.dimensions?.width ?? DEFAULT_PRODUCT_DIMENSIONS_CM.width,
+      dimHeight: p.dimensions?.height ?? DEFAULT_PRODUCT_DIMENSIONS_CM.height,
       displayOrder: p.displayOrder ?? '',
     });
     setImagePreview(p.imageUrl);
@@ -1467,13 +1479,18 @@ export const Inventory = () => {
                       />
                     </div>
 
+                    <p className="text-xs text-slate-500 col-span-full -mb-1">
+                      Envío (EnvíoPack): por defecto ~mochila ({DEFAULT_PRODUCT_DIMENSIONS_CM.height}×
+                      {DEFAULT_PRODUCT_DIMENSIONS_CM.width}×{DEFAULT_PRODUCT_DIMENSIONS_CM.length} cm,{' '}
+                      {DEFAULT_PRODUCT_WEIGHT_KG} kg). Modificá estos valores si el producto es distinto.
+                    </p>
                     <div>
                       <label className="section-heading">Peso (kg)</label>
                       <input
                         type="number"
                         step="0.01"
                         className="input"
-                        placeholder="0.30"
+                        placeholder={String(DEFAULT_PRODUCT_WEIGHT_KG)}
                         value={formData.weight as any}
                         onWheel={handleNumberWheel}
                         onChange={(e) => setFormData({ ...formData, weight: e.target.value === '' ? '' : Number(e.target.value) } as ProductFormData)}

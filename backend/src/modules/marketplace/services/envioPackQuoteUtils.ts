@@ -1,3 +1,5 @@
+import { effectivePackageDimensions } from '../constants/packageShippingDefaults';
+
 export type EnvioPackCostQuote = {
   correo?: { id?: string; nombre?: string };
   despacho?: string;
@@ -10,10 +12,12 @@ export type EnvioPackCostQuote = {
   horas_entrega?: number;
 };
 
-export function buildPaquetesString(dimensions?: { length: number; width: number; height: number }) {
-  const h = Math.max(1, Math.round(dimensions?.height || 30));
-  const w = Math.max(1, Math.round(dimensions?.width || 20));
-  const l = Math.max(1, Math.round(dimensions?.length || 10));
+/** Formato EnvíoPack: alto x ancho x largo (cm). */
+export function buildPaquetesString(dimensions?: Partial<{ length: number; width: number; height: number }>) {
+  const d = effectivePackageDimensions(dimensions);
+  const h = Math.max(1, Math.round(d.height));
+  const w = Math.max(1, Math.round(d.width));
+  const l = Math.max(1, Math.round(d.length));
   return `${h}x${w}x${l}`;
 }
 

@@ -14,6 +14,7 @@ import {
 import { createMarketplaceNotification } from './marketplaceNotificationStoreService';
 import { marketplaceConfig } from '../../../config/features';
 import { PUBLIC_LISTING_FILTER } from './listingService';
+import { aggregatePackageForLineItems } from '../constants/packageShippingDefaults';
 import { applySelectedQuoteToShippingRow, quoteShippingByPostalCode } from './marketplaceShippingService';
 import { quotePriceValue } from './envioPackQuoteUtils';
 import {
@@ -62,6 +63,7 @@ export const resolveCheckoutItems = async (rawItems: CheckoutItemInput[]) => {
     imageUrl?: string;
     subtotal: number;
     weight?: number;
+    dimensions?: { length?: number; width?: number; height?: number };
     freeShipping: boolean;
     allowPickup: boolean;
     supplierName?: string;
@@ -95,6 +97,7 @@ export const resolveCheckoutItems = async (rawItems: CheckoutItemInput[]) => {
       imageUrl: listing.images?.[0]?.url,
       subtotal: round2(listing.price * qty),
       weight: listing.weight,
+      dimensions: listing.dimensions,
       freeShipping: listing.freeShipping,
       allowPickup: Boolean(listing.allowPickup),
       supplierName: listing.supplierName,
@@ -132,7 +135,7 @@ export const previewCheckout = async (input: {
 
   const bySellerMap = new Map<
     string,
-    { sellerId: string; sellerName: string; items: typeof orderItems; productSubtotal: number; weightKg: number }
+    { sellerId: string; sellerName: string; items: typeof orderItems; productSubtotal: number }
   >();
 
   for (const item of orderItems) {
@@ -141,11 +144,9 @@ export const previewCheckout = async (input: {
       sellerName: item.sellerName,
       items: [],
       productSubtotal: 0,
-      weightKg: 0,
     };
     group.items.push(item);
     group.productSubtotal = round2(group.productSubtotal + item.subtotal);
-    group.weightKg += (item.weight || 0.5) * item.quantity;
     bySellerMap.set(item.seller, group);
   }
 
@@ -169,12 +170,20 @@ export const previewCheckout = async (input: {
     if (shippingMethod === 'delivery' && input.postalCode && !allFreeShipping) {
       shipFromSnapshot = await getShipFromForSeller(group.sellerId);
       assertShipFromReadyForQuote(shipFromSnapshot);
+      const packageTotals = aggregatePackageForLineItems(
+        group.items.map((i) => ({
+          quantity: i.quantity,
+          weight: i.weight,
+          dimensions: i.dimensions,
+        }))
+      );
       const quote = await quoteShippingByPostalCode({
         postalCode: input.postalCode,
         province: input.province,
         originPostalCode: shipFromSnapshot.postalCode,
         originProvince: shipFromSnapshot.province,
-        weightKg: Math.max(group.weightKg, 0.5),
+        weightKg: packageTotals.weightKg,
+        dimensions: packageTotals.dimensions,
         sellerId: group.sellerId,
         shipFromSource: shipFromSnapshot.source,
       });

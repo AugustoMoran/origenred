@@ -3,6 +3,11 @@ import { envioPackGet, isEnvioPackApiConfigured } from './envioPackApiClient';
 import { provinceToEnvioPackId } from './envioPackProvinceMap';
 import { resolveEnvioPackDireccionEnvioId } from './envioPackDireccionService';
 import {
+  effectivePackageDimensions,
+  effectivePackageWeightKg,
+  MIN_PACKAGE_WEIGHT_KG,
+} from '../constants/packageShippingDefaults';
+import {
   buildPaquetesString,
   pickEnvioPackQuoteForCheckout,
   type EnvioPackCostQuote,
@@ -38,8 +43,8 @@ export const quoteShippingByPostalCode = async (input: QuoteShippingInput) => {
 
   try {
     const destProvince = provinceToEnvioPackId(input.province);
-    const paquetes = buildPaquetesString(input.dimensions);
-    const peso = Math.max(0.5, input.weightKg);
+    const paquetes = buildPaquetesString(effectivePackageDimensions(input.dimensions));
+    const peso = Math.max(MIN_PACKAGE_WEIGHT_KG, effectivePackageWeightKg(input.weightKg));
 
     let direccionEnvio: number | undefined;
     if (input.sellerId && input.shipFromSource) {

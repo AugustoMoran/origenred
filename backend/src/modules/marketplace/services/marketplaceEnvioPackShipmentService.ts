@@ -3,6 +3,7 @@ import { Listing } from '../models/Listing';
 import { envioPackPost, isEnvioPackApiConfigured } from './envioPackApiClient';
 import { resolveEnvioPackDireccionEnvioId } from './envioPackDireccionService';
 import { provinceToEnvioPackId } from './envioPackProvinceMap';
+import { aggregatePackageForLineItems } from '../constants/packageShippingDefaults';
 import {
   buildPaquetesString,
   splitFullName,
@@ -34,24 +35,20 @@ async function notifyAdminsShipmentResult(orderNumber: string, ok: boolean, deta
 
 async function aggregatePackageForOrder(order: IMarketplaceOrder, sellerId: string) {
   const items = order.items.filter((i) => String(i.seller) === sellerId);
-  let weightKg = 0;
-  let maxH = 30;
-  let maxW = 20;
-  let maxL = 10;
-
+  const lines = [];
   for (const item of items) {
     const listing = await Listing.findById(item.listing).select('weight dimensions title');
-    const w = (listing?.weight || 0.5) * item.quantity;
-    weightKg += w;
-    const dim = listing?.dimensions;
-    if (dim?.height) maxH = Math.max(maxH, dim.height);
-    if (dim?.width) maxW = Math.max(maxW, dim.width);
-    if (dim?.length) maxL = Math.max(maxL, dim.length);
+    lines.push({
+      quantity: item.quantity,
+      weight: listing?.weight,
+      dimensions: listing?.dimensions,
+    });
   }
+  const { weightKg, dimensions } = aggregatePackageForLineItems(lines);
 
   return {
-    weightKg: Math.max(0.5, Math.round(weightKg * 100) / 100),
-    paquetes: buildPaquetesString({ height: maxH, width: maxW, length: maxL }),
+    weightKg,
+    paquetes: buildPaquetesString(dimensions),
     descripcion: items.map((i) => i.title).join(', ').slice(0, 50) || 'Productos OrigenRed',
   };
 }
@@ -122,9 +119,9 @@ export async function createEnvioPackShipmentForSellerRow(
     confirmado: Boolean(correo && servicio),
     paquetes: [
       {
-        alto: Number(paquetes.split('x')[0]) || 30,
-        ancho: Number(paquetes.split('x')[1]) || 20,
-        largo: Number(paquetes.split('x')[2]) || 10,
+        alto: Number(paquetes.split('x')[0]) || 45,
+        ancho: Number(paquetes.split('x')[1]) || 30,
+        largo: Number(paquetes.split('x')[2]) || 15,
         peso: weightKg,
         descripcion_primera_linea: descripcion,
         descripcion_segunda_linea: order.orderNumber,
