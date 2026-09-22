@@ -19,6 +19,7 @@ import { quotePriceValue } from './envioPackQuoteUtils';
 import {
   getShipFromForSeller,
   assertShipFromReadyForQuote,
+  assertPickupLocationReady,
 } from './sellerShipFromService';
 import { createMarketplacePreference, verifyMercadoPagoPayment, isMercadoPagoEnabled, isMercadoPagoConnectEnabled } from './marketplacePaymentService';
 
@@ -62,6 +63,7 @@ export const resolveCheckoutItems = async (rawItems: CheckoutItemInput[]) => {
     subtotal: number;
     weight?: number;
     freeShipping: boolean;
+    allowPickup: boolean;
     supplierName?: string;
     supplierProductCode?: string;
   }> = [];
@@ -94,12 +96,24 @@ export const resolveCheckoutItems = async (rawItems: CheckoutItemInput[]) => {
       subtotal: round2(listing.price * qty),
       weight: listing.weight,
       freeShipping: listing.freeShipping,
+      allowPickup: Boolean(listing.allowPickup),
       supplierName: listing.supplierName,
       supplierProductCode: listing.supplierProductCode,
     });
   }
 
   return orderItems;
+};
+
+const assertPickupAllowedForItems = (
+  orderItems: Awaited<ReturnType<typeof resolveCheckoutItems>>
+) => {
+  const blocked = orderItems.filter((i) => !i.allowPickup);
+  if (!blocked.length) return;
+  const titles = blocked.map((i) => `"${i.title}"`).join(', ');
+  throw new Error(
+    `${titles} no permite retiro en persona. Elegí envío a domicilio o quitá esos productos del carrito.`
+  );
 };
 
 /** Agrupa por vendedor y cotiza envío por código postal */
@@ -111,6 +125,10 @@ export const previewCheckout = async (input: {
 }) => {
   const orderItems = await resolveCheckoutItems(input.items);
   const shippingMethod = input.shippingMethod || 'delivery';
+
+  if (shippingMethod === 'pickup') {
+    assertPickupAllowedForItems(orderItems);
+  }
 
   const bySellerMap = new Map<
     string,
@@ -142,6 +160,11 @@ export const previewCheckout = async (input: {
     const allFreeShipping = group.items.every((i) => i.freeShipping);
 
     let shipFromSnapshot: Awaited<ReturnType<typeof getShipFromForSeller>> | undefined;
+
+    if (shippingMethod === 'pickup') {
+      shipFromSnapshot = await getShipFromForSeller(group.sellerId);
+      assertPickupLocationReady(shipFromSnapshot);
+    }
 
     if (shippingMethod === 'delivery' && input.postalCode && !allFreeShipping) {
       shipFromSnapshot = await getShipFromForSeller(group.sellerId);

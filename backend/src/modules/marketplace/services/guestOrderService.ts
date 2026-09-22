@@ -4,6 +4,7 @@ import { Conversation } from '../models/Chat';
 import { User } from '../../auth/models/User';
 import { SellerProfile } from '../models/SellerProfile';
 import { sendEmail } from '../../../shared/services/emailService';
+import { formatShipFromAddressLine } from './sellerShipFromService';
 import { createMarketplaceNotification } from './marketplaceNotificationStoreService';
 import { mongoRefId } from '../../../shared/utils/mongoRefId';
 
@@ -69,6 +70,27 @@ export async function sendGuestOrderConfirmationEmail(order: IMarketplaceOrder) 
   const trackUrl = buildGuestOrderTrackUrl(order.orderNumber, token);
   const registerUrl = `${frontendUrl()}/registro?email=${encodeURIComponent(email)}`;
 
+  let pickupBlock = '';
+  if (order.shippingMethod === 'pickup' && order.shippingBySeller?.length) {
+    const lines = order.shippingBySeller.map((row) => {
+      const label = row.shipFromLabel || row.sellerName || 'Vendedor';
+      const addr = formatShipFromAddressLine({
+        street: row.shipFromStreet || '',
+        city: row.shipFromCity || '',
+        province: row.shipFromProvince || '',
+        postalCode: row.shipFromPostalCode || '',
+        label,
+        source: row.shipFromSource === 'platform' ? 'platform' : 'seller',
+      });
+      return `<li><strong>${label}</strong><br/>${addr}</li>`;
+    });
+    pickupBlock = `
+      <p><strong>Retiro en persona</strong></p>
+      <ul>${lines.join('')}</ul>
+      <p>Coordiná día y horario con el vendedor desde Mis compras (chat) una vez confirmado el pago.</p>
+    `;
+  }
+
   await sendEmail({
     to: email,
     subject: `Compra confirmada — pedido ${order.orderNumber}`,
@@ -77,6 +99,7 @@ export async function sendGuestOrderConfirmationEmail(order: IMarketplaceOrder) 
       <p>Tu pago fue confirmado en <strong>OrigenRed</strong>.</p>
       <p><strong>Pedido:</strong> ${order.orderNumber}<br/>
       <strong>Total:</strong> $${Number(order.total).toLocaleString('es-AR')}</p>
+      ${pickupBlock}
       <p><a href="${trackUrl}">Seguir mi pedido</a></p>
       <p>Para chatear con el vendedor y ver tus compras en un solo lugar, creá tu cuenta con este mismo email:</p>
       <p><a href="${registerUrl}">Crear cuenta en OrigenRed</a></p>
@@ -143,6 +166,8 @@ export async function getOrderForGuestTracking(orderNumber: string, token: strin
       subtotal: i.subtotal,
     })),
     shippingAddress: order.shippingAddress,
+    shippingMethod: order.shippingMethod,
+    shippingBySeller: order.shippingBySeller,
     createdAt: order.createdAt,
   };
 }

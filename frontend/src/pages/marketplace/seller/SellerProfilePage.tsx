@@ -113,10 +113,10 @@ export const SellerProfilePage: React.FC = () => {
           </label>
         </div>
         <div className="border-t border-slate-100 pt-4 space-y-3">
-          <p className="text-sm font-semibold text-or-navy">Dirección de despacho (EnvíoPack)</p>
+          <p className="text-sm font-semibold text-or-navy">Dirección de despacho y retiro en persona</p>
           <p className="text-xs text-slate-500">
-            Desde acá se cotiza y retira el paquete. Si sos admin de OrigenRed, se usa el depósito configurado en el
-            servidor.
+            Se usa para EnvíoPack y para mostrar el punto de retiro a los compradores cuando activás &quot;Permitir
+            retiro&quot; en una publicación. Si sos admin de OrigenRed, se usa el depósito configurado en el servidor.
           </p>
           <label className="block space-y-1">
             <span className="text-sm font-medium text-slate-700">Calle y número</span>

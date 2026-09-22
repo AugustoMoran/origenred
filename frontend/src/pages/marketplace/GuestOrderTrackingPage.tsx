@@ -2,6 +2,8 @@ import React from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { SEO } from '../../components/ecommerce/SEO';
 import { useGetGuestOrderTrackQuery } from '../../services/marketplaceApi';
+import { PickupLocationCard } from '../../components/marketplace/PickupLocationCard';
+import { shipFromFromOrderRow } from '../../utils/orderPickup';
 
 const format = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
@@ -60,6 +62,18 @@ export const GuestOrderTrackingPage: React.FC = () => {
           </div>
         ))}
       </div>
+
+      {order.shippingMethod === 'pickup' && order.shippingBySeller?.length > 0 && (
+        <div className="space-y-3">
+          {(order.shippingBySeller as any[]).map((row) => (
+            <PickupLocationCard
+              key={String(row.seller)}
+              sellerName={row.sellerName || 'Vendedor'}
+              shipFrom={shipFromFromOrderRow(row)}
+            />
+          ))}
+        </div>
+      )}
 
       <div className="bg-blue-50 border border-blue-100 rounded-2xl p-5 space-y-3 text-sm text-or-navy">
         <p className="font-semibold">Creá tu cuenta para chatear con el vendedor</p>

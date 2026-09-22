@@ -12,6 +12,10 @@ import {
   usePreviewCheckoutMutation,
   useCreateCheckoutMutation,
 } from '../../services/marketplaceApi';
+import {
+  PickupCheckoutIntro,
+  PickupLocationCard,
+} from '../../components/marketplace/PickupLocationCard';
 
 const format = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
@@ -191,6 +195,22 @@ export const MarketplaceCheckoutPage: React.FC = () => {
                 )}
               </div>
 
+              {shippingMethod === 'pickup' && (
+                <div className="space-y-3">
+                  <PickupCheckoutIntro />
+                  {previewLoading && (
+                    <p className="text-sm text-slate-500">Cargando puntos de retiro...</p>
+                  )}
+                  {preview?.bySeller?.map((group) => (
+                    <PickupLocationCard
+                      key={group.sellerId}
+                      sellerName={group.sellerName}
+                      shipFrom={group.shipFrom}
+                    />
+                  ))}
+                </div>
+              )}
+
               <div className="flex gap-3">
                 <label className={`flex-1 flex items-center gap-2 p-3 rounded-xl border cursor-pointer ${shippingMethod === 'delivery' ? 'border-or-blue bg-blue-50' : 'border-slate-200'}`}>
                   <input type="radio" checked={shippingMethod === 'delivery'} onChange={() => setShippingMethod('delivery')} />
@@ -245,6 +265,18 @@ export const MarketplaceCheckoutPage: React.FC = () => {
                 )}
                 <p><strong>Contacto:</strong> {form.fullName} — {form.phone}</p>
               </div>
+
+              {shippingMethod === 'pickup' && preview?.bySeller && (
+                <div className="space-y-3">
+                  {preview.bySeller.map((group) => (
+                    <PickupLocationCard
+                      key={group.sellerId}
+                      sellerName={group.sellerName}
+                      shipFrom={group.shipFrom}
+                    />
+                  ))}
+                </div>
+              )}
 
               {preview?.bySeller?.map((group: any) => (
                 <div key={group.sellerId} className="border border-slate-100 rounded-xl p-4 space-y-2">

@@ -56,3 +56,35 @@ export function assertShipFromReadyForQuote(shipFrom: ShipFromAddress) {
     );
   }
 }
+
+/** Retiro en persona: al menos calle o ciudad+provincia para mostrar al comprador. */
+export function assertPickupLocationReady(shipFrom: ShipFromAddress) {
+  const street = shipFrom.street.trim();
+  const city = shipFrom.city.trim();
+  const province = shipFrom.province.trim();
+  const postalCode = shipFrom.postalCode.trim();
+
+  const hasStreet = street.length >= 3;
+  const hasCityArea = city.length >= 2 && province.length >= 2;
+
+  if (!hasStreet && !hasCityArea) {
+    throw new Error(
+      `El vendedor "${shipFrom.label}" debe completar la dirección de retiro en Mi perfil (calle o ciudad y provincia).`
+    );
+  }
+
+  if (!hasStreet && !postalCode) {
+    throw new Error(
+      `El vendedor "${shipFrom.label}" debe indicar calle o código postal para el punto de retiro.`
+    );
+  }
+}
+
+export function formatShipFromAddressLine(shipFrom: ShipFromAddress): string {
+  const parts: string[] = [];
+  if (shipFrom.street) parts.push(shipFrom.street);
+  const cityLine = [shipFrom.city, shipFrom.province].filter(Boolean).join(', ');
+  if (cityLine) parts.push(cityLine);
+  if (shipFrom.postalCode) parts.push(`CP ${shipFrom.postalCode}`);
+  return parts.join(' — ') || shipFrom.label;
+}

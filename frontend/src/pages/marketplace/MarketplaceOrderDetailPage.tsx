@@ -4,6 +4,8 @@ import { SEO } from '../../components/ecommerce/SEO';
 import { MarketplaceReportModal } from '../../components/marketplace/MarketplaceReportModal';
 import { ReturnRequestModal } from '../../components/marketplace/ReturnRequestModal';
 import { useGetOrderQuery, useGetReturnForOrderQuery } from '../../services/marketplaceApi';
+import { PickupLocationCard } from '../../components/marketplace/PickupLocationCard';
+import { shipFromFromOrderRow } from '../../utils/orderPickup';
 
 const STATUS_LABELS: Record<string, string> = {
   pending_payment: 'Pendiente de pago',
@@ -72,14 +74,31 @@ export const MarketplaceOrderDetailPage: React.FC = () => {
           <span>{format(o.total)}</span>
         </div>
 
-        {o.shippingAddress && (
-          <div className="text-sm text-slate-600 space-y-1 border-t border-slate-100 pt-4">
-            <p className="font-medium text-or-navy">Envío a</p>
-            <p>{o.shippingAddress.fullName}</p>
-            <p>{o.shippingAddress.street}</p>
-            <p>{o.shippingAddress.city}, {o.shippingAddress.province} ({o.shippingAddress.postalCode})</p>
-            <p>{o.shippingAddress.phone}</p>
+        {o.shippingMethod === 'pickup' ? (
+          <div className="border-t border-slate-100 pt-4 space-y-3">
+            <p className="text-sm font-medium text-or-navy">Retiro en persona</p>
+            <p className="text-sm text-slate-600">
+              {o.shippingAddress?.fullName} — {o.shippingAddress?.phone}
+            </p>
+            {o.shippingBySeller?.map((row: any) => (
+              <PickupLocationCard
+                key={String(row.seller)}
+                sellerName={row.sellerName || 'Vendedor'}
+                shipFrom={shipFromFromOrderRow(row)}
+                showCoordinationNote={o.status === 'paid' || o.status === 'processing'}
+              />
+            ))}
           </div>
+        ) : (
+          o.shippingAddress && (
+            <div className="text-sm text-slate-600 space-y-1 border-t border-slate-100 pt-4">
+              <p className="font-medium text-or-navy">Envío a</p>
+              <p>{o.shippingAddress.fullName}</p>
+              <p>{o.shippingAddress.street}</p>
+              <p>{o.shippingAddress.city}, {o.shippingAddress.province} ({o.shippingAddress.postalCode})</p>
+              <p>{o.shippingAddress.phone}</p>
+            </div>
+          )
         )}
 
         {o.trackingCode && (

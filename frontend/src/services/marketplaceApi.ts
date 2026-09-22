@@ -503,6 +503,14 @@ export const marketplaceApi = createApi({
           productSubtotal: number;
           shippingCost: number;
           freeShipping: boolean;
+          shipFrom?: {
+            street: string;
+            city: string;
+            province: string;
+            postalCode: string;
+            label: string;
+            source: 'platform' | 'seller';
+          };
         }>;
         subtotal: number;
         shippingTotal: number;

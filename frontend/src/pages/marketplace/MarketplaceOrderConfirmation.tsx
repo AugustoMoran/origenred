@@ -3,6 +3,8 @@ import { Link, useParams } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
 import { SEO } from '../../components/ecommerce/SEO';
 import { useGetOrderQuery } from '../../services/marketplaceApi';
+import { PickupLocationCard } from '../../components/marketplace/PickupLocationCard';
+import { shipFromFromOrderRow } from '../../utils/orderPickup';
 import { clearMarketplaceCart } from '../../store/marketplaceCartSlice';
 
 const format = (n: number) =>
@@ -32,7 +34,7 @@ export const MarketplaceOrderConfirmation: React.FC = () => {
       <p className="text-slate-500">
         Número de pedido: <strong className="text-or-navy">{order.orderNumber}</strong>
       </p>
-      <div className="bg-white rounded-2xl border border-slate-100 p-6 text-left space-y-2">
+      <div className="bg-white rounded-2xl border border-slate-100 p-6 text-left space-y-4">
         <div className="flex justify-between text-sm">
           <span className="text-slate-500">Total</span>
           <span className="font-bold text-or-navy">{format(order.total)}</span>
@@ -47,9 +49,27 @@ export const MarketplaceOrderConfirmation: React.FC = () => {
             <span>{format(item.subtotal)}</span>
           </div>
         ))}
+        {(order as { shippingMethod?: string }).shippingMethod === 'pickup' &&
+          (order as { shippingBySeller?: unknown[] }).shippingBySeller?.map((row: any) => (
+            <PickupLocationCard
+              key={String(row.seller)}
+              sellerName={row.sellerName || 'Vendedor'}
+              shipFrom={shipFromFromOrderRow(row)}
+              showCoordinationNote
+            />
+          ))}
       </div>
       {isPaid && order.chatEnabled && (
-        <p className="text-sm text-or-blue">Podés chatear con el vendedor desde Mis compras</p>
+        <p className="text-sm text-or-blue">
+          Coordiná el retiro con el vendedor desde{' '}
+          <Link to={`/cuenta/chat/${order.orderNumber}`} className="font-semibold hover:underline">
+            el chat del pedido
+          </Link>{' '}
+          o Mis compras.
+        </p>
+      )}
+      {isPaid && order.chatEnabled === false && (order as { shippingMethod?: string }).shippingMethod === 'pickup' && (
+        <p className="text-sm text-slate-600">Cuando se habilite el chat, podrás coordinar el retiro con el vendedor.</p>
       )}
       <Link to="/" className="inline-block text-or-red font-medium hover:underline">
         Volver al inicio
