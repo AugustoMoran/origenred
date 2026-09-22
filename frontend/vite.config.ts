@@ -1,10 +1,12 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { VitePWA } from 'vite-plugin-pwa';
+import { marketplaceSitemapPlugin } from './plugins/marketplaceSitemap';
 
 export default defineConfig({
   plugins: [
     react(),
+    marketplaceSitemapPlugin(),
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['logooficialdefinitivo.png', 'origenred-logo.png', 'origenred-icon.png'],
@@ -34,6 +36,7 @@ export default defineConfig({
       },
       workbox: {
         navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/sitemap\.xml$/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
