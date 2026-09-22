@@ -1052,7 +1052,8 @@ export const Inventory = () => {
                 )}
                 <td className="px-1 text-center">
                   <div className="w-7 h-7 rounded-lg overflow-hidden bg-slate-800 ring-1 ring-white/10 inline-flex items-center justify-center">
-                    {resolveProductImageUrl(p) !== '/logooficialdefinitivo.png' ? (
+                    {(p.imageUrl || p.gallery?.length || p.imagePublicId) &&
+                    resolveProductImageUrl(p) !== '/logooficialdefinitivo.png' ? (
                       <MarketplaceImage
                         src={p.imageUrl || p.gallery?.[0]?.url}
                         storageKey={p.imagePublicId || p.gallery?.[0]?.publicId}

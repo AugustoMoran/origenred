@@ -8,7 +8,8 @@ import {
   getMainUploadedImage,
 } from '../utils/productFormParser';
 import { applyInventoryImagesToProductData } from '../utils/inventoryImageUpload';
-import { normalizeProductMedia } from '../../../shared/utils/mediaUrl';
+import { Listing } from '../../marketplace/models/Listing';
+import { prepareProductForClient, persistProductMediaIfRepaired } from '../services/productMediaRepairService';
 
 const isHttpUrl = (value?: string) => !!value && /^https?:\/\//i.test(value);
 
@@ -43,13 +44,32 @@ const toPlainProduct = (product: unknown) =>
     ? (product as { toObject: () => Record<string, unknown> }).toObject()
     : product;
 
-const toClientProduct = (req: Request, product: unknown) =>
-  normalizeProductMedia(toPlainProduct(product) as Record<string, unknown>, req);
+const toClientProduct = async (req: Request, product: unknown, listing?: { images?: unknown[] } | null) => {
+  const plain = toPlainProduct(product) as Record<string, unknown> & {
+    _id?: unknown;
+    imageUrl?: string;
+    imagePublicId?: string;
+  };
+  const before = { imageUrl: plain.imageUrl, imagePublicId: plain.imagePublicId };
+  const prepared = prepareProductForClient(plain, listing as any, req);
+  if (plain._id) {
+    void persistProductMediaIfRepaired(String(plain._id), before, prepared as any);
+  }
+  return prepared;
+};
 
 export const getProductsController = async (req: Request, res: Response) => {
   try {
     const products = await inventoryService.getProducts(req.query || {});
-    res.json(products.map((p) => toClientProduct(req, p as any)));
+    const ids = products.map((p: any) => p._id);
+    const listings = await Listing.find({ inventoryProductId: { $in: ids } }).select('inventoryProductId images');
+    const listingByProduct = new Map(
+      listings.map((l) => [String(l.inventoryProductId), l])
+    );
+    const payload = await Promise.all(
+      products.map((p: any) => toClientProduct(req, p, listingByProduct.get(String(p._id))))
+    );
+    res.json(payload);
   } catch (error: any) {
     res.status(500).json({ message: error.message });
   }
@@ -71,7 +91,7 @@ export const createProductController = async (req: Request, res: Response) => {
     await applyInventoryImagesToProductData(req, productData);
 
     const product = await inventoryService.createProduct(productData, (req as any).user);
-    res.status(201).json(product ? toClientProduct(req, product as any) : product);
+    res.status(201).json(product ? await toClientProduct(req, product as any) : product);
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }
@@ -96,7 +116,7 @@ export const updateProductController = async (req: Request, res: Response) => {
 
     const product = await inventoryService.updateProduct(id, productData, (req as any).user);
     if (!product) return res.status(404).json({ message: 'Producto no encontrado' });
-    res.json(toClientProduct(req, product as any));
+    res.json(await toClientProduct(req, product as any));
   } catch (error: any) {
     res.status(400).json({ message: error.message });
   }

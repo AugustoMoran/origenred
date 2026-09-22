@@ -5,7 +5,6 @@ import helmet from 'helmet';
 import cors from 'cors';
 import cookieParser from 'cookie-parser';
 import csurf from 'csurf';
-import rateLimit from 'express-rate-limit';
 import mongoose from 'mongoose';
 import morgan from 'morgan';
 import path from 'path';
@@ -103,19 +102,6 @@ app.get('/health', (_req, res) => {
   };
   res.status(mongoOk ? 200 : 503).json(body);
 });
-
-const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 1200,
-  standardHeaders: true,
-  legacyHeaders: false,
-  skip: (req) => {
-    const path = req.path || '';
-    return path.startsWith('/api/media') || path.startsWith('/uploads');
-  },
-  message: { message: 'Demasiadas solicitudes. Esperá unos minutos e intentá de nuevo.' },
-});
-app.use(limiter);
 
 // CSRF en producción (opcional vía ENABLE_CSRF=true)
 if (process.env.NODE_ENV === 'production' && process.env.ENABLE_CSRF === 'true') {

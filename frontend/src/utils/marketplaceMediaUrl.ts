@@ -1,6 +1,9 @@
 import {
   apiOrigin,
   buildMediaProxyUrl,
+  effectiveStorageKey,
+  extractStorageKeyFromUrl,
+  isCloudinaryMediaUrl,
   isPlaceholderMediaUrl,
   isR2ObjectKey,
 } from './mediaUrlHelpers';
@@ -30,6 +33,10 @@ const rewriteUploadPathToApi = (url: string): string | null => {
 };
 
 const tryPrivateR2ToPublic = (url: string): string | null => {
+  const key = extractStorageKeyFromUrl(url);
+  if (isR2ObjectKey(key)) {
+    return buildMediaProxyUrl(key);
+  }
   if (!url.includes('r2.cloudflarestorage.com') || url.includes('.r2.dev')) return null;
   const match = url.match(/r2\.cloudflarestorage\.com\/[^/]+\/(.+)$/i);
   const base = (import.meta.env.VITE_R2_PUBLIC_URL as string | undefined)?.replace(/\/+$/, '');
@@ -38,12 +45,17 @@ const tryPrivateR2ToPublic = (url: string): string | null => {
 };
 
 export const resolveMarketplaceImageUrl = (url?: string | null, storageKey?: string | null): string => {
-  if (isR2ObjectKey(storageKey)) {
-    const proxy = buildMediaProxyUrl(storageKey);
+  const key = effectiveStorageKey(url, storageKey);
+  if (isR2ObjectKey(key)) {
+    const proxy = buildMediaProxyUrl(key);
     if (proxy) return proxy;
   }
 
   const trimmed = url?.trim();
+  if (trimmed && isCloudinaryMediaUrl(trimmed)) {
+    return trimmed.replace(/^http:/i, 'https:');
+  }
+
   if (trimmed && !isPlaceholderMediaUrl(trimmed)) {
     if (trimmed.includes('/api/media/')) {
       return trimmed.replace(/^http:/i, 'https:');
@@ -62,19 +74,15 @@ export const resolveMarketplaceImageUrl = (url?: string | null, storageKey?: str
       if (privateR2) return privateR2;
       if (normalized.includes('picsum.photos')) return PLACEHOLDER;
       if (normalized.includes('r2.cloudflarestorage.com') && !normalized.includes('.r2.dev')) {
-        return PLACEHOLDER;
+        const proxy = buildMediaProxyUrl(extractStorageKeyFromUrl(normalized));
+        return proxy || PLACEHOLDER;
       }
-      if (isPlaceholderMediaUrl(normalized)) return PLACEHOLDER;
       return normalized;
     }
   }
 
-  if (trimmed && !isPlaceholderMediaUrl(trimmed) && !trimmed.startsWith('/')) {
-    return trimmed.replace(/^http:/i, 'https:');
-  }
-
-  if (isR2ObjectKey(storageKey)) {
-    return buildMediaProxyUrl(storageKey) || PLACEHOLDER;
+  if (isR2ObjectKey(key)) {
+    return buildMediaProxyUrl(key) || PLACEHOLDER;
   }
 
   return PLACEHOLDER;
@@ -98,7 +106,6 @@ export const resolveProductImageUrl = (product: {
   return PLACEHOLDER;
 };
 
-/** Variantes para reintentar si falla la carga (CDN, host viejo, etc.). */
 export const buildImageFallbackUrls = (url?: string | null, storageKey?: string | null): string[] => {
   const list: string[] = [];
   const seen = new Set<string>();
@@ -108,14 +115,14 @@ export const buildImageFallbackUrls = (url?: string | null, storageKey?: string 
     list.push(value);
   };
 
-  const primary = resolveMarketplaceImageUrl(url, storageKey);
-  add(primary);
+  const key = effectiveStorageKey(url, storageKey);
+  add(resolveMarketplaceImageUrl(url, key));
 
-  if (isR2ObjectKey(storageKey)) {
-    add(buildMediaProxyUrl(storageKey));
+  if (isR2ObjectKey(key)) {
+    add(buildMediaProxyUrl(key));
     const publicBase = (import.meta.env.VITE_R2_PUBLIC_URL as string | undefined)?.replace(/\/+$/, '');
     if (publicBase) {
-      add(`${publicBase}/${String(storageKey).replace(/^\//, '')}`);
+      add(`${publicBase}/${String(key).replace(/^\//, '')}`);
     }
   }
 

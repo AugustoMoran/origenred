@@ -15,6 +15,7 @@ import {
   registerPushTokenController,
 } from '../controllers/authController';
 import { authenticate, authorize } from '../../../middleware/authMiddleware';
+import { authAttemptLimiter } from '../../../middleware/authRateLimit';
 import { User } from '../models/User';
 
 const router = Router();
@@ -30,14 +31,14 @@ const canRegister = async (req: any, res: any, next: any) => {
 };
 
 router.get('/bootstrap', bootstrapStatusController);
-router.post('/register/public', publicRegisterController);
-router.post('/register', canRegister, registerController);
+router.post('/register/public', authAttemptLimiter, publicRegisterController);
+router.post('/register', authAttemptLimiter, canRegister, registerController);
 router.get('/users', authenticate, authorize('admin'), getUsersController);
 router.delete('/users/:id', authenticate, authorize('admin'), deleteUserController);
 router.patch('/users/permissions', authenticate, authorize('admin'), updatePermissionsController);
 router.patch('/users/commission', authenticate, authorize('admin'), updateCommissionController);
 router.patch('/users/branch', authenticate, authorize('admin'), updateBranchController);
-router.post('/login', loginController);
+router.post('/login', authAttemptLimiter, loginController);
 router.get('/me', authenticate, getMeController);
 router.post('/refresh', refreshController);
 router.post('/logout', logoutController);

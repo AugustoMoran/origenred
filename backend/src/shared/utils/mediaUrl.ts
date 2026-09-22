@@ -42,6 +42,56 @@ export const isR2ObjectKey = (key?: string | null) => {
   return k.includes('/');
 };
 
+export const isCloudinaryMediaUrl = (url?: string | null) =>
+  Boolean(url?.trim() && /res\.cloudinary\.com/i.test(url));
+
+/** Recupera clave R2 embebida en URL (proxy, R2 público o endpoint privado). */
+export const extractStorageKeyFromUrl = (url?: string | null): string | null => {
+  if (!url?.trim()) return null;
+  const u = url.trim();
+
+  const mediaIdx = u.indexOf('/api/media/');
+  if (mediaIdx >= 0) {
+    const keyPart = u.slice(mediaIdx + '/api/media/'.length).split('?')[0];
+    try {
+      return decodeURIComponent(keyPart.replace(/^\//, ''));
+    } catch {
+      return keyPart.replace(/^\//, '');
+    }
+  }
+
+  if (r2Config.publicUrl && u.startsWith(r2Config.publicUrl)) {
+    return u.slice(r2Config.publicUrl.length).replace(/^\//, '').split('?')[0];
+  }
+
+  const privateMatch = u.match(/r2\.cloudflarestorage\.com\/[^/]+\/([^?]+)/i);
+  if (privateMatch?.[1]) {
+    try {
+      return decodeURIComponent(privateMatch[1]);
+    } catch {
+      return privateMatch[1];
+    }
+  }
+
+  const r2DevMatch = u.match(/\.r2\.dev\/([^?]+)/i);
+  if (r2DevMatch?.[1]) {
+    try {
+      return decodeURIComponent(r2DevMatch[1]);
+    } catch {
+      return r2DevMatch[1];
+    }
+  }
+
+  return null;
+};
+
+const effectiveStorageKey = (url?: string | null, storageKey?: string | null) => {
+  if (isR2ObjectKey(storageKey)) return storageKey!.trim();
+  const fromUrl = extractStorageKeyFromUrl(url);
+  if (isR2ObjectKey(fromUrl)) return fromUrl;
+  return storageKey?.trim() || null;
+};
+
 /** URL pública estable vía API (no expira, no depende del dominio R2 en el cliente). */
 export const buildMediaProxyUrl = (storageKey?: string | null, req?: Request): string | null => {
   if (!isR2ObjectKey(storageKey)) return null;
@@ -90,15 +140,20 @@ export const resolveStoredMediaUrl = (
   storageKey?: string | null,
   req?: Request
 ): string => {
-  if (isR2ObjectKey(storageKey)) {
-    const proxy = buildMediaProxyUrl(storageKey, req);
+  const key = effectiveStorageKey(url, storageKey);
+  if (isR2ObjectKey(key)) {
+    const proxy = buildMediaProxyUrl(key, req);
     if (proxy) return proxy;
     if (r2Config.publicUrl) {
-      return `${r2Config.publicUrl}/${String(storageKey).replace(/^\//, '')}`;
+      return `${r2Config.publicUrl}/${String(key).replace(/^\//, '')}`;
     }
   }
 
   const trimmed = url?.trim();
+  if (trimmed && isCloudinaryMediaUrl(trimmed)) {
+    return trimmed.replace(/^http:/i, 'https:');
+  }
+
   if (trimmed && !isPlaceholderMediaUrl(trimmed)) {
     if (trimmed.includes('/api/media/')) {
       return trimmed.replace(/^http:/i, 'https:');
@@ -124,7 +179,12 @@ export const resolveStoredMediaUrl = (
 /** Solo para respuestas HTTP al cliente (fallback visual). */
 export const normalizeMediaUrl = (url?: string | null, storageKey?: string | null, req?: Request): string => {
   const resolved = resolveStoredMediaUrl(url, storageKey, req);
-  return resolved || DEFAULT_PLACEHOLDER;
+  if (resolved) return resolved;
+  const raw = url?.trim();
+  if (raw && !isPlaceholderMediaUrl(raw)) {
+    return raw.replace(/^http:/i, 'https:');
+  }
+  return DEFAULT_PLACEHOLDER;
 };
 
 export const canonicalizeMediaUrl = (url?: string | null, storageKey?: string | null, req?: Request) =>
@@ -186,7 +246,15 @@ export const repairProductMediaInPlace = (product: {
 }) => {
   let changed = false;
 
-  if (isPlaceholderMediaUrl(product.imageUrl) && isR2ObjectKey(product.imagePublicId)) {
+  const inferredFromUrl = extractStorageKeyFromUrl(product.imageUrl);
+  if (isPlaceholderMediaUrl(product.imageUrl) && isR2ObjectKey(inferredFromUrl)) {
+    product.imagePublicId = inferredFromUrl!;
+    const fixed = resolveStoredMediaUrl(product.imageUrl, inferredFromUrl);
+    if (fixed) {
+      product.imageUrl = fixed;
+      changed = true;
+    }
+  } else if (isPlaceholderMediaUrl(product.imageUrl) && isR2ObjectKey(product.imagePublicId)) {
     const fixed = resolveStoredMediaUrl(product.imageUrl, product.imagePublicId);
     if (fixed) {
       product.imageUrl = fixed;

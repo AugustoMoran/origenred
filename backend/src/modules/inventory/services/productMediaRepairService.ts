@@ -1,17 +1,53 @@
 import Product from '../models/Product';
 import { Listing } from '../../marketplace/models/Listing';
 import {
+  extractStorageKeyFromUrl,
+  isCloudinaryMediaUrl,
   isPlaceholderMediaUrl,
   isR2ObjectKey,
+  normalizeProductMedia,
   repairProductMediaInPlace,
   resolveStoredMediaUrl,
 } from '../../../shared/utils/mediaUrl';
+import { Request } from 'express';
 
 const hasUsableMedia = (url?: string | null, key?: string | null) => {
   const resolved = resolveStoredMediaUrl(url, key);
   if (resolved && !isPlaceholderMediaUrl(resolved)) return true;
+  if (isCloudinaryMediaUrl(url)) return true;
+  const inferred = extractStorageKeyFromUrl(url);
+  if (isR2ObjectKey(inferred)) return true;
   return Boolean(url?.trim() && !isPlaceholderMediaUrl(url));
 };
+
+export const prepareProductForClient = (
+  product: Record<string, unknown>,
+  listing?: { images?: Array<{ url?: string; key?: string; alt?: string }> } | null,
+  req?: Request
+) => {
+  repairProductMediaFromListing(product as any, listing);
+  repairProductMediaInPlace(product as any);
+  return normalizeProductMedia(product as any, req);
+};
+
+export async function persistProductMediaIfRepaired(
+  productId: string,
+  before: { imageUrl?: string; imagePublicId?: string },
+  after: { imageUrl?: string; imagePublicId?: string }
+) {
+  if (before.imageUrl === after.imageUrl && before.imagePublicId === after.imagePublicId) return;
+  if (!after.imageUrl || isPlaceholderMediaUrl(after.imageUrl)) return;
+  await Product.updateOne(
+    { _id: productId },
+    {
+      $set: {
+        imageUrl: after.imageUrl,
+        ...(after.imagePublicId ? { imagePublicId: after.imagePublicId } : {}),
+        ...(Array.isArray((after as any).gallery) ? { gallery: (after as any).gallery } : {}),
+      },
+    }
+  );
+}
 
 export const repairProductMediaFromListing = (
   product: {
@@ -28,11 +64,12 @@ export const repairProductMediaFromListing = (
 
   const listingImages = listing.images
     .map((img) => {
-      const url = resolveStoredMediaUrl(img.url, img.key) || img.url?.trim();
+      const inferredKey = img.key || extractStorageKeyFromUrl(img.url);
+      const url = resolveStoredMediaUrl(img.url, inferredKey) || img.url?.trim();
       if (!url || isPlaceholderMediaUrl(url)) return null;
       return {
         url,
-        publicId: isR2ObjectKey(img.key) ? img.key : undefined,
+        publicId: isR2ObjectKey(inferredKey) ? inferredKey : undefined,
         alt: img.alt,
       };
     })
