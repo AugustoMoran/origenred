@@ -114,19 +114,14 @@ export const updateSellerOrderFulfillment = async (
   order.markModified('shippingBySeller');
   await order.save();
 
-  if (order.buyer && (next === 'shipped' || next === 'delivered')) {
+  const statusChanged = current !== next;
+  if (statusChanged && order.buyer && (next === 'shipped' || next === 'delivered')) {
     const label = next === 'shipped' ? 'Tu pedido fue enviado' : 'Tu pedido fue entregado';
     const tracking = entry.trackingCode || order.trackingCode;
     const body = tracking
       ? `Pedido ${order.orderNumber} — tracking: ${tracking}`
       : `Pedido ${order.orderNumber}`;
-    await notifyUserPush(String(order.buyer), label, body, {
-      type: 'order',
-      orderNumber: order.orderNumber,
-      status: next,
-      role: 'buyer',
-    });
-    await createMarketplaceNotification({
+    const { created } = await createMarketplaceNotification({
       userId: String(order.buyer),
       type: 'order',
       title: label,
@@ -135,6 +130,14 @@ export const updateSellerOrderFulfillment = async (
       orderNumber: order.orderNumber,
       referenceKey: `buyer-order-${next}-${order._id}`,
     });
+    if (created) {
+      await notifyUserPush(String(order.buyer), label, body, {
+        type: 'order',
+        orderNumber: order.orderNumber,
+        status: next,
+        role: 'buyer',
+      });
+    }
   }
 
   return order;

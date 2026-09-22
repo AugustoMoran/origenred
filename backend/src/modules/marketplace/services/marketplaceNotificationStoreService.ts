@@ -1,10 +1,19 @@
-import { MarketplaceNotification, PersistedNotificationType } from '../models/MarketplaceNotification';
+import {
+  IMarketplaceNotification,
+  MarketplaceNotification,
+  PersistedNotificationType,
+} from '../models/MarketplaceNotification';
 import { MarketplaceNotificationItem } from '../types/marketplaceNotificationTypes';
 
 const sinceDays = (days: number) => {
   const d = new Date();
   d.setDate(d.getDate() - days);
   return d;
+};
+
+export type CreateMarketplaceNotificationResult = {
+  notification: IMarketplaceNotification;
+  created: boolean;
 };
 
 export const createMarketplaceNotification = async (input: {
@@ -15,24 +24,18 @@ export const createMarketplaceNotification = async (input: {
   href: string;
   orderNumber?: string;
   referenceKey?: string;
-}) => {
+}): Promise<CreateMarketplaceNotificationResult> => {
   if (input.referenceKey) {
     const existing = await MarketplaceNotification.findOne({
       user: input.userId,
       referenceKey: input.referenceKey,
     });
     if (existing) {
-      existing.title = input.title;
-      existing.body = input.body;
-      existing.href = input.href;
-      existing.orderNumber = input.orderNumber;
-      existing.readAt = undefined;
-      await existing.save();
-      return existing;
+      return { notification: existing, created: false };
     }
   }
 
-  return MarketplaceNotification.create({
+  const notification = await MarketplaceNotification.create({
     user: input.userId,
     type: input.type,
     title: input.title,
@@ -41,6 +44,7 @@ export const createMarketplaceNotification = async (input: {
     orderNumber: input.orderNumber,
     referenceKey: input.referenceKey,
   });
+  return { notification, created: true };
 };
 
 export const listPersistedNotifications = async (

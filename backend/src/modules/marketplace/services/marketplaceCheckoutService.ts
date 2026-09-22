@@ -440,100 +440,144 @@ export const createMarketplaceCheckout = async (input: {
   };
 };
 
-/** Confirmar pago y actualizar stock — llamado desde webhook */
-export const fulfillMarketplaceOrder = async (orderId: string, paymentId?: string, paymentStatus?: string) => {
-  const order = await MarketplaceOrder.findById(orderId);
-  if (!order) throw new Error('Pedido no encontrado');
-  if (order.status === 'paid') return order;
+const formatCurrency = (n: number) =>
+  new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
 
-  for (const item of order.items) {
-    const listing = await Listing.findById(item.listing);
-    if (!listing) continue;
-    listing.stock = Math.max(0, listing.stock - item.quantity);
-    if (listing.stock === 0) listing.status = 'sold_out';
-    listing.salesCount += item.quantity;
-    await listing.save();
-
-    await SellerProfile.findByIdAndUpdate(item.seller, {
-      $inc: { totalSales: item.quantity },
-    });
-  }
-
-  order.status = 'paid';
-  order.paymentId = paymentId;
-  order.paymentStatus = paymentStatus || 'approved';
-  order.chatEnabled = true;
-  initOrderFulfillmentOnPayment(order);
-  await order.save();
-
-  const { notifyAdminsEnvioPackOnOrderPaid } = await import('./envioPackProofService');
-  await notifyAdminsEnvioPackOnOrderPaid(order).catch((err) =>
-    console.error('[enviopack-notify-paid]', err)
+/** Push + in-app + admin: una sola vez por pedido pagado. */
+const dispatchOrderPaidNotifications = async (orderId: string) => {
+  const order = await MarketplaceOrder.findOneAndUpdate(
+    { _id: orderId, paymentNotificationsSentAt: { $exists: false } },
+    { $set: { paymentNotificationsSentAt: new Date() } },
+    { new: true }
   );
-
-  const { tryCreateEnvioPackShipmentsForOrder } = await import('./marketplaceEnvioPackShipmentService');
-  await tryCreateEnvioPackShipmentsForOrder(order).catch((err) =>
-    console.error('[enviopack-auto-ship]', err)
-  );
-
-  await attachExistingBuyerFromGuestEmail(order);
-  if (!order.buyer && order.guestEmail) {
-    const withToken = await MarketplaceOrder.findById(order._id).select('+guestAccessToken');
-    if (withToken && !withToken.guestAccessToken) {
-      withToken.guestAccessToken = generateGuestAccessToken();
-      await withToken.save();
-    }
-  }
-  await ensureConversationForOrder(order);
-
-  if (!order.buyer && order.guestEmail) {
-    await sendGuestOrderConfirmationEmail(order).catch((err) =>
-      console.error('[order-email-guest]', err)
-    );
-  }
+  if (!order) return;
 
   await notifyAdminsNewMarketplaceOrder(order).catch((err) =>
     console.error('[order-notify-admin]', err)
   );
 
   const sellerId = order.items[0]?.seller;
-  if (sellerId) {
-    const sellerProfile = await SellerProfile.findById(sellerId);
-    if (sellerProfile?.user) {
+  if (!sellerId) return;
+
+  const sellerProfile = await SellerProfile.findById(sellerId);
+  if (sellerProfile?.user) {
+    const sellerUserId = String(sellerProfile.user);
+    const { created } = await createMarketplaceNotification({
+      userId: sellerUserId,
+      type: 'order',
+      title: 'Nueva venta',
+      body: `Pedido ${order.orderNumber}`,
+      href: '/vendedor/ventas',
+      orderNumber: order.orderNumber,
+      referenceKey: `seller-order-${order._id}`,
+    });
+    if (created) {
       await notifyUserPush(
-        String(sellerProfile.user),
+        sellerUserId,
         'Nueva venta en OrigenRed',
         `Pedido ${order.orderNumber} — ${formatCurrency(order.total)}`,
         { type: 'order', orderNumber: order.orderNumber, role: 'seller' }
       );
-      await createMarketplaceNotification({
-        userId: String(sellerProfile.user),
-        type: 'order',
-        title: 'Nueva venta',
-        body: `Pedido ${order.orderNumber}`,
-        href: '/vendedor/ventas',
-        orderNumber: order.orderNumber,
-        referenceKey: `seller-order-${order._id}`,
-      });
-    }
-    if (order.buyer) {
-      await createMarketplaceNotification({
-        userId: String(order.buyer),
-        type: 'order',
-        title: 'Pago confirmado',
-        body: `Pedido ${order.orderNumber}`,
-        href: `/cuenta/compras/${order.orderNumber}`,
-        orderNumber: order.orderNumber,
-        referenceKey: `buyer-order-paid-${order._id}`,
-      });
     }
   }
 
-  return order;
+  if (order.buyer) {
+    await createMarketplaceNotification({
+      userId: String(order.buyer),
+      type: 'order',
+      title: 'Pago confirmado',
+      body: `Pedido ${order.orderNumber}`,
+      href: `/cuenta/compras/${order.orderNumber}`,
+      orderNumber: order.orderNumber,
+      referenceKey: `buyer-order-paid-${order._id}`,
+    });
+  }
 };
 
-const formatCurrency = (n: number) =>
-  new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
+/** Confirmar pago y actualizar stock — llamado desde webhook */
+export const fulfillMarketplaceOrder = async (orderId: string, paymentId?: string, paymentStatus?: string) => {
+  const claimed = await MarketplaceOrder.findOneAndUpdate(
+    { _id: orderId, status: 'pending_payment' },
+    {
+      $set: {
+        status: 'paid',
+        paymentId,
+        paymentStatus: paymentStatus || 'approved',
+        chatEnabled: true,
+      },
+    },
+    { new: true }
+  );
+
+  let order = claimed;
+  const firstFulfillment = Boolean(claimed);
+
+  if (!order) {
+    order = await MarketplaceOrder.findById(orderId);
+    if (!order) throw new Error('Pedido no encontrado');
+    if (order.status === 'pending_payment') {
+      throw new Error('No se pudo confirmar el pago del pedido');
+    }
+  }
+
+  if (firstFulfillment) {
+    initOrderFulfillmentOnPayment(order);
+
+    for (const item of order.items) {
+      const listing = await Listing.findById(item.listing);
+      if (!listing) continue;
+      listing.stock = Math.max(0, listing.stock - item.quantity);
+      if (listing.stock === 0) listing.status = 'sold_out';
+      listing.salesCount += item.quantity;
+      await listing.save();
+
+      await SellerProfile.findByIdAndUpdate(item.seller, {
+        $inc: { totalSales: item.quantity },
+      });
+    }
+
+    await order.save();
+
+    const { notifyAdminsEnvioPackOnOrderPaid } = await import('./envioPackProofService');
+    await notifyAdminsEnvioPackOnOrderPaid(order).catch((err) =>
+      console.error('[enviopack-notify-paid]', err)
+    );
+
+    const { tryCreateEnvioPackShipmentsForOrder } = await import('./marketplaceEnvioPackShipmentService');
+    await tryCreateEnvioPackShipmentsForOrder(order).catch((err) =>
+      console.error('[enviopack-auto-ship]', err)
+    );
+
+    await attachExistingBuyerFromGuestEmail(order);
+
+    if (!order.buyer && order.guestEmail) {
+      const withToken = await MarketplaceOrder.findById(order._id).select('+guestAccessToken');
+      if (withToken && !withToken.guestAccessToken) {
+        withToken.guestAccessToken = generateGuestAccessToken();
+        await withToken.save();
+      }
+    }
+
+    await ensureConversationForOrder(order);
+
+    if (!order.buyer && order.guestEmail) {
+      const emailed = await MarketplaceOrder.findOneAndUpdate(
+        { _id: order._id, guestConfirmationEmailSentAt: { $exists: false } },
+        { $set: { guestConfirmationEmailSentAt: new Date() } },
+        { new: true }
+      );
+      if (emailed) {
+        await sendGuestOrderConfirmationEmail(order).catch((err) =>
+          console.error('[order-email-guest]', err)
+        );
+      }
+    }
+  }
+
+  await dispatchOrderPaidNotifications(String(order._id));
+
+  return order;
+};
 
 export const processMarketplacePaymentWebhook = async (paymentId: string) => {
   const payment = await verifyMercadoPagoPayment(paymentId);

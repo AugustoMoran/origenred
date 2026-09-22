@@ -77,6 +77,9 @@ export interface IMarketplaceOrder extends Document {
   envioPackShipmentId?: string;
   trackingCode?: string;
   chatEnabled: boolean;
+  /** Evita push/email duplicados si MP reenvía el webhook o el usuario vuelve del checkout. */
+  paymentNotificationsSentAt?: Date;
+  guestConfirmationEmailSentAt?: Date;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -172,6 +175,8 @@ const MarketplaceOrderSchema = new Schema<IMarketplaceOrder>(
     envioPackShipmentId: { type: String },
     trackingCode: { type: String },
     chatEnabled: { type: Boolean, default: false },
+    paymentNotificationsSentAt: { type: Date },
+    guestConfirmationEmailSentAt: { type: Date },
   },
   { timestamps: true, versionKey: false }
 );

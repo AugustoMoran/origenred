@@ -119,8 +119,9 @@ export async function notifyAdminsNewMarketplaceOrder(order: IMarketplaceOrder) 
 
   const bodyLine = `${order.orderNumber} — ${buyerLabel} — $${Number(order.total).toLocaleString('es-AR')}`;
 
+  let anyNew = false;
   for (const admin of admins) {
-    await createMarketplaceNotification({
+    const { created } = await createMarketplaceNotification({
       userId: String(admin._id),
       type: 'order',
       title: 'Nueva venta marketplace',
@@ -129,10 +130,11 @@ export async function notifyAdminsNewMarketplaceOrder(order: IMarketplaceOrder) 
       orderNumber: order.orderNumber,
       referenceKey: `admin-order-${order._id}`,
     });
+    if (created) anyNew = true;
   }
 
   const adminEmail = process.env.ADMIN_NOTIFICATION_EMAIL?.trim();
-  if (adminEmail) {
+  if (anyNew && adminEmail) {
     const panelUrl = `${frontendUrl()}/dashboard/admin/marketplace-orders`;
     await sendEmail({
       to: adminEmail,
