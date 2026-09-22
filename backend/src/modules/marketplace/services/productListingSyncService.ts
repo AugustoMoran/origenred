@@ -7,12 +7,11 @@ import { Listing } from '../models/Listing';
 import { SellerProfile } from '../models/SellerProfile';
 import { computeOrigenRankScore } from './origenRankService';
 import { indexListing, removeListingFromIndex } from './meilisearchService';
+import { repairProductMediaInPlace } from '../../../shared/utils/mediaUrl';
 import {
-  isPlaceholderMediaUrl,
-  isR2ObjectKey,
-  repairProductMediaInPlace,
-  resolveStoredMediaUrl,
-} from '../../../shared/utils/mediaUrl';
+  listingImagesFromProductOrExisting,
+  repairProductMediaFromListing,
+} from '../../inventory/services/productMediaRepairService';
 
 const OFFICIAL_SELLER_SLUG = 'origenred-oficial';
 
@@ -119,23 +118,6 @@ async function getDefaultAdminId(): Promise<mongoose.Types.ObjectId> {
   return admin._id as mongoose.Types.ObjectId;
 }
 
-function buildListingImages(product: IProduct) {
-  const toListingImage = (url?: string, publicId?: string, alt?: string) => {
-    const resolved = resolveStoredMediaUrl(url, publicId);
-    if (!resolved || isPlaceholderMediaUrl(resolved)) return null;
-    const key = isR2ObjectKey(publicId) ? publicId : undefined;
-    return { url: resolved, key, alt: alt || product.name };
-  };
-
-  const fromGallery = (product.gallery || [])
-    .map((item) => toListingImage(item.url, item.publicId, item.alt))
-    .filter(Boolean) as Array<{ url: string; key?: string; alt: string }>;
-  if (fromGallery.length) return fromGallery;
-
-  const main = toListingImage(product.imageUrl, product.imagePublicId, product.name);
-  return main ? [main] : [];
-}
-
 async function uniqueListingSlug(base: string, excludeId?: string) {
   let slug = slugify(base) || `producto-${Date.now()}`;
   let counter = 1;
@@ -170,7 +152,16 @@ export async function syncProductToMarketplaceListing(
   const product = await Product.findById(productId);
   if (!product) return null;
 
+  const existingListing = await Listing.findOne({ inventoryProductId: product._id }).select('images');
+
+  let productMediaDirty = false;
+  if (repairProductMediaFromListing(product, existingListing)) {
+    productMediaDirty = true;
+  }
   if (repairProductMediaInPlace(product)) {
+    productMediaDirty = true;
+  }
+  if (productMediaDirty) {
     await product.save();
   }
 
@@ -217,7 +208,7 @@ export async function syncProductToMarketplaceListing(
     category: category._id,
     brand: product.internalCode || product.sku,
     condition: 'new' as const,
-    images: buildListingImages(product),
+    images: listingImagesFromProductOrExisting(product, existingListing),
     weight: product.weight,
     dimensions: product.dimensions,
     freeShipping: false,
@@ -233,7 +224,7 @@ export async function syncProductToMarketplaceListing(
     supplierProductCode,
   };
 
-  let listing = await Listing.findOne({ inventoryProductId: product._id });
+  let listing = existingListing || (await Listing.findOne({ inventoryProductId: product._id }));
   const wasActive = listing?.status === 'active';
   const previousSellerId = listing?.seller ? String(listing.seller) : null;
 

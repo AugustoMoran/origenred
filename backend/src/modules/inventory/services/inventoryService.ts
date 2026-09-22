@@ -422,11 +422,22 @@ export const resyncInventoryToMarketplace = async (actingUser: { _id?: unknown; 
   if (!isAdmin) {
     throw new Error('Solo administradores pueden resincronizar el marketplace');
   }
+  const { repairAllInventoryProductMedia } = await import('./productMediaRepairService');
+  const mediaRepair = await repairAllInventoryProductMedia();
   const { syncAllInventoryProductsToMarketplace } = await import(
     '../../marketplace/services/productListingSyncService'
   );
   const synced = await syncAllInventoryProductsToMarketplace(actingUser._id as any);
-  return { synced };
+  return { synced, mediaRepair };
+};
+
+export const repairInventoryProductMedia = async (actingUser: { roles?: string[] }) => {
+  const isAdmin = Array.isArray(actingUser?.roles) && actingUser.roles.includes('admin');
+  if (!isAdmin) {
+    throw new Error('Solo administradores pueden reparar imágenes');
+  }
+  const { repairAllInventoryProductMedia } = await import('./productMediaRepairService');
+  return repairAllInventoryProductMedia();
 };
 
 export const deleteProduct = async (id: string) => {

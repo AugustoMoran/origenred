@@ -138,6 +138,16 @@ const toPlainDoc = <T extends Record<string, any>>(value: T): T => {
   return value;
 };
 
+const resolveForApiResponse = (url?: string | null, storageKey?: string | null, req?: Request) => {
+  const resolved = resolveStoredMediaUrl(url, storageKey, req);
+  if (resolved) return resolved;
+  const raw = url?.trim();
+  if (raw && !isPlaceholderMediaUrl(raw)) {
+    return raw.replace(/^http:/i, 'https:');
+  }
+  return DEFAULT_PLACEHOLDER;
+};
+
 export const normalizeProductMedia = <T extends Record<string, any>>(product: T, req?: Request): T => {
   const next = { ...toPlainDoc(product) } as T & {
     imageUrl?: string;
@@ -145,12 +155,12 @@ export const normalizeProductMedia = <T extends Record<string, any>>(product: T,
     gallery?: Array<{ url?: string; alt?: string; publicId?: string }>;
   };
   if ('imageUrl' in next) {
-    next.imageUrl = normalizeMediaUrl(next.imageUrl, next.imagePublicId, req);
+    next.imageUrl = resolveForApiResponse(next.imageUrl, next.imagePublicId, req);
   }
   if (Array.isArray(next.gallery)) {
     next.gallery = next.gallery.map((item) => ({
       ...item,
-      url: normalizeMediaUrl(item?.url, item?.publicId, req),
+      url: resolveForApiResponse(item?.url, item?.publicId, req),
     }));
   }
   return next as T;

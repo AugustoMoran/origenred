@@ -12,6 +12,7 @@ import {
   usePreviewBulkCostUpdateMutation,
   useApplyBulkCostUpdateMutation,
   useSyncMarketplaceMutation,
+  useRepairProductMediaMutation,
 } from '../services/inventoryApi';
 import { useGetBranchesQuery } from '../services/branchApi';
 import { useGetCategoriesQuery } from '../services/categoryApi';
@@ -196,6 +197,7 @@ export const Inventory = () => {
   const [previewBulkCostUpdate, { isLoading: isPreviewingBulk }] = usePreviewBulkCostUpdateMutation();
   const [applyBulkCostUpdate, { isLoading: isApplyingBulk }] = useApplyBulkCostUpdateMutation();
   const [syncMarketplace, { isLoading: isSyncingMp }] = useSyncMarketplaceMutation();
+  const [repairProductMedia, { isLoading: isRepairingMedia }] = useRepairProductMediaMutation();
   const [mpSyncMsg, setMpSyncMsg] = useState('');
   const { user } = useSelector((state: any) => state.auth);
   
@@ -783,12 +785,16 @@ export const Inventory = () => {
           <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
-              disabled={isSyncingMp}
+              disabled={isSyncingMp || isRepairingMedia}
               onClick={async () => {
                 setMpSyncMsg('');
                 try {
                   const res = await syncMarketplace().unwrap();
-                  setMpSyncMsg(res.message);
+                  const repair = res.mediaRepair;
+                  const extra = repair
+                    ? ` · Imágenes: ${repair.repairedProducts} reparadas, ${repair.stillMissing} sin recuperar.`
+                    : '';
+                  setMpSyncMsg(`${res.message}${extra}`);
                 } catch (e: any) {
                   setMpSyncMsg(e?.data?.message || 'Error al sincronizar');
                 }
@@ -796,6 +802,22 @@ export const Inventory = () => {
               className="px-3 py-1.5 text-xs font-medium rounded-lg bg-brand-600 text-white hover:bg-brand-500 disabled:opacity-50"
             >
               {isSyncingMp ? 'Sincronizando…' : 'Unificar inventario con mi tienda MP'}
+            </button>
+            <button
+              type="button"
+              disabled={isSyncingMp || isRepairingMedia}
+              onClick={async () => {
+                setMpSyncMsg('');
+                try {
+                  const res = await repairProductMedia().unwrap();
+                  setMpSyncMsg(res.message);
+                } catch (e: any) {
+                  setMpSyncMsg(e?.data?.message || 'Error al reparar imágenes');
+                }
+              }}
+              className="px-3 py-1.5 text-xs font-medium rounded-lg bg-slate-700 text-white hover:bg-slate-600 disabled:opacity-50"
+            >
+              {isRepairingMedia ? 'Reparando…' : 'Recuperar imágenes'}
             </button>
             {mpSyncMsg && <span className="text-xs text-slate-400">{mpSyncMsg}</span>}
           </div>

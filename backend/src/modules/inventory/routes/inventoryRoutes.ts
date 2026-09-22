@@ -7,6 +7,7 @@ import {
   adjustStockController,
   bulkCostUpdateController,
   resyncMarketplaceController,
+  repairProductMediaController,
 } from '../controllers/inventoryController';
 import { authenticate, authorize } from '../../../middleware/authMiddleware';
 import { inventoryProductUpload } from '../middleware/inventoryUpload';
@@ -40,5 +41,6 @@ router.delete('/:id', authenticate, authorize(PERMISSIONS.INVENTORY_EDIT), delet
 router.patch('/:id/stock', authenticate, authorize(PERMISSIONS.INVENTORY_EDIT), adjustStockController);
 router.post('/bulk/cost-update', authenticate, authorize(PERMISSIONS.INVENTORY_EDIT), bulkCostUpdateController);
 router.post('/sync-marketplace', authenticate, resyncMarketplaceController);
+router.post('/repair-media', authenticate, repairProductMediaController);
 
 export default router;

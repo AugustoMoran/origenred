@@ -136,6 +136,19 @@ export const resyncMarketplaceController = async (req: Request, res: Response) =
   }
 };
 
+export const repairProductMediaController = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const result = await inventoryService.repairInventoryProductMedia(user);
+    res.json({
+      message: `Reparación completada: ${result.repairedProducts} productos actualizados (${result.repairedFromListing} desde marketplace). ${result.stillMissing} siguen sin imagen recuperable.`,
+      ...result,
+    });
+  } catch (error: any) {
+    res.status(error.message?.includes('Solo administradores') ? 403 : 400).json({ message: error.message });
+  }
+};
+
 export const bulkCostUpdateController = async (req: Request, res: Response) => {
   try {
     const user = (req as any).user;

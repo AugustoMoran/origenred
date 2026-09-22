@@ -88,11 +88,40 @@ export const inventoryApi = createApi({
       }),
       invalidatesTags: ['Product'],
     }),
-    syncMarketplace: builder.mutation<{ message: string; synced: number }, void>({
+    syncMarketplace: builder.mutation<
+      {
+        message: string;
+        synced: number;
+        mediaRepair?: {
+          scanned: number;
+          repairedProducts: number;
+          repairedFromListing: number;
+          stillMissing: number;
+        };
+      },
+      void
+    >({
       query: () => ({
         url: '/sync-marketplace',
         method: 'POST',
       }),
+      invalidatesTags: ['Product'],
+    }),
+    repairProductMedia: builder.mutation<
+      {
+        message: string;
+        scanned: number;
+        repairedProducts: number;
+        repairedFromListing: number;
+        stillMissing: number;
+      },
+      void
+    >({
+      query: () => ({
+        url: '/repair-media',
+        method: 'POST',
+      }),
+      invalidatesTags: ['Product'],
     }),
   }),
 });
@@ -108,4 +137,5 @@ export const {
   usePreviewBulkCostUpdateMutation,
   useApplyBulkCostUpdateMutation,
   useSyncMarketplaceMutation,
+  useRepairProductMediaMutation,
 } = inventoryApi;

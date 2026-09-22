@@ -2,7 +2,11 @@ import { Request, Response } from 'express';
 import { getR2Object } from '../../marketplace/services/r2StorageService';
 
 export const streamMediaObjectController = async (req: Request, res: Response) => {
-  const key = decodeURIComponent(req.path.replace(/^\//, ''));
+  const marker = '/api/media/';
+  const fromOriginal = req.originalUrl.includes(marker)
+    ? req.originalUrl.slice(req.originalUrl.indexOf(marker) + marker.length).split('?')[0]
+    : '';
+  const key = decodeURIComponent((fromOriginal || req.path.replace(/^\//, '')).replace(/^\//, ''));
   if (!key || key.includes('..')) {
     return res.status(400).json({ message: 'Clave de archivo inválida' });
   }

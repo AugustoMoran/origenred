@@ -64,8 +64,13 @@ export const resolveMarketplaceImageUrl = (url?: string | null, storageKey?: str
       if (normalized.includes('r2.cloudflarestorage.com') && !normalized.includes('.r2.dev')) {
         return PLACEHOLDER;
       }
+      if (isPlaceholderMediaUrl(normalized)) return PLACEHOLDER;
       return normalized;
     }
+  }
+
+  if (trimmed && !isPlaceholderMediaUrl(trimmed) && !trimmed.startsWith('/')) {
+    return trimmed.replace(/^http:/i, 'https:');
   }
 
   if (isR2ObjectKey(storageKey)) {
