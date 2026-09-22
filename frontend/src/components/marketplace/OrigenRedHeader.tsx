@@ -6,6 +6,7 @@ import { selectMarketplaceCartCount, toggleMarketplaceCart } from '../../store/m
 import { useGetNotificationSummaryQuery } from '../../services/marketplaceApi';
 import { OrigenRedLogo } from '../branding/OrigenRedLogo';
 import { MarketplaceAccountMenu } from './MarketplaceAccountMenu';
+import { MarketplaceSearchBar } from './MarketplaceSearchBar';
 
 export const OrigenRedHeader: React.FC = () => {
   const dispatch = useDispatch();
@@ -21,31 +22,12 @@ export const OrigenRedHeader: React.FC = () => {
   return (
     <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-100 shadow-sm">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="min-h-[4rem] sm:min-h-[4.75rem] py-2 flex items-center justify-between gap-2 sm:gap-4">
-          <Link
-            to="/"
-            className="flex items-center min-w-0 flex-shrink-0 group"
-          >
+        <div className="min-h-[3.5rem] sm:min-h-[4rem] py-2 flex items-center justify-between gap-2 sm:gap-3">
+          <Link to="/" className="flex items-center min-w-0 flex-shrink-0 group">
             <OrigenRedLogo variant="header" className="group-hover:opacity-90 transition-opacity" />
           </Link>
 
-          <div className="hidden md:flex flex-1 max-w-xl mx-4">
-            <form action="/buscar" method="get" className="w-full relative">
-              <input
-                name="q"
-                type="search"
-                placeholder="Buscar productos, marcas, categorías..."
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2.5 text-sm text-or-navy placeholder-slate-400 focus:outline-none focus:border-or-blue focus:ring-2 focus:ring-or-blue/10 transition-all"
-              />
-              <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-or-blue">
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-            </form>
-          </div>
-
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1 flex-shrink-0">
             <Link to="/" className="px-3 py-2 text-sm text-slate-600 hover:text-or-navy rounded-lg hover:bg-slate-50 transition-colors">
               Inicio
             </Link>
@@ -57,35 +39,35 @@ export const OrigenRedHeader: React.FC = () => {
             </Link>
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
             {isAdmin && (
               <Link
                 to="/dashboard"
-                className="inline-flex items-center px-3 py-2 text-xs font-semibold text-white bg-or-red hover:bg-red-600 rounded-lg transition-colors shadow-sm"
+                className="hidden sm:inline-flex items-center px-2.5 py-1.5 text-xs font-semibold text-white bg-or-red hover:bg-red-600 rounded-lg transition-colors"
               >
-                Panel admin
+                Admin
               </Link>
             )}
             {showSellerPanel && (
               <Link
                 to="/vendedor"
-                className="inline-flex items-center px-3 py-2 text-xs font-semibold text-or-blue bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                className="hidden sm:inline-flex items-center px-2.5 py-1.5 text-xs font-semibold text-or-blue bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
               >
-                Panel vendedor
+                Vendedor
               </Link>
             )}
             {!user ? (
               <>
-                <Link to="/login" className="px-3 py-2 text-xs font-medium text-or-navy hover:text-or-blue transition-colors">
+                <Link to="/login" className="px-2 sm:px-3 py-2 text-xs font-medium text-or-navy hover:text-or-blue transition-colors">
                   Ingresar
                 </Link>
-                <Link to="/registro" className="px-4 py-2 text-xs font-semibold text-white bg-or-red hover:bg-red-600 rounded-xl transition-colors shadow-sm">
-                  Registrarse
+                <Link to="/registro" className="px-3 sm:px-4 py-2 text-xs font-semibold text-white bg-or-red hover:bg-red-600 rounded-xl transition-colors shadow-sm">
+                  Registro
                 </Link>
               </>
             ) : (
               <>
-                <div className="hidden md:flex items-center gap-1">
+                <div className="hidden xl:flex items-center gap-1">
                   <Link to="/cuenta/favoritos" className="px-2 py-2 text-xs text-slate-500 hover:text-or-navy">
                     Favoritos
                   </Link>
@@ -98,42 +80,36 @@ export const OrigenRedHeader: React.FC = () => {
             )}
 
             {user && (
-              <Link
-                to="/cuenta/notificaciones"
-                className="relative w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:text-or-navy hover:border-or-blue/30 transition-colors"
-                aria-label="Notificaciones"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
-                </svg>
-                {unread > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-or-red text-white text-[9px] font-bold flex items-center justify-center">
-                    {unread > 9 ? '9+' : unread}
-                  </span>
-                )}
-              </Link>
-            )}
-
-            {user && (
-              <Link
-                to="/cuenta/mensajes"
-                className="relative w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:text-or-navy hover:border-or-blue/30 transition-colors"
-                aria-label="Mensajes"
-              >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
-                </svg>
-                {unread > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-or-red text-white text-[9px] font-bold flex items-center justify-center">
-                    {unread > 9 ? '9+' : unread}
-                  </span>
-                )}
-              </Link>
+              <>
+                <Link
+                  to="/cuenta/notificaciones"
+                  className="relative w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:text-or-navy hover:border-or-blue/30 transition-colors"
+                  aria-label="Notificaciones"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                  </svg>
+                  {unread > 0 && (
+                    <span className="absolute -top-1 -right-1 min-w-[16px] h-4 px-1 rounded-full bg-or-red text-white text-[9px] font-bold flex items-center justify-center">
+                      {unread > 9 ? '9+' : unread}
+                    </span>
+                  )}
+                </Link>
+                <Link
+                  to="/cuenta/mensajes"
+                  className="relative w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:text-or-navy hover:border-or-blue/30 transition-colors"
+                  aria-label="Mensajes"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                  </svg>
+                </Link>
+              </>
             )}
 
             <button
               onClick={() => dispatch(toggleMarketplaceCart())}
-              className="relative w-9 h-9 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:text-or-navy hover:border-or-blue/30 transition-colors"
+              className="relative w-9 h-9 sm:w-10 sm:h-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:text-or-navy hover:border-or-blue/30 transition-colors"
               aria-label="Carrito"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.75} viewBox="0 0 24 24">
@@ -146,6 +122,10 @@ export const OrigenRedHeader: React.FC = () => {
               )}
             </button>
           </div>
+        </div>
+
+        <div className="pb-3 sm:pb-4">
+          <MarketplaceSearchBar autoFocus={false} />
         </div>
       </div>
     </header>

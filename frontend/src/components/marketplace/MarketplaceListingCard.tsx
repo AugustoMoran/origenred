@@ -58,8 +58,8 @@ export const MarketplaceListingCard: React.FC<Props> = ({ listing }) => {
   return (
     <motion.div
       className="group relative bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-lg hover:border-or-red/20 transition-[box-shadow,border-color] duration-300"
-      whileHover={reduce ? undefined : { y: -3 }}
-      transition={{ type: 'spring', stiffness: 420, damping: 28 }}
+      whileHover={reduce ? undefined : { y: -5, scale: 1.01 }}
+      transition={{ type: 'spring', stiffness: 380, damping: 24 }}
     >
       <Link to={`/p/${listing.slug}`} className="block">
         <div className="aspect-square bg-slate-50 overflow-hidden relative">
