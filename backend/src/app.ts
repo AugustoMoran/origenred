@@ -8,6 +8,7 @@ import csurf from 'csurf';
 import mongoose from 'mongoose';
 import morgan from 'morgan';
 import path from 'path';
+import { features } from './config/features';
 import { ensureListingsIndex, isMeilisearchEnabled } from './modules/marketplace/services/meilisearchService';
 import { registerMarketplaceChatSocket } from './socket/marketplaceChatSocket';
 
@@ -97,6 +98,7 @@ app.get('/health', (_req, res) => {
     ok: mongoOk,
     mongo: mongoOk ? 'connected' : 'disconnected',
     meilisearch: isMeilisearchEnabled(),
+    r2: features.r2,
     uptime: Math.floor(process.uptime()),
     version: process.env.npm_package_version || '0.1.0',
   };

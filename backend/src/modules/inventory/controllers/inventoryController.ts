@@ -13,6 +13,11 @@ import { isR2ObjectKey } from '../../../shared/utils/mediaUrl';
 import { applyInventoryImagesToProductData } from '../utils/inventoryImageUpload';
 import { Listing } from '../../marketplace/models/Listing';
 import { prepareProductForClient } from '../services/productMediaRepairService';
+import {
+  getR2PublicConfig,
+  probeR2WriteAccess,
+  verifyR2BucketReachable,
+} from '../../marketplace/services/r2StorageService';
 
 const isHttpUrl = (value?: string) => !!value && /^https?:\/\//i.test(value);
 
@@ -154,6 +159,25 @@ export const resyncMarketplaceController = async (req: Request, res: Response) =
     });
   } catch (error: any) {
     res.status(error.message?.includes('Solo administradores') ? 403 : 400).json({ message: error.message });
+  }
+};
+
+export const r2DiagnosticsController = async (req: Request, res: Response) => {
+  try {
+    const user = (req as any).user;
+    const isAdmin = Array.isArray(user?.roles) && user.roles.includes('admin');
+    if (!isAdmin) {
+      return res.status(403).json({ message: 'Solo administradores' });
+    }
+
+    const [head, write] = await Promise.all([verifyR2BucketReachable(), probeR2WriteAccess()]);
+    res.json({
+      config: getR2PublicConfig(),
+      headBucket: head,
+      writeProbe: write,
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: error.message });
   }
 };
 
