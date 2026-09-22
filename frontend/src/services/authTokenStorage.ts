@@ -42,3 +42,18 @@ export function applyAuthTokensFromPayload(data: unknown): void {
     saveAuthTokens(payload.accessToken, payload.refreshToken);
   }
 }
+
+/** Skip sending expired Bearer tokens so a valid session cookie can be used instead. */
+export function isAccessTokenExpired(token: string, skewMs = 10_000): boolean {
+  try {
+    const part = token.split('.')[1];
+    if (!part) return true;
+    const payload = JSON.parse(atob(part.replace(/-/g, '+').replace(/_/g, '/'))) as {
+      exp?: number;
+    };
+    if (!payload.exp) return true;
+    return payload.exp * 1000 <= Date.now() + skewMs;
+  } catch {
+    return true;
+  }
+}

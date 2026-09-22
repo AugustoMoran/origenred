@@ -3,6 +3,7 @@ import { useDispatch } from 'react-redux';
 import { useNavigate, Link } from 'react-router-dom';
 import { useLoginMutation } from '../services/authApi';
 import { setCredentials } from '../store/authSlice';
+import { applyAuthTokensFromPayload, clearAuthTokens } from '../services/authTokenStorage';
 import { OrigenRedLogo } from '../components/branding/OrigenRedLogo';
 import { SEO } from '../components/ecommerce/SEO';
 
@@ -21,10 +22,12 @@ export const Login = () => {
       const normalizedEmail = email.trim().toLowerCase();
       const normalizedPassword = password.trim();
 
+      clearAuthTokens();
       const result = await login({
         email: normalizedEmail,
         password: normalizedPassword,
       }).unwrap();
+      applyAuthTokensFromPayload(result);
       dispatch(setCredentials({ user: result.user }));
       const roles: string[] = result?.user?.roles || [];
       const isStaff = roles.some((r) => ['admin', 'vendedor'].includes(String(r).toLowerCase()));

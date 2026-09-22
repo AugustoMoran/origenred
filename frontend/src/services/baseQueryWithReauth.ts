@@ -4,6 +4,7 @@ import { logout, setUser, AuthUser } from '../store/authSlice';
 import {
   applyAuthTokensFromPayload,
   clearAuthTokens,
+  isAccessTokenExpired,
   loadAuthTokens,
 } from './authTokenStorage';
 
@@ -26,7 +27,7 @@ export async function fetchCsrfToken(): Promise<void> {
 
 export const prepareAuthHeaders = (headers: Headers) => {
   const tokens = loadAuthTokens();
-  if (tokens?.accessToken) {
+  if (tokens?.accessToken && !isAccessTokenExpired(tokens.accessToken)) {
     headers.set('Authorization', `Bearer ${tokens.accessToken}`);
   }
   if (csrfToken) headers.set('X-CSRF-Token', csrfToken);

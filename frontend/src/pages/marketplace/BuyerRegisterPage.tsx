@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { SEO } from '../../components/ecommerce/SEO';
 import { usePublicRegisterMutation, useLoginMutation } from '../../services/authApi';
 import { setCredentials } from '../../store/authSlice';
+import { applyAuthTokensFromPayload, clearAuthTokens } from '../../services/authTokenStorage';
 
 export const BuyerRegisterPage: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -27,12 +28,14 @@ export const BuyerRegisterPage: React.FC = () => {
         password,
       }).unwrap();
 
+      clearAuthTokens();
       const result = await login({
         email: email.trim().toLowerCase(),
         password,
       }).unwrap();
 
       if (result.user) {
+        applyAuthTokensFromPayload(result);
         dispatch(setCredentials({ user: result.user }));
         navigate('/');
       }

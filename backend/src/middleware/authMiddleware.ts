@@ -48,7 +48,7 @@ const extractAccessToken = (req: Request): string | null => {
       // try next duplicate/stale cookie
     }
   }
-  return candidates[0] ?? null;
+  return null;
 };
 
 export async function authenticate(req: Request, res: Response, next: NextFunction) {
