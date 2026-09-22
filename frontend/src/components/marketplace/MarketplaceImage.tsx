@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
-import { resolveMarketplaceImageUrl } from '../../utils/marketplaceMediaUrl';
+import React, { useEffect, useMemo, useState } from 'react';
+import { buildImageFallbackUrls } from '../../utils/marketplaceMediaUrl';
+
+const PLACEHOLDER = '/logooficialdefinitivo.png';
 
 type Props = {
   src?: string | null;
@@ -16,10 +18,16 @@ export const MarketplaceImage: React.FC<Props> = ({
   className,
   loading = 'lazy',
 }) => {
-  const [current, setCurrent] = useState(() => resolveMarketplaceImageUrl(src, storageKey));
+  const candidates = useMemo(
+    () => buildImageFallbackUrls(src, storageKey),
+    [src, storageKey]
+  );
+
+  const [index, setIndex] = useState(0);
+  const current = index < candidates.length ? candidates[index] : PLACEHOLDER;
 
   useEffect(() => {
-    setCurrent(resolveMarketplaceImageUrl(src, storageKey));
+    setIndex(0);
   }, [src, storageKey]);
 
   return (
@@ -30,7 +38,7 @@ export const MarketplaceImage: React.FC<Props> = ({
       loading={loading}
       decoding="async"
       onError={() => {
-        setCurrent('/logooficialdefinitivo.png');
+        setIndex((prev) => prev + 1);
       }}
     />
   );

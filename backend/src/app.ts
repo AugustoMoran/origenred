@@ -133,7 +133,9 @@ import analyticsRoutes from './modules/analytics/routes/analyticsRoutes';
 import paymentsRoutes from './modules/payments/routes/paymentsRoutes';
 import shippingRoutes from './modules/shipping/routes/shippingRoutes';
 import marketplaceRoutes from './modules/marketplace/routes/marketplaceRoutes';
+import mediaRoutes from './modules/media/routes/mediaRoutes';
 
+app.use('/api/media', mediaRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/inventory', inventoryRoutes);
 app.use('/api/sales', salesRoutes);

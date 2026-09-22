@@ -9,21 +9,19 @@ export const isPlaceholderMediaUrl = (url?: string | null): boolean => {
   );
 };
 
-/**
- * Solo reconstruir desde key cuando es clave R2 (carpeta/objeto), no el filename local de Multer.
- */
-export const shouldResolveMediaFromR2Key = (url?: string | null, r2Key?: string | null): boolean => {
-  const key = r2Key?.trim();
-  if (!key) return false;
+export const isR2ObjectKey = (key?: string | null) => {
+  const k = key?.trim();
+  if (!k || k.includes('..')) return false;
+  return k.includes('/');
+};
 
-  if (key.includes('/')) return true;
+export const apiOrigin = () => {
+  const raw = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
+  return raw.replace(/\/api\/?$/, '');
+};
 
-  const u = (url || '').toLowerCase();
-  if (!u) return false;
-  if (u.includes('r2.cloudflarestorage.com') || u.includes('.r2.dev')) return true;
-
-  const publicBase = (import.meta.env.VITE_R2_PUBLIC_URL as string | undefined)?.replace(/\/+$/, '');
-  if (publicBase && u.startsWith(publicBase)) return true;
-
-  return false;
+export const buildMediaProxyUrl = (storageKey?: string | null): string | null => {
+  if (!isR2ObjectKey(storageKey)) return null;
+  const key = String(storageKey).replace(/^\//, '');
+  return `${apiOrigin()}/api/media/${key.split('/').map(encodeURIComponent).join('/')}`;
 };

@@ -43,8 +43,8 @@ const toPlainProduct = (product: unknown) =>
     ? (product as { toObject: () => Record<string, unknown> }).toObject()
     : product;
 
-const toClientProduct = (_req: Request, product: unknown) =>
-  normalizeProductMedia(toPlainProduct(product) as Record<string, unknown>);
+const toClientProduct = (req: Request, product: unknown) =>
+  normalizeProductMedia(toPlainProduct(product) as Record<string, unknown>, req);
 
 export const getProductsController = async (req: Request, res: Response) => {
   try {

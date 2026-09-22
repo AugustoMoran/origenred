@@ -1,4 +1,5 @@
-import { S3Client, PutObjectCommand, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, DeleteObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
+import { buildMediaProxyUrl } from '../../../shared/utils/mediaUrl';
 import { Upload } from '@aws-sdk/lib-storage';
 import { randomUUID } from 'crypto';
 import path from 'path';
@@ -74,10 +75,25 @@ export const uploadToR2 = async (input: {
     throw err;
   }
 
+  const proxyUrl = buildMediaProxyUrl(key);
   return {
     key,
-    url: buildPublicUrl(key),
+    url: proxyUrl || buildPublicUrl(key),
   };
+};
+
+export const getR2Object = async (key: string) => {
+  const s3 = getClient();
+  if (!s3) {
+    throw new Error('Cloudflare R2 no configurado');
+  }
+  const normalizedKey = key.replace(/^\//, '');
+  return s3.send(
+    new GetObjectCommand({
+      Bucket: r2Config.bucket,
+      Key: normalizedKey,
+    })
+  );
 };
 
 export const deleteFromR2 = async (key: string) => {

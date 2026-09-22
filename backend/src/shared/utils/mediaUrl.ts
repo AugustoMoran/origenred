@@ -36,133 +36,99 @@ export const isPlaceholderMediaUrl = (url?: string | null): boolean => {
   );
 };
 
-/** Solo claves R2 con path (inventory/..., listings/...), no filenames sueltos de disco local. */
-export const shouldResolveMediaFromR2Key = (url?: string | null, r2Key?: string | null): boolean => {
-  const key = r2Key?.trim();
-  if (!key) return false;
-  if (key.includes('/')) return true;
-
-  const u = (url || '').toLowerCase();
-  if (!u) return false;
-  if (u.includes('r2.cloudflarestorage.com') || u.includes('.r2.dev')) return true;
-  if (r2Config.publicUrl && u.startsWith(r2Config.publicUrl.toLowerCase())) return true;
-
-  return false;
+export const isR2ObjectKey = (key?: string | null) => {
+  const k = key?.trim();
+  if (!k || k.includes('..')) return false;
+  return k.includes('/');
 };
 
-export const resolveMediaUrlFromR2Key = (r2Key?: string | null, url?: string | null): string | null => {
-  if (!shouldResolveMediaFromR2Key(url, r2Key)) return null;
-  const publicBase = r2Config.publicUrl;
-  if (!publicBase || !r2Key?.trim()) return null;
-  return `${publicBase}/${String(r2Key).replace(/^\//, '')}`;
+/** URL pública estable vía API (no expira, no depende del dominio R2 en el cliente). */
+export const buildMediaProxyUrl = (storageKey?: string | null, req?: Request): string | null => {
+  if (!isR2ObjectKey(storageKey)) return null;
+  const key = String(storageKey).replace(/^\//, '');
+  const base = getPublicApiBaseUrl(req).replace(/\/+$/, '');
+  return `${base}/api/media/${key.split('/').map(encodeURIComponent).join('/')}`;
+};
+
+const rewriteUploadPathToApi = (url: string, apiBase?: string): string | null => {
+  const base = (apiBase || getPublicApiBaseUrl()).replace(/\/+$/, '');
+
+  if (url.startsWith('/uploads')) {
+    return `${base}${url}`;
+  }
+
+  try {
+    const parsed = new URL(url.replace(/^http:/i, 'https:'));
+    if (!parsed.pathname.startsWith('/uploads')) return null;
+    const host = parsed.hostname.toLowerCase();
+    if (
+      FRONTEND_HOSTS.has(host) ||
+      host.includes('localhost') ||
+      host.includes('onrender.com')
+    ) {
+      return `${base}${parsed.pathname}`;
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
 };
 
 const tryPrivateR2ToPublic = (url: string): string | null => {
   if (!url.includes('r2.cloudflarestorage.com') || url.includes('.r2.dev')) return null;
   const fromKey = url.match(/r2\.cloudflarestorage\.com\/[^/]+\/(.+)$/i);
-  if (!fromKey?.[1]) return null;
-  const publicBase = r2Config.publicUrl;
-  if (!publicBase) return null;
-  return `${publicBase}/${decodeURIComponent(fromKey[1])}`;
-};
-
-const tryRewriteUploadsOnFrontendHost = (url: string, apiBase: string): string | null => {
-  try {
-    const parsed = new URL(url);
-    if (!FRONTEND_HOSTS.has(parsed.hostname.toLowerCase())) return null;
-    if (!parsed.pathname.startsWith('/uploads')) return null;
-    return `${apiBase.replace(/\/+$/, '')}${parsed.pathname}`;
-  } catch {
-    return null;
-  }
+  if (!fromKey?.[1] || !r2Config.publicUrl) return null;
+  return `${r2Config.publicUrl}/${decodeURIComponent(fromKey[1])}`;
 };
 
 /**
- * URL estable para guardar en DB (nunca reemplaza por placeholder).
+ * Resuelve la mejor URL para mostrar o guardar. Nunca devuelve el logo placeholder.
  */
-export const canonicalizeMediaUrl = (url?: string | null, r2Key?: string | null): string => {
-  if (isPlaceholderMediaUrl(url) && !shouldResolveMediaFromR2Key(url, r2Key)) {
-    return '';
-  }
-
-  const fromKey = resolveMediaUrlFromR2Key(r2Key, url);
-  if (fromKey) return fromKey;
-
-  if (!url || !String(url).trim()) return '';
-
-  let normalized = String(url).trim();
-  const apiBase = getPublicApiBaseUrl();
-
-  if (normalized.startsWith('//')) {
-    normalized = `https:${normalized}`;
-  }
-
-  if (normalized.startsWith('/uploads')) {
-    return `${apiBase.replace(/\/+$/, '')}${normalized}`;
-  }
-
-  normalized = normalized.replace(/^http:/i, 'https:');
-
-  const privateR2 = tryPrivateR2ToPublic(normalized);
-  if (privateR2) return privateR2;
-
-  const frontendUploads = tryRewriteUploadsOnFrontendHost(normalized, apiBase);
-  if (frontendUploads) return frontendUploads;
-
-  try {
-    const parsed = new URL(normalized);
-    if (parsed.pathname.startsWith('/uploads')) {
-      const host = parsed.hostname.toLowerCase();
-      if (
-        FRONTEND_HOSTS.has(host) ||
-        host.includes('localhost') ||
-        host.includes('onrender.com')
-      ) {
-        return `${apiBase.replace(/\/+$/, '')}${parsed.pathname}`;
-      }
+export const resolveStoredMediaUrl = (
+  url?: string | null,
+  storageKey?: string | null,
+  req?: Request
+): string => {
+  if (isR2ObjectKey(storageKey)) {
+    const proxy = buildMediaProxyUrl(storageKey, req);
+    if (proxy) return proxy;
+    if (r2Config.publicUrl) {
+      return `${r2Config.publicUrl}/${String(storageKey).replace(/^\//, '')}`;
     }
-  } catch {
-    return '';
   }
 
-  if (normalized.startsWith('/') && !normalized.startsWith('//')) {
-    const frontend = (process.env.FRONTEND_URL || 'https://origenred.com').replace(/\/+$/, '');
-    return `${frontend}${normalized}`;
+  const trimmed = url?.trim();
+  if (trimmed && !isPlaceholderMediaUrl(trimmed)) {
+    if (trimmed.includes('/api/media/')) {
+      return trimmed.replace(/^http:/i, 'https:');
+    }
+
+    const rewritten = rewriteUploadPathToApi(trimmed);
+    if (rewritten) return rewritten;
+
+    if (/^https?:\/\//i.test(trimmed)) {
+      const https = trimmed.replace(/^http:/i, 'https:');
+      const privateR2 = tryPrivateR2ToPublic(https);
+      return privateR2 || https;
+    }
+
+    if (trimmed.startsWith('/uploads')) {
+      return `${getPublicApiBaseUrl(req).replace(/\/+$/, '')}${trimmed}`;
+    }
   }
 
-  return normalized;
+  return '';
 };
 
-/** URL lista para el cliente (con fallback si sigue rota). */
-export const normalizeMediaUrl = (url?: string | null, r2Key?: string | null): string => {
-  const canonical = canonicalizeMediaUrl(url, r2Key);
-  if (!canonical) return DEFAULT_PLACEHOLDER;
-
-  if (canonical.includes('picsum.photos')) {
-    return DEFAULT_PLACEHOLDER;
-  }
-
-  if (/localhost|127\.0\.0\.1/i.test(canonical)) {
-    try {
-      const parsed = new URL(canonical);
-      if (parsed.pathname.startsWith('/uploads')) {
-        return `${getPublicApiBaseUrl()}${parsed.pathname}`;
-      }
-    } catch {
-      return DEFAULT_PLACEHOLDER;
-    }
-    if (process.env.NODE_ENV === 'production') {
-      return DEFAULT_PLACEHOLDER;
-    }
-  }
-
-  if (canonical.includes('r2.cloudflarestorage.com') && !canonical.includes('.r2.dev')) {
-    const fixed = tryPrivateR2ToPublic(canonical);
-    return fixed || DEFAULT_PLACEHOLDER;
-  }
-
-  return canonical;
+/** Solo para respuestas HTTP al cliente (fallback visual). */
+export const normalizeMediaUrl = (url?: string | null, storageKey?: string | null, req?: Request): string => {
+  const resolved = resolveStoredMediaUrl(url, storageKey, req);
+  return resolved || DEFAULT_PLACEHOLDER;
 };
+
+export const canonicalizeMediaUrl = (url?: string | null, storageKey?: string | null, req?: Request) =>
+  resolveStoredMediaUrl(url, storageKey, req);
 
 const toPlainDoc = <T extends Record<string, any>>(value: T): T => {
   const maybeDoc = value as { toObject?: () => T };
@@ -172,33 +138,66 @@ const toPlainDoc = <T extends Record<string, any>>(value: T): T => {
   return value;
 };
 
-export const normalizeProductMedia = <T extends Record<string, any>>(product: T): T => {
+export const normalizeProductMedia = <T extends Record<string, any>>(product: T, req?: Request): T => {
   const next = { ...toPlainDoc(product) } as T & {
     imageUrl?: string;
     imagePublicId?: string;
     gallery?: Array<{ url?: string; alt?: string; publicId?: string }>;
   };
   if ('imageUrl' in next) {
-    next.imageUrl = normalizeMediaUrl(next.imageUrl, next.imagePublicId);
+    next.imageUrl = normalizeMediaUrl(next.imageUrl, next.imagePublicId, req);
   }
   if (Array.isArray(next.gallery)) {
     next.gallery = next.gallery.map((item) => ({
       ...item,
-      url: normalizeMediaUrl(item?.url, item?.publicId),
+      url: normalizeMediaUrl(item?.url, item?.publicId, req),
     }));
   }
   return next as T;
 };
 
-export const normalizeListingMedia = <T extends Record<string, any>>(listing: T): T => {
+export const normalizeListingMedia = <T extends Record<string, any>>(listing: T, req?: Request): T => {
   const next = { ...listing } as T & {
     images?: Array<{ url?: string; alt?: string; key?: string }>;
   };
   if (Array.isArray(next.images)) {
     next.images = next.images.map((item) => ({
       ...item,
-      url: normalizeMediaUrl(item?.url, item?.key),
+      url: normalizeMediaUrl(item?.url, item?.key, req),
     }));
   }
   return next as T;
+};
+
+export const repairProductMediaInPlace = (product: {
+  imageUrl?: string;
+  imagePublicId?: string;
+  gallery?: Array<{ url?: string; publicId?: string; alt?: string }>;
+}) => {
+  let changed = false;
+
+  if (isPlaceholderMediaUrl(product.imageUrl) && isR2ObjectKey(product.imagePublicId)) {
+    const fixed = resolveStoredMediaUrl(product.imageUrl, product.imagePublicId);
+    if (fixed) {
+      product.imageUrl = fixed;
+      changed = true;
+    }
+  } else if (product.imageUrl && !isPlaceholderMediaUrl(product.imageUrl)) {
+    const fixed = resolveStoredMediaUrl(product.imageUrl, product.imagePublicId);
+    if (fixed && fixed !== product.imageUrl) {
+      product.imageUrl = fixed;
+      changed = true;
+    }
+  }
+
+  if (Array.isArray(product.gallery)) {
+    product.gallery = product.gallery.map((item) => {
+      const fixed = resolveStoredMediaUrl(item.url, item.publicId);
+      if (!fixed) return item;
+      if (fixed !== item.url) changed = true;
+      return { ...item, url: fixed };
+    });
+  }
+
+  return changed;
 };

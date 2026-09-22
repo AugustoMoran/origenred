@@ -8,9 +8,10 @@ import { SellerProfile } from '../models/SellerProfile';
 import { computeOrigenRankScore } from './origenRankService';
 import { indexListing, removeListingFromIndex } from './meilisearchService';
 import {
-  canonicalizeMediaUrl,
   isPlaceholderMediaUrl,
-  shouldResolveMediaFromR2Key,
+  isR2ObjectKey,
+  repairProductMediaInPlace,
+  resolveStoredMediaUrl,
 } from '../../../shared/utils/mediaUrl';
 
 const OFFICIAL_SELLER_SLUG = 'origenred-oficial';
@@ -120,11 +121,10 @@ async function getDefaultAdminId(): Promise<mongoose.Types.ObjectId> {
 
 function buildListingImages(product: IProduct) {
   const toListingImage = (url?: string, publicId?: string, alt?: string) => {
-    if (isPlaceholderMediaUrl(url) && !shouldResolveMediaFromR2Key(url, publicId)) return null;
-    const canonical = canonicalizeMediaUrl(url, publicId);
-    if (!canonical || isPlaceholderMediaUrl(canonical)) return null;
-    const key = shouldResolveMediaFromR2Key(url, publicId) ? publicId : undefined;
-    return { url: canonical, key, alt: alt || product.name };
+    const resolved = resolveStoredMediaUrl(url, publicId);
+    if (!resolved || isPlaceholderMediaUrl(resolved)) return null;
+    const key = isR2ObjectKey(publicId) ? publicId : undefined;
+    return { url: resolved, key, alt: alt || product.name };
   };
 
   const fromGallery = (product.gallery || [])
@@ -169,6 +169,10 @@ export async function syncProductToMarketplaceListing(
 ) {
   const product = await Product.findById(productId);
   if (!product) return null;
+
+  if (repairProductMediaInPlace(product)) {
+    await product.save();
+  }
 
   if (!product.isActive) {
     await unpublishProductListing(productId);

@@ -1,97 +1,78 @@
-import { isPlaceholderMediaUrl, shouldResolveMediaFromR2Key } from './mediaUrlHelpers';
+import {
+  apiOrigin,
+  buildMediaProxyUrl,
+  isPlaceholderMediaUrl,
+  isR2ObjectKey,
+} from './mediaUrlHelpers';
 
 const PLACEHOLDER = '/logooficialdefinitivo.png';
 
-const apiOrigin = () => {
-  const raw = import.meta.env.VITE_API_URL || 'http://localhost:4000/api';
-  return raw.replace(/\/api\/?$/, '');
-};
+const rewriteUploadPathToApi = (url: string): string | null => {
+  const origin = apiOrigin();
+  if (url.startsWith('/uploads')) return `${origin}${url}`;
 
-const r2PublicBase = () => {
-  const fromEnv = import.meta.env.VITE_R2_PUBLIC_URL as string | undefined;
-  return fromEnv?.replace(/\/+$/, '') || '';
-};
-
-const resolveFromR2Key = (key?: string | null, url?: string | null): string | null => {
-  if (!shouldResolveMediaFromR2Key(url, key)) return null;
-  const base = r2PublicBase();
-  if (!base || !key?.trim()) return null;
-  return `${base}/${String(key).replace(/^\//, '')}`;
+  try {
+    const parsed = new URL(url.replace(/^http:/i, 'https:'));
+    if (!parsed.pathname.startsWith('/uploads')) return null;
+    const host = parsed.hostname.toLowerCase();
+    if (
+      host === 'origenred.com' ||
+      host === 'www.origenred.com' ||
+      host.includes('localhost') ||
+      host.includes('onrender.com')
+    ) {
+      return `${origin}${parsed.pathname}`;
+    }
+  } catch {
+    return null;
+  }
+  return null;
 };
 
 const tryPrivateR2ToPublic = (url: string): string | null => {
   if (!url.includes('r2.cloudflarestorage.com') || url.includes('.r2.dev')) return null;
   const match = url.match(/r2\.cloudflarestorage\.com\/[^/]+\/(.+)$/i);
-  const base = r2PublicBase();
+  const base = (import.meta.env.VITE_R2_PUBLIC_URL as string | undefined)?.replace(/\/+$/, '');
   if (!match?.[1] || !base) return null;
   return `${base}/${decodeURIComponent(match[1])}`;
 };
 
-/** URLs de imágenes (R2, /uploads en API, Cloudinary, etc.) */
-export const resolveMarketplaceImageUrl = (url?: string | null, r2Key?: string | null): string => {
-  if (isPlaceholderMediaUrl(url) && !shouldResolveMediaFromR2Key(url, r2Key)) {
-    return PLACEHOLDER;
+export const resolveMarketplaceImageUrl = (url?: string | null, storageKey?: string | null): string => {
+  if (isR2ObjectKey(storageKey)) {
+    const proxy = buildMediaProxyUrl(storageKey);
+    if (proxy) return proxy;
   }
 
-  const fromKey = resolveFromR2Key(r2Key, url);
-  if (fromKey) return fromKey;
-
-  if (!url?.trim()) return PLACEHOLDER;
-
-  let normalized = url.trim();
-  if (normalized.startsWith('//')) normalized = `https:${normalized}`;
-
-  const origin = apiOrigin();
-
-  if (normalized.startsWith('/uploads')) {
-    return `${origin}${normalized}`;
-  }
-
-  if (normalized.startsWith('/') && !normalized.startsWith('//')) {
-    return normalized;
-  }
-
-  normalized = normalized.replace(/^http:/i, 'https:');
-
-  const privateR2 = tryPrivateR2ToPublic(normalized);
-  if (privateR2) return privateR2;
-
-  try {
-    const parsed = new URL(normalized);
-    if (parsed.pathname.startsWith('/uploads')) {
-      const host = parsed.hostname.toLowerCase();
-      if (
-        host === 'origenred.com' ||
-        host === 'www.origenred.com' ||
-        host.includes('localhost') ||
-        host.includes('onrender.com')
-      ) {
-        return `${origin}${parsed.pathname}`;
-      }
+  const trimmed = url?.trim();
+  if (trimmed && !isPlaceholderMediaUrl(trimmed)) {
+    if (trimmed.includes('/api/media/')) {
+      return trimmed.replace(/^http:/i, 'https:');
     }
-  } catch {
-    return PLACEHOLDER;
-  }
 
-  if (normalized.includes('picsum.photos')) return PLACEHOLDER;
-  if (normalized.includes('r2.cloudflarestorage.com') && !normalized.includes('.r2.dev')) {
-    const fixed = tryPrivateR2ToPublic(normalized);
-    return fixed || PLACEHOLDER;
-  }
+    const rewritten = rewriteUploadPathToApi(trimmed);
+    if (rewritten) return rewritten;
 
-  if (/localhost|127\.0\.0\.1/i.test(normalized) && import.meta.env.PROD) {
-    try {
-      const parsed = new URL(normalized);
-      if (parsed.pathname.startsWith('/uploads')) {
-        return `${origin}${parsed.pathname}`;
-      }
-    } catch {
-      return PLACEHOLDER;
+    let normalized = trimmed.replace(/^http:/i, 'https:');
+    if (normalized.startsWith('/uploads')) {
+      return `${apiOrigin()}${normalized}`;
     }
-    return PLACEHOLDER;
+
+    if (/^https?:\/\//i.test(normalized)) {
+      const privateR2 = tryPrivateR2ToPublic(normalized);
+      if (privateR2) return privateR2;
+      if (normalized.includes('picsum.photos')) return PLACEHOLDER;
+      if (normalized.includes('r2.cloudflarestorage.com') && !normalized.includes('.r2.dev')) {
+        return PLACEHOLDER;
+      }
+      return normalized;
+    }
   }
 
-  return normalized;
+  if (isR2ObjectKey(storageKey)) {
+    return buildMediaProxyUrl(storageKey) || PLACEHOLDER;
+  }
+
+  return PLACEHOLDER;
 };
 
 export const resolveProductImageUrl = (product: {
@@ -105,12 +86,40 @@ export const resolveProductImageUrl = (product: {
   ];
 
   for (const candidate of candidates) {
-    if (isPlaceholderMediaUrl(candidate.url) && !shouldResolveMediaFromR2Key(candidate.url, candidate.key)) {
-      continue;
-    }
     const resolved = resolveMarketplaceImageUrl(candidate.url, candidate.key);
     if (!isPlaceholderMediaUrl(resolved)) return resolved;
   }
 
   return PLACEHOLDER;
+};
+
+/** Variantes para reintentar si falla la carga (CDN, host viejo, etc.). */
+export const buildImageFallbackUrls = (url?: string | null, storageKey?: string | null): string[] => {
+  const list: string[] = [];
+  const seen = new Set<string>();
+  const add = (value?: string | null) => {
+    if (!value || isPlaceholderMediaUrl(value) || seen.has(value)) return;
+    seen.add(value);
+    list.push(value);
+  };
+
+  const primary = resolveMarketplaceImageUrl(url, storageKey);
+  add(primary);
+
+  if (isR2ObjectKey(storageKey)) {
+    add(buildMediaProxyUrl(storageKey));
+    const publicBase = (import.meta.env.VITE_R2_PUBLIC_URL as string | undefined)?.replace(/\/+$/, '');
+    if (publicBase) {
+      add(`${publicBase}/${String(storageKey).replace(/^\//, '')}`);
+    }
+  }
+
+  if (url && !isPlaceholderMediaUrl(url)) {
+    add(rewriteUploadPathToApi(url.trim()));
+    const https = url.trim().replace(/^http:/i, 'https:');
+    add(https);
+    add(tryPrivateR2ToPublic(https));
+  }
+
+  return list;
 };

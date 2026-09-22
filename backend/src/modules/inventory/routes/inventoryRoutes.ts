@@ -9,14 +9,14 @@ import {
   resyncMarketplaceController,
 } from '../controllers/inventoryController';
 import { authenticate, authorize } from '../../../middleware/authMiddleware';
-import { upload } from '../../../middleware/uploadMiddleware';
+import { inventoryProductUpload } from '../middleware/inventoryUpload';
 import { PERMISSIONS } from '../../auth/constants/permissions';
 import { Request, Response, NextFunction } from 'express';
 
 const router = Router();
 
 const optionalProductUpload = (req: Request, res: Response, next: NextFunction) => {
-  upload.fields([
+  inventoryProductUpload.fields([
     { name: 'image', maxCount: 1 },
     { name: 'galleryImages', maxCount: 10 },
   ])(req, res, (err: any) => {
