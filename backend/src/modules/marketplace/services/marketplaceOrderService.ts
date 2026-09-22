@@ -105,6 +105,12 @@ export const updateSellerOrderFulfillment = async (
     order.trackingCode = input.trackingCode.trim();
   }
 
+  if (order.status === 'delivered') {
+    order.chatEnabled = false;
+  } else if (['paid', 'processing', 'shipped'].includes(String(order.status))) {
+    order.chatEnabled = true;
+  }
+
   order.markModified('shippingBySeller');
   await order.save();
 

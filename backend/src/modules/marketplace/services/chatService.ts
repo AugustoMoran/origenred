@@ -4,6 +4,26 @@ import { SellerProfile } from '../models/SellerProfile';
 import { attachExistingBuyerFromGuestEmail, ensureConversationForOrder } from './guestOrderService';
 import { mongoRefId as refId } from '../../../shared/utils/mongoRefId';
 
+const CHAT_CLOSED_ORDER_STATUSES = new Set([
+  'pending_payment',
+  'cancelled',
+  'refunded',
+  'delivered',
+]);
+
+const CHAT_OPEN_ORDER_STATUSES = new Set(['paid', 'processing', 'shipped']);
+
+/** Chat abierto desde el pago hasta marcar el pedido como entregado. */
+export const isOrderChatActive = (
+  order: { chatEnabled?: boolean; status?: string } | null | undefined
+): boolean => {
+  if (!order) return false;
+  const status = String(order.status || '');
+  if (CHAT_CLOSED_ORDER_STATUSES.has(status)) return false;
+  if (CHAT_OPEN_ORDER_STATUSES.has(status)) return true;
+  return Boolean(order.chatEnabled);
+};
+
 export const getBuyerConversations = async (buyerId: string) => {
   const conversations = await Conversation.find({ buyer: buyerId })
     .populate('order', 'orderNumber status total items createdAt chatEnabled')
@@ -12,7 +32,7 @@ export const getBuyerConversations = async (buyerId: string) => {
 
   const filtered = conversations.filter((c) => {
     const order = c.order as any;
-    return order?.chatEnabled;
+    return isOrderChatActive(order);
   });
 
   return attachUnreadCounts(filtered, buyerId);
@@ -29,7 +49,7 @@ export const getSellerConversations = async (userId: string) => {
 
   const filtered = conversations.filter((c) => {
     const order = c.order as any;
-    return order?.chatEnabled;
+    return isOrderChatActive(order);
   });
 
   return attachUnreadCounts(filtered, userId);
@@ -62,7 +82,9 @@ export const getConversationMessages = async (conversationId: string, userId: st
   if (!isBuyer && !isSeller) throw new Error('Acceso denegado');
 
   const order = await MarketplaceOrder.findById(conversation.order);
-  if (!order?.chatEnabled) throw new Error('El chat no está habilitado para este pedido');
+  if (!isOrderChatActive(order)) {
+    throw new Error('El chat ya no está disponible para este pedido');
+  }
 
   const messages = await Message.find({ conversation: conversationId })
     .populate('sender', 'name email')
@@ -91,7 +113,9 @@ export const sendMessage = async (conversationId: string, userId: string, body: 
   if (!isBuyer && !isSeller) throw new Error('Acceso denegado');
 
   const order = await MarketplaceOrder.findById(conversation.order);
-  if (!order?.chatEnabled) throw new Error('El chat no está habilitado para este pedido');
+  if (!isOrderChatActive(order)) {
+    throw new Error('El chat ya no está disponible para este pedido');
+  }
 
   const message = await Message.create({
     conversation: conversationId,
@@ -109,7 +133,7 @@ export const sendMessage = async (conversationId: string, userId: string, body: 
 export const getConversationByOrder = async (orderNumber: string, userId: string) => {
   let order = await MarketplaceOrder.findOne({ orderNumber });
   if (!order) throw new Error('Pedido no encontrado');
-  if (!order.chatEnabled) throw new Error('Chat no disponible');
+  if (!isOrderChatActive(order)) throw new Error('Chat no disponible');
 
   if (!order.buyer) {
     await attachExistingBuyerFromGuestEmail(order);
@@ -173,7 +197,7 @@ export const canAccessConversation = async (conversationId: string, userId: stri
   if (!isBuyer && !isSeller) return false;
 
   const order = await MarketplaceOrder.findById(conversation.order);
-  return Boolean(order?.chatEnabled);
+  return isOrderChatActive(order);
 };
 
 export const getSellerOrders = async (userId: string) => {

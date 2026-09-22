@@ -6,6 +6,7 @@ import {
   useGetEnvioPackTransferInfoQuery,
   useUploadEnvioPackProofMutation,
 } from '../../../services/marketplaceApi';
+import { canShowOrderChat } from '../../../utils/orderChat';
 
 const STATUS_LABELS: Record<string, string> = {
   paid: 'Pagado',
@@ -243,7 +244,7 @@ export const SellerOrdersPage: React.FC = () => {
                   </button>
                 )}
 
-                {order.chatEnabled && (
+                {canShowOrderChat(order) && (
                   <Link
                     to={`/vendedor/chat/${order.orderNumber}`}
                     className="text-xs text-or-blue font-medium hover:underline"

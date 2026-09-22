@@ -6,6 +6,7 @@ import { ReturnRequestModal } from '../../components/marketplace/ReturnRequestMo
 import { useGetOrderQuery, useGetReturnForOrderQuery } from '../../services/marketplaceApi';
 import { PickupLocationCard } from '../../components/marketplace/PickupLocationCard';
 import { shipFromFromOrderRow } from '../../utils/orderPickup';
+import { canShowOrderChat } from '../../utils/orderChat';
 
 const STATUS_LABELS: Record<string, string> = {
   pending_payment: 'Pendiente de pago',
@@ -132,7 +133,7 @@ export const MarketplaceOrderDetailPage: React.FC = () => {
           ))}
         </div>
 
-        {o.chatEnabled && o.status !== 'pending_payment' && (
+        {canShowOrderChat(o) && (
           <Link
             to={`/cuenta/chat/${o.orderNumber}`}
             className="inline-flex text-sm text-or-red font-medium hover:underline"

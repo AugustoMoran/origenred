@@ -4,6 +4,7 @@ import { SEO } from '../../components/ecommerce/SEO';
 import { useGetGuestOrderTrackQuery } from '../../services/marketplaceApi';
 import { PickupLocationCard } from '../../components/marketplace/PickupLocationCard';
 import { shipFromFromOrderRow } from '../../utils/orderPickup';
+import { canShowOrderChat } from '../../utils/orderChat';
 
 const format = (n: number) =>
   new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS', maximumFractionDigits: 0 }).format(n);
@@ -86,7 +87,7 @@ export const GuestOrderTrackingPage: React.FC = () => {
         >
           Crear cuenta
         </Link>
-        {order.chatEnabled && (
+        {canShowOrderChat(order) && (
           <p className="text-xs text-slate-500">
             Ya tenés cuenta?{' '}
             <Link to="/login" className="text-or-blue font-medium hover:underline">

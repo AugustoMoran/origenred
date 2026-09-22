@@ -1,6 +1,6 @@
 import { Conversation, Message } from '../models/Chat';
 import { SellerProfile } from '../models/SellerProfile';
-import { getUnreadChatCount } from './chatService';
+import { getUnreadChatCount, isOrderChatActive } from './chatService';
 import {
   listPersistedNotifications,
   markNotificationRead,
@@ -42,7 +42,7 @@ export const buildChatNotificationItems = async (userId: string): Promise<Market
 
   for (const c of buyerConversations) {
     const order = c.order as any;
-    if (!order?.chatEnabled) continue;
+    if (!isOrderChatActive(order)) continue;
     const unreadCount = await Message.countDocuments({
       conversation: c._id,
       sender: { $ne: userId },
@@ -71,7 +71,7 @@ export const buildChatNotificationItems = async (userId: string): Promise<Market
 
     for (const c of sellerConversations) {
       const order = c.order as any;
-      if (!order?.chatEnabled) continue;
+      if (!isOrderChatActive(order)) continue;
       const unreadCount = await Message.countDocuments({
         conversation: c._id,
         sender: { $ne: userId },

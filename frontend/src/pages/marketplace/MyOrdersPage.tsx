@@ -2,6 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { SEO } from '../../components/ecommerce/SEO';
 import { useCancelOrderMutation, useGetMyOrdersQuery } from '../../services/marketplaceApi';
+import { canShowOrderChat } from '../../utils/orderChat';
 
 const STATUS_LABELS: Record<string, string> = {
   pending_payment: 'Pendiente de pago',
@@ -93,7 +94,7 @@ export const MyOrdersPage: React.FC = () => {
                 >
                   Ver detalle
                 </Link>
-                {order.chatEnabled && order.status !== 'pending_payment' && (
+                {canShowOrderChat(order) && (
                   <Link
                     to={`/cuenta/chat/${order.orderNumber}`}
                     className="text-xs text-or-red font-medium hover:underline"

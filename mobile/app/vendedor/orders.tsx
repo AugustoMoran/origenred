@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Link } from 'expo-router';
 import { getSellerOrders, updateSellerOrder } from '../../src/api/marketplace';
+import { canShowOrderChat } from '../../src/utils/orderChat';
 import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
 
@@ -111,7 +112,7 @@ export default function SellerOrdersScreen() {
                 </Pressable>
               )}
 
-              {order.chatEnabled && (
+              {canShowOrderChat(order) && (
                 <Link href={`/chat/${order.orderNumber}`} asChild>
                   <Pressable>
                     <Text style={styles.link}>💬 Chat con comprador</Text>

@@ -4,6 +4,7 @@ import { Link } from 'expo-router';
 import { getMyOrders, cancelOrder } from '../../src/api/marketplace';
 import { useAuth } from '../../src/context/AuthContext';
 import { colors } from '../../src/theme/colors';
+import { canShowOrderChat } from '../../src/utils/orderChat';
 
 const STATUS_LABELS: Record<string, string> = {
   pending_payment: 'Pendiente de pago',
@@ -113,7 +114,7 @@ export default function OrdersScreen() {
                   <Text style={styles.detailLink}>Ver detalle</Text>
                 </Pressable>
               </Link>
-              {order.chatEnabled && order.status !== 'pending_payment' && (
+              {canShowOrderChat(order) && (
                 <Link href={`/chat/${order.orderNumber}`} asChild>
                   <Pressable>
                     <Text style={styles.chatLink}>💬 Chatear</Text>

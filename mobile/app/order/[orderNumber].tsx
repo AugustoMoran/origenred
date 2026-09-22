@@ -5,6 +5,7 @@ import { getOrder, createReturnRequest, getReturnForOrder, MarketplaceOrder } fr
 import { useAuth } from '../../src/context/AuthContext';
 import { ReportModal } from '../../src/components/ReportModal';
 import { colors } from '../../src/theme/colors';
+import { canShowOrderChat } from '../../src/utils/orderChat';
 
 const STATUS_LABELS: Record<string, string> = {
   pending_payment: 'Pendiente de pago',
@@ -123,7 +124,7 @@ export default function OrderDetailScreen() {
           ))}
         </View>
 
-        {order.chatEnabled && order.status !== 'pending_payment' && (
+        {canShowOrderChat(order) && (
           <Link href={`/chat/${order.orderNumber}`} asChild>
             <Pressable>
               <Text style={styles.chatLink}>💬 Chatear con el vendedor</Text>
