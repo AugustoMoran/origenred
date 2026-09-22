@@ -131,8 +131,16 @@ export const normalizeMediaUrl = (url?: string | null, r2Key?: string | null): s
   return canonical;
 };
 
+const toPlainDoc = <T extends Record<string, any>>(value: T): T => {
+  const maybeDoc = value as { toObject?: () => T };
+  if (value && typeof maybeDoc.toObject === 'function') {
+    return maybeDoc.toObject();
+  }
+  return value;
+};
+
 export const normalizeProductMedia = <T extends Record<string, any>>(product: T): T => {
-  const next = { ...product } as T & {
+  const next = { ...toPlainDoc(product) } as T & {
     imageUrl?: string;
     imagePublicId?: string;
     gallery?: Array<{ url?: string; alt?: string; publicId?: string }>;

@@ -823,7 +823,7 @@ export const Inventory = () => {
         {[
           { label: 'Total productos', value: products?.length ?? 0, color: 'text-white' },
           { label: 'Stock bajo mínimo', value: products?.filter((p: any) => p.stock <= p.minStock).length ?? 0, color: 'text-amber-400' },
-          { label: 'Unidades totales', value: products?.reduce((a: number, p: any) => a + p.stock, 0) ?? 0, color: 'text-emerald-400' },
+          { label: 'Unidades totales', value: products?.reduce((a: number, p: any) => a + Number(p.stock ?? 0), 0) ?? 0, color: 'text-emerald-400' },
         ].map(s => (
           <div key={s.label} className="card p-4 flex items-center gap-4">
             <div>
@@ -1048,7 +1048,7 @@ export const Inventory = () => {
                   {p.description && <div className="text-[10px] text-slate-500 mt-0.5 whitespace-normal break-words line-clamp-1 max-w-[120px] sm:max-w-[200px]">{p.description}</div>}
                 </td>
                 <td className="text-right px-1 font-bold text-brand-400 text-[13px] whitespace-nowrap">
-                  ${p.price.toLocaleString()}
+                  ${Number(p.price ?? 0).toLocaleString('es-AR')}
                 </td>
                 <td className="text-center px-1 border-x border-white/[0.02]">
                   <StockCell product={p} />

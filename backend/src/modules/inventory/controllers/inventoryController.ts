@@ -38,7 +38,13 @@ const parseSupplierField = (productData: Record<string, any>) => {
   }
 };
 
-const toClientProduct = (_req: Request, product: Record<string, unknown>) => normalizeProductMedia(product);
+const toPlainProduct = (product: unknown) =>
+  product && typeof (product as { toObject?: () => Record<string, unknown> }).toObject === 'function'
+    ? (product as { toObject: () => Record<string, unknown> }).toObject()
+    : product;
+
+const toClientProduct = (_req: Request, product: unknown) =>
+  normalizeProductMedia(toPlainProduct(product) as Record<string, unknown>);
 
 export const getProductsController = async (req: Request, res: Response) => {
   try {
