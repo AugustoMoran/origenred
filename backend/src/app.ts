@@ -91,19 +91,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use('/uploads', express.static(path.resolve(process.cwd(), 'uploads')));
 
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 200 });
-app.use(limiter);
-
-// CSRF en producción (opcional vía ENABLE_CSRF=true)
-if (process.env.NODE_ENV === 'production' && process.env.ENABLE_CSRF === 'true') {
-  const csrfProtection = csurf({
-    cookie: { httpOnly: true, sameSite: 'strict', secure: true },
-  });
-  app.use('/api', csrfProtection);
-  app.get('/api/csrf-token', (req, res) => res.json({ csrfToken: (req as any).csrfToken() }));
-}
-
-// Health check (used by Render / uptime monitors)
+// Health check (used by Render / uptime monitors) — sin rate limit
 app.get('/health', (_req, res) => {
   const mongoOk = mongoose.connection.readyState === 1;
   const body = {
@@ -115,6 +103,28 @@ app.get('/health', (_req, res) => {
   };
   res.status(mongoOk ? 200 : 503).json(body);
 });
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 1200,
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: (req) => {
+    const path = req.path || '';
+    return path.startsWith('/api/media') || path.startsWith('/uploads');
+  },
+  message: { message: 'Demasiadas solicitudes. Esperá unos minutos e intentá de nuevo.' },
+});
+app.use(limiter);
+
+// CSRF en producción (opcional vía ENABLE_CSRF=true)
+if (process.env.NODE_ENV === 'production' && process.env.ENABLE_CSRF === 'true') {
+  const csrfProtection = csurf({
+    cookie: { httpOnly: true, sameSite: 'strict', secure: true },
+  });
+  app.use('/api', csrfProtection);
+  app.get('/api/csrf-token', (req, res) => res.json({ csrfToken: (req as any).csrfToken() }));
+}
 
 // mount modules
 import authRoutes from './modules/auth/routes/authRoutes';

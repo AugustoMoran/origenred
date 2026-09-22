@@ -33,6 +33,15 @@ export const Login = () => {
       const isStaff = roles.some((r) => ['admin', 'vendedor'].includes(String(r).toLowerCase()));
       navigate(isStaff ? '/dashboard' : '/');
     } catch (err: any) {
+      const status = err?.status ?? err?.originalStatus;
+      if (status === 429) {
+        setError('El servidor está saturado (demasiadas solicitudes). Esperá 2–3 minutos y volvé a intentar.');
+        return;
+      }
+      if (status === 'FETCH_ERROR' || status === 0) {
+        setError('No se pudo conectar con el servidor. Revisá tu conexión o probá en unos minutos.');
+        return;
+      }
       setError(err.data?.message || 'Error al iniciar sesión. Verifica tus credenciales.');
     }
   };
