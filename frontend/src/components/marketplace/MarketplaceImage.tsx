@@ -3,17 +3,24 @@ import { resolveMarketplaceImageUrl } from '../../utils/marketplaceMediaUrl';
 
 type Props = {
   src?: string | null;
+  storageKey?: string | null;
   alt: string;
   className?: string;
   loading?: 'lazy' | 'eager';
 };
 
-export const MarketplaceImage: React.FC<Props> = ({ src, alt, className, loading = 'lazy' }) => {
-  const [current, setCurrent] = useState(() => resolveMarketplaceImageUrl(src));
+export const MarketplaceImage: React.FC<Props> = ({
+  src,
+  storageKey,
+  alt,
+  className,
+  loading = 'lazy',
+}) => {
+  const [current, setCurrent] = useState(() => resolveMarketplaceImageUrl(src, storageKey));
 
   useEffect(() => {
-    setCurrent(resolveMarketplaceImageUrl(src));
-  }, [src]);
+    setCurrent(resolveMarketplaceImageUrl(src, storageKey));
+  }, [src, storageKey]);
 
   return (
     <img

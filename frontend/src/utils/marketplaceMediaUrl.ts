@@ -1,3 +1,5 @@
+import { isPlaceholderMediaUrl, shouldResolveMediaFromR2Key } from './mediaUrlHelpers';
+
 const PLACEHOLDER = '/logooficialdefinitivo.png';
 
 const apiOrigin = () => {
@@ -10,7 +12,8 @@ const r2PublicBase = () => {
   return fromEnv?.replace(/\/+$/, '') || '';
 };
 
-const resolveFromR2Key = (key?: string | null): string | null => {
+const resolveFromR2Key = (key?: string | null, url?: string | null): string | null => {
+  if (!shouldResolveMediaFromR2Key(url, key)) return null;
   const base = r2PublicBase();
   if (!base || !key?.trim()) return null;
   return `${base}/${String(key).replace(/^\//, '')}`;
@@ -26,7 +29,11 @@ const tryPrivateR2ToPublic = (url: string): string | null => {
 
 /** URLs de imágenes (R2, /uploads en API, Cloudinary, etc.) */
 export const resolveMarketplaceImageUrl = (url?: string | null, r2Key?: string | null): string => {
-  const fromKey = resolveFromR2Key(r2Key);
+  if (isPlaceholderMediaUrl(url) && !shouldResolveMediaFromR2Key(url, r2Key)) {
+    return PLACEHOLDER;
+  }
+
+  const fromKey = resolveFromR2Key(r2Key, url);
   if (fromKey) return fromKey;
 
   if (!url?.trim()) return PLACEHOLDER;
@@ -92,9 +99,18 @@ export const resolveProductImageUrl = (product: {
   imagePublicId?: string | null;
   gallery?: Array<{ url?: string; publicId?: string }> | null;
 }) => {
-  const galleryFirst = product.gallery?.[0];
-  return resolveMarketplaceImageUrl(
-    product.imageUrl || galleryFirst?.url,
-    product.imagePublicId || galleryFirst?.publicId
-  );
+  const candidates: Array<{ url?: string | null; key?: string | null }> = [
+    { url: product.imageUrl, key: product.imagePublicId },
+    ...(product.gallery || []).map((item) => ({ url: item.url, key: item.publicId })),
+  ];
+
+  for (const candidate of candidates) {
+    if (isPlaceholderMediaUrl(candidate.url) && !shouldResolveMediaFromR2Key(candidate.url, candidate.key)) {
+      continue;
+    }
+    const resolved = resolveMarketplaceImageUrl(candidate.url, candidate.key);
+    if (!isPlaceholderMediaUrl(resolved)) return resolved;
+  }
+
+  return PLACEHOLDER;
 };

@@ -26,7 +26,32 @@ export const buildLocalUploadUrl = (req: Request, filename: string) => {
   return `${base}/uploads/${filename}`;
 };
 
-export const resolveMediaUrlFromR2Key = (r2Key?: string | null): string | null => {
+export const isPlaceholderMediaUrl = (url?: string | null): boolean => {
+  if (!url?.trim()) return true;
+  const lower = url.toLowerCase();
+  return (
+    lower.includes('logooficialdefinitivo') ||
+    lower.includes('origenred-logo') ||
+    lower.endsWith('/logooficialdefinitivo.png')
+  );
+};
+
+/** Solo claves R2 con path (inventory/..., listings/...), no filenames sueltos de disco local. */
+export const shouldResolveMediaFromR2Key = (url?: string | null, r2Key?: string | null): boolean => {
+  const key = r2Key?.trim();
+  if (!key) return false;
+  if (key.includes('/')) return true;
+
+  const u = (url || '').toLowerCase();
+  if (!u) return false;
+  if (u.includes('r2.cloudflarestorage.com') || u.includes('.r2.dev')) return true;
+  if (r2Config.publicUrl && u.startsWith(r2Config.publicUrl.toLowerCase())) return true;
+
+  return false;
+};
+
+export const resolveMediaUrlFromR2Key = (r2Key?: string | null, url?: string | null): string | null => {
+  if (!shouldResolveMediaFromR2Key(url, r2Key)) return null;
   const publicBase = r2Config.publicUrl;
   if (!publicBase || !r2Key?.trim()) return null;
   return `${publicBase}/${String(r2Key).replace(/^\//, '')}`;
@@ -56,7 +81,11 @@ const tryRewriteUploadsOnFrontendHost = (url: string, apiBase: string): string |
  * URL estable para guardar en DB (nunca reemplaza por placeholder).
  */
 export const canonicalizeMediaUrl = (url?: string | null, r2Key?: string | null): string => {
-  const fromKey = resolveMediaUrlFromR2Key(r2Key);
+  if (isPlaceholderMediaUrl(url) && !shouldResolveMediaFromR2Key(url, r2Key)) {
+    return '';
+  }
+
+  const fromKey = resolveMediaUrlFromR2Key(r2Key, url);
   if (fromKey) return fromKey;
 
   if (!url || !String(url).trim()) return '';
@@ -84,7 +113,11 @@ export const canonicalizeMediaUrl = (url?: string | null, r2Key?: string | null)
     const parsed = new URL(normalized);
     if (parsed.pathname.startsWith('/uploads')) {
       const host = parsed.hostname.toLowerCase();
-      if (FRONTEND_HOSTS.has(host) || host.includes('localhost')) {
+      if (
+        FRONTEND_HOSTS.has(host) ||
+        host.includes('localhost') ||
+        host.includes('onrender.com')
+      ) {
         return `${apiBase.replace(/\/+$/, '')}${parsed.pathname}`;
       }
     }

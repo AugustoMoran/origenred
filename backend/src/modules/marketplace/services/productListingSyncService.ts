@@ -7,7 +7,11 @@ import { Listing } from '../models/Listing';
 import { SellerProfile } from '../models/SellerProfile';
 import { computeOrigenRankScore } from './origenRankService';
 import { indexListing, removeListingFromIndex } from './meilisearchService';
-import { canonicalizeMediaUrl } from '../../../shared/utils/mediaUrl';
+import {
+  canonicalizeMediaUrl,
+  isPlaceholderMediaUrl,
+  shouldResolveMediaFromR2Key,
+} from '../../../shared/utils/mediaUrl';
 
 const OFFICIAL_SELLER_SLUG = 'origenred-oficial';
 
@@ -115,26 +119,21 @@ async function getDefaultAdminId(): Promise<mongoose.Types.ObjectId> {
 }
 
 function buildListingImages(product: IProduct) {
-  if (product.gallery?.length) {
-    return product.gallery
-      .map((item) => {
-        const url = canonicalizeMediaUrl(item.url, item.publicId);
-        if (!url) return null;
-        return {
-          url,
-          key: item.publicId,
-          alt: item.alt || product.name,
-        };
-      })
-      .filter(Boolean) as Array<{ url: string; key?: string; alt: string }>;
-  }
-  if (product.imageUrl) {
-    const url = canonicalizeMediaUrl(product.imageUrl, product.imagePublicId);
-    if (url) {
-      return [{ url, key: product.imagePublicId, alt: product.name }];
-    }
-  }
-  return [];
+  const toListingImage = (url?: string, publicId?: string, alt?: string) => {
+    if (isPlaceholderMediaUrl(url) && !shouldResolveMediaFromR2Key(url, publicId)) return null;
+    const canonical = canonicalizeMediaUrl(url, publicId);
+    if (!canonical || isPlaceholderMediaUrl(canonical)) return null;
+    const key = shouldResolveMediaFromR2Key(url, publicId) ? publicId : undefined;
+    return { url: canonical, key, alt: alt || product.name };
+  };
+
+  const fromGallery = (product.gallery || [])
+    .map((item) => toListingImage(item.url, item.publicId, item.alt))
+    .filter(Boolean) as Array<{ url: string; key?: string; alt: string }>;
+  if (fromGallery.length) return fromGallery;
+
+  const main = toListingImage(product.imageUrl, product.imagePublicId, product.name);
+  return main ? [main] : [];
 }
 
 async function uniqueListingSlug(base: string, excludeId?: string) {
