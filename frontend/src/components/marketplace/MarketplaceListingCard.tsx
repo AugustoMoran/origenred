@@ -68,6 +68,7 @@ export const MarketplaceListingCard: React.FC<Props> = ({ listing }) => {
         <div className="aspect-square bg-slate-50 overflow-hidden relative">
           <MarketplaceImage
             src={imageUrl}
+            storageKey={primaryImage?.key}
             alt={listing.title}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />

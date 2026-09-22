@@ -211,7 +211,7 @@ const toPlainDoc = <T extends Record<string, any>>(value: T): T => {
   return value;
 };
 
-const resolveForApiResponse = (url?: string | null, storageKey?: string | null, req?: Request) => {
+export const resolveForApiResponse = (url?: string | null, storageKey?: string | null, req?: Request) => {
   const resolved = resolveStoredMediaUrl(url, storageKey, req);
   if (resolved) return resolved;
   const raw = url?.trim();
@@ -246,7 +246,7 @@ export const normalizeListingMedia = <T extends Record<string, any>>(listing: T,
   if (Array.isArray(next.images)) {
     next.images = next.images.map((item) => ({
       ...item,
-      url: normalizeMediaUrl(item?.url, item?.key, req),
+      url: resolveForApiResponse(item?.url, item?.key, req),
     }));
   }
   return next as T;

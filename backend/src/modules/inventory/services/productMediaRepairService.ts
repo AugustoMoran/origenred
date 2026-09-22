@@ -131,6 +131,36 @@ export const listingImagesFromProductOrExisting = (
     .filter(Boolean) as Array<{ url: string; key?: string; alt: string }>;
 };
 
+/** Publicaciones ligadas al inventario: la tienda muestra las mismas fotos que el panel POS. */
+export const enrichPublicListingsWithInventoryMedia = async <
+  T extends { inventoryProductId?: unknown; images?: Array<{ url?: string; key?: string; alt?: string }> }
+>(
+  listings: T[]
+): Promise<T[]> => {
+  const ids = listings
+    .map((l) => l.inventoryProductId)
+    .filter(Boolean)
+    .map((id) => String(id));
+
+  if (!ids.length) return listings;
+
+  const products = await Product.find({ _id: { $in: ids } }).select(
+    'imageUrl imagePublicId gallery name'
+  );
+  const productById = new Map(products.map((p) => [String(p._id), p]));
+
+  return listings.map((listing) => {
+    const productId = listing.inventoryProductId ? String(listing.inventoryProductId) : '';
+    const product = productById.get(productId);
+    if (!product || !productHasUsableMedia(product)) return listing;
+
+    const images = listingImagesFromProductOrExisting(product, listing);
+    if (!images.length) return listing;
+
+    return { ...listing, images };
+  });
+};
+
 export const repairAllInventoryProductMedia = async () => {
   const products = await Product.find({ isActive: true });
   let repairedProducts = 0;

@@ -105,13 +105,24 @@ import {
 } from '../../../socket/marketplaceChatSocket';
 import { notifyChatRecipient } from '../../../modules/notifications/chatPushService';
 import { normalizeListingMedia } from '../../../shared/utils/mediaUrl';
+import { enrichPublicListingsWithInventoryMedia } from '../../inventory/services/productMediaRepairService';
 
 // ── Público ──────────────────────────────────────────────
 
 const toPlainListing = (item: any) =>
   typeof item?.toObject === 'function' ? item.toObject() : item;
 
-export async function getHomeDataController(_req: Request, res: Response) {
+const preparePublicListingsForClient = async (items: any[], req?: Request) => {
+  const enriched = await enrichPublicListingsWithInventoryMedia(items);
+  return enriched.map((item) => normalizeListingMedia(item, req));
+};
+
+const preparePublicListingForClient = async (plain: any, req?: Request) => {
+  const [enriched] = await enrichPublicListingsWithInventoryMedia([plain]);
+  return normalizeListingMedia(enriched, req);
+};
+
+export async function getHomeDataController(req: Request, res: Response) {
   const [featured, newest, bestsellers, categories] = await Promise.all([
     getPublicListings({ sort: 'origenrank', limit: 8 }),
     getPublicListings({ sort: 'newest', limit: 8 }),
@@ -121,10 +132,16 @@ export async function getHomeDataController(_req: Request, res: Response) {
       .limit(20),
   ]);
 
+  const [featuredItems, newestItems, bestsellersItems] = await Promise.all([
+    preparePublicListingsForClient(featured.items.map((item) => toPlainListing(item)), req),
+    preparePublicListingsForClient(newest.items.map((item) => toPlainListing(item)), req),
+    preparePublicListingsForClient(bestsellers.items.map((item) => toPlainListing(item)), req),
+  ]);
+
   res.json({
-    featured: featured.items.map((item) => normalizeListingMedia(toPlainListing(item))),
-    newest: newest.items.map((item) => normalizeListingMedia(toPlainListing(item))),
-    bestsellers: bestsellers.items.map((item) => normalizeListingMedia(toPlainListing(item))),
+    featured: featuredItems,
+    newest: newestItems,
+    bestsellers: bestsellersItems,
     categories,
     integrations: {
       r2: features.r2,
@@ -137,9 +154,13 @@ export async function getHomeDataController(_req: Request, res: Response) {
 
 export async function listPublicListingsController(req: Request, res: Response) {
   const result = await getPublicListings(req.query as Record<string, unknown>);
+  const items = await preparePublicListingsForClient(
+    result.items.map((item: any) => toPlainListing(item)),
+    req
+  );
   res.json({
     ...result,
-    items: result.items.map((item: any) => normalizeListingMedia(toPlainListing(item))),
+    items,
   });
 }
 
@@ -147,7 +168,7 @@ export async function getPublicListingController(req: Request, res: Response) {
   const listing = await getPublicListingBySlug(String(req.params.slug));
   if (!listing) return res.status(404).json({ message: 'Producto no encontrado' });
   const plain = toPlainListing(listing);
-  res.json(normalizeListingMedia(plain as any));
+  res.json(await preparePublicListingForClient(plain as any, req));
 }
 
 export async function listPublicCategoriesController(req: Request, res: Response) {

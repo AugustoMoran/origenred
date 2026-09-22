@@ -62,7 +62,12 @@ export const MarketplaceListingDetail: React.FC = () => {
       <div className="grid lg:grid-cols-2 gap-8">
         <div className="space-y-3">
           <div className="aspect-square bg-white rounded-2xl border border-slate-100 overflow-hidden">
-            <MarketplaceImage src={images[0].url} alt={listing.title} className="w-full h-full object-cover" />
+            <MarketplaceImage
+              src={images[0].url}
+              storageKey={listing.images?.[0]?.key}
+              alt={listing.title}
+              className="w-full h-full object-cover"
+            />
           </div>
           {images.length > 1 && (
             <div className="flex gap-2 overflow-x-auto">
@@ -70,6 +75,7 @@ export const MarketplaceListingDetail: React.FC = () => {
                 <MarketplaceImage
                   key={i}
                   src={img.url}
+                  storageKey={listing.images?.[i + 1]?.key}
                   alt=""
                   className="w-16 h-16 rounded-lg object-cover border border-slate-100 flex-shrink-0"
                 />
