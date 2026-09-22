@@ -100,8 +100,13 @@ const effectiveStorageKey = (url?: string | null, storageKey?: string | null) =>
 export const buildMediaProxyUrl = (storageKey?: string | null, req?: Request): string | null => {
   if (!isR2ObjectKey(storageKey)) return null;
   const key = String(storageKey).replace(/^\//, '');
+  const encoded = key.split('/').map(encodeURIComponent).join('/');
+  // En producción guardamos ruta relativa: Vercel reescribe /api/media → Render (ver vercel.json).
+  if (process.env.NODE_ENV === 'production') {
+    return `/api/media/${encoded}`;
+  }
   const base = getPublicApiBaseUrl(req).replace(/\/+$/, '');
-  return `${base}/api/media/${key.split('/').map(encodeURIComponent).join('/')}`;
+  return `${base}/api/media/${encoded}`;
 };
 
 const rewriteUploadPathToApi = (url: string, apiBase?: string): string | null => {
@@ -174,6 +179,10 @@ export const resolveStoredMediaUrl = (
 
     if (trimmed.startsWith('/uploads')) {
       return `${getPublicApiBaseUrl(req).replace(/\/+$/, '')}${trimmed}`;
+    }
+
+    if (trimmed.startsWith('/api/media/')) {
+      return trimmed;
     }
   }
 

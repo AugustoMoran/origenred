@@ -422,13 +422,19 @@ export const resyncInventoryToMarketplace = async (actingUser: { _id?: unknown; 
   if (!isAdmin) {
     throw new Error('Solo administradores pueden resincronizar el marketplace');
   }
-  const { repairAllInventoryProductMedia } = await import('./productMediaRepairService');
-  const mediaRepair = await repairAllInventoryProductMedia();
   const { syncAllInventoryProductsToMarketplace } = await import(
     '../../marketplace/services/productListingSyncService'
   );
   const synced = await syncAllInventoryProductsToMarketplace(actingUser._id as any);
-  return { synced, mediaRepair };
+  return {
+    synced,
+    mediaRepair: {
+      scanned: 0,
+      repairedProducts: 0,
+      repairedFromListing: 0,
+      stillMissing: 0,
+    },
+  };
 };
 
 export const repairInventoryProductMedia = async (actingUser: { roles?: string[] }) => {

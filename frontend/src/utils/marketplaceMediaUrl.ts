@@ -57,6 +57,9 @@ export const resolveMarketplaceImageUrl = (url?: string | null, storageKey?: str
   }
 
   if (trimmed && !isPlaceholderMediaUrl(trimmed)) {
+    if (trimmed.startsWith('/api/media/')) {
+      return trimmed;
+    }
     if (trimmed.includes('/api/media/')) {
       return trimmed.replace(/^http:/i, 'https:');
     }

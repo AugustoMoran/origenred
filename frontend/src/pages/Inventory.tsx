@@ -22,6 +22,7 @@ import {
 } from '../constants/shippingPackageDefaults';
 import { MarketplaceImage } from '../components/marketplace/MarketplaceImage';
 import { resolveProductImageUrl } from '../utils/marketplaceMediaUrl';
+import { isPlaceholderMediaUrl } from '../utils/mediaUrlHelpers';
 import { useGetSuppliersQuery } from '../services/supplierApi';
 import { HasPermission } from '../components/auth/HasPermission';
 import { PERMISSIONS } from '../constants/permissions';
@@ -566,7 +567,10 @@ export const Inventory = () => {
 
     if (selectedFile) data.append('image', selectedFile);
     galleryFiles.forEach((file) => data.append('galleryImages', file));
-    data.append('gallery', JSON.stringify(galleryItems));
+    const galleryToSave = galleryItems.filter(
+      (item) => item?.url && !isPlaceholderMediaUrl(item.url)
+    );
+    data.append('gallery', JSON.stringify(galleryToSave));
 
     const ecommerceFields = [
       'commercialDescription', 'longDescription', 'seoTitle', 'seoDescription', 'slug', 'weight', 'displayOrder',
@@ -647,7 +651,9 @@ export const Inventory = () => {
       displayOrder: p.displayOrder ?? '',
     });
     setImagePreview(resolveProductImageUrl(p));
-    const savedGallery = Array.isArray(p.gallery) ? p.gallery.filter((g: GalleryItem) => g?.url) : [];
+    const savedGallery = Array.isArray(p.gallery)
+      ? p.gallery.filter((g: GalleryItem) => g?.url && !isPlaceholderMediaUrl(g.url))
+      : [];
     if (savedGallery.length) {
       setGalleryItems(savedGallery);
     } else {

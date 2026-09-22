@@ -1,6 +1,7 @@
 import Product from '../models/Product';
 import { Listing } from '../../marketplace/models/Listing';
 import {
+  buildMediaProxyUrl,
   extractStorageKeyFromUrl,
   isCloudinaryMediaUrl,
   isPlaceholderMediaUrl,
@@ -88,7 +89,9 @@ export const listingImagesFromProductOrExisting = (
 ) => {
   const fromProduct = (product.gallery || [])
     .map((item) => {
-      const url = resolveStoredMediaUrl(item.url, item.publicId);
+      const url =
+        resolveStoredMediaUrl(item.url, item.publicId) ||
+        (isR2ObjectKey(item.publicId) ? buildMediaProxyUrl(item.publicId) : null);
       if (!url || isPlaceholderMediaUrl(url)) return null;
       return {
         url,
@@ -100,7 +103,9 @@ export const listingImagesFromProductOrExisting = (
 
   if (fromProduct.length) return fromProduct;
 
-  const mainUrl = resolveStoredMediaUrl(product.imageUrl, product.imagePublicId);
+  const mainUrl =
+    resolveStoredMediaUrl(product.imageUrl, product.imagePublicId) ||
+    (isR2ObjectKey(product.imagePublicId) ? buildMediaProxyUrl(product.imagePublicId) : null);
   if (mainUrl && !isPlaceholderMediaUrl(mainUrl)) {
     return [
       {

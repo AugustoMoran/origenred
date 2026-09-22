@@ -1,5 +1,5 @@
 import { Request } from 'express';
-import { buildLocalUploadUrl } from '../../../shared/utils/mediaUrl';
+import { buildLocalUploadUrl, isPlaceholderMediaUrl } from '../../../shared/utils/mediaUrl';
 
 const isHttpUrl = (value?: string) => !!value && /^https?:\/\//i.test(value);
 
@@ -69,7 +69,9 @@ export const applyEcommerceFieldsToProductData = (req: Request, productData: Rec
     const keptGallery = parseJsonField(productData.gallery);
     delete productData.gallery;
     if (Array.isArray(keptGallery)) {
-      const filtered = keptGallery.filter((item) => item?.url);
+      const filtered = keptGallery.filter(
+        (item) => item?.url && !isPlaceholderMediaUrl(item.url)
+      );
       if (filtered.length) productData.gallery = filtered;
     }
   }

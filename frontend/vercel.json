@@ -5,6 +5,10 @@
       "destination": "https://origenred-ulob.onrender.com/uploads/:path*"
     },
     {
+      "source": "/api/media/:path*",
+      "destination": "https://origenred-ulob.onrender.com/api/media/:path*"
+    },
+    {
       "source": "/((?!.*\\.).*)",
       "destination": "/index.html"
     }

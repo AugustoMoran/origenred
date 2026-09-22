@@ -7,12 +7,7 @@ import { Listing } from '../models/Listing';
 import { SellerProfile } from '../models/SellerProfile';
 import { computeOrigenRankScore } from './origenRankService';
 import { indexListing, removeListingFromIndex } from './meilisearchService';
-import { repairProductMediaInPlace } from '../../../shared/utils/mediaUrl';
-import {
-  listingImagesFromProductOrExisting,
-  productHasUsableMedia,
-  repairProductMediaFromListing,
-} from '../../inventory/services/productMediaRepairService';
+import { listingImagesFromProductOrExisting } from '../../inventory/services/productMediaRepairService';
 
 const OFFICIAL_SELLER_SLUG = 'origenred-oficial';
 
@@ -154,19 +149,6 @@ export async function syncProductToMarketplaceListing(
   if (!product) return null;
 
   const existingListing = await Listing.findOne({ inventoryProductId: product._id }).select('images');
-
-  let productMediaDirty = false;
-  if (!productHasUsableMedia(product)) {
-    if (repairProductMediaFromListing(product, existingListing)) {
-      productMediaDirty = true;
-    }
-  }
-  if (repairProductMediaInPlace(product)) {
-    productMediaDirty = true;
-  }
-  if (productMediaDirty) {
-    await product.save();
-  }
 
   if (!product.isActive) {
     await unpublishProductListing(productId);
